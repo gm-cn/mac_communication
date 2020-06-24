@@ -21,8 +21,8 @@ retry_kwargs = {
 class IPMIPlugin_v2(object):
 
     def __init__(self):
-        self.base_cmd = "ipmitool -I lanplus -H {} -U {} -P {} "
-        self.cmd = "ipmitool -I lanplus -H {} -U {} -P {} chassis "
+        self.base_cmd = "ipmitool -I lanplus -H {} -U {} -P '{}' "
+        self.cmd = "ipmitool -I lanplus -H {} -U {} -P '{}' chassis "
         self.power_status_cmd = self.cmd + "power status"
         self.poweron_cmd = self.cmd + "power on"
         self.poweroff_cmd = self.cmd + "power off"

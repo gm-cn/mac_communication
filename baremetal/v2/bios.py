@@ -226,12 +226,12 @@ class BiosSetPlugin_v2(object):
     def set_alarm_and_cpu(self, req):
         body = jsonobject.loads(req[http.REQUEST_BODY])
         header = req[http.REQUEST_HEADER]
-        logger.debug("set alarm and cpu perforance/numa config taskuuid:%s body:%s" %
+        logger.debug("set snmp ,cpu perforance/numa and timezone config taskuuid:%s body:%s" %
                     (header[V2_REQUEST_ID], req[http.REQUEST_BODY]))
 
         rsp = models.BiosconfigSet()
         rsp.requestId = header[V2_REQUEST_ID]
-        funcs = ['mail_alarm', 'snmp_alarm', 'performance_config', 'numa_config']
+        funcs = ['snmp_alarm', 'performance_config', 'numa_config', 'change_timezone']
         for func in funcs:
             self.execute_cmd(func, body)
 

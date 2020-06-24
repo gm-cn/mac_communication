@@ -124,7 +124,7 @@ class RestService(object):
                                      self.switches_v2.init_all_config)
         self.rest.register_async_uri(constants.V2_CLEAN_SWITCH_CONFIG,
                                      self.switches_v2.clean_all_config)
-        self.rest.register_sync_uri(constants.V2_GET_RELATEION_PATH,
+        self.rest.register_async_uri(constants.V2_GET_RELATEION_PATH,
                                      self.switches_v2.get_relations)
         self.rest.register_async_uri(constants.V2_SET_VLAN_PATH,
                                      self.switches_v2.set_vlan)
@@ -169,6 +169,10 @@ class RestService(object):
                                      self.bios_v2.set_alarm_and_cpu)
         self.rest.register_async_uri(constants.V2_HARDWARE_TEST_PATH,
                                      self.hardware_v2.hareware_test)
+        self.rest.register_async_uri(constants.V2_CRC_TEST_PATH,
+                                     self.hardware_v2.crc_test)
+        self.rest.register_sync_uri(constants.V2_HW_LOG_SCP_PATH,
+                                    self.hardware_v2.hw_log_copy)
         self.rest.register_async_uri(constants.V2_PING_HOST_PATH,
                                      self.hardware_v2.ping_host)
         self.rest.register_sync_uri(constants.V2_CHECK_IMAGE_PATH,

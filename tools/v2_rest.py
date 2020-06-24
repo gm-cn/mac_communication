@@ -371,7 +371,9 @@ def hw_test(req):
     body = {
                "ip_list": ["ip1,ip2", "ip1,ip2"],
                "username": "root",
-               "password": "cds-china"
+               "password": "cds-china",
+               "log_id": "qwer"
+
     }
     data = simplejson.dumps(body)
     (status, result) = req.post(path, data, None)
@@ -441,6 +443,27 @@ def check_image(req):
     (status, result) = req.post(path, data, None)
     print "check_ipmi result: %s" % result
 
+def crctest(req):
+    path = "/v2/baremetal/crc_test"
+    body = {
+          "ip_list": ["10.100.100.251,10.100.100.252"],
+               "username": "root",
+               "password": "cds-china",
+               "log_id": "qwer"
+    }
+    data = simplejson.dumps(body)
+    (status, result) = req.post(path, data, None)
+    print " result: %s" % result
+
+def scp_hw_log(req):
+    path = "/v2/baremetal/hw_log"
+    body = {
+            "log_id": "qwer"
+    }
+    data = simplejson.dumps(body)
+    (status, result) = req.post(path, data, None)
+    print " result: %s" % result
+
 if __name__ == "__main__":
     ip = "10.177.178.86"
     username = "admin"
@@ -485,3 +508,5 @@ if __name__ == "__main__":
     # set_boot(rest)
     # check_ipmi(rest)
     # check_image(rest)
+    # crctest(rest)
+    # scp_hw_log(rest)

@@ -70,7 +70,7 @@ class ImagePlugin(object):
 
         taskuuid = req[http.REQUEST_HEADER]["Taskuuid"]
         headers = {http.TASK_UUID: taskuuid, "step": None}
-        for i in range(2048):
+        while True:
             extra = utils.query_task(body.workFlowId, p.pid)
             if (extra.get("status") == "failed"):
                 rsp = models.AgentResponse(success=False, error="rsync process inner error")

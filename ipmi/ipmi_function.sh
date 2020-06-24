@@ -4,7 +4,7 @@ function usage()
     
     echo "ipmi_function version 1.01  Copyright (C) zhaoec(2020-03-02), capitalonline"
     echo "2020-03-02 version 1.01: R540 R640 R740"
-    echo "USAGE: $0 [OPTIONS] < add_bmc_user|submit_onetime|vnc_config|mail_alarm|snmp_alarm|performance_config|boot_set|numa_config|pxe_config|alarm_config|boot_config|get_sn|get_mac|config_raid|power_status|power_off|power_on|hardreset|delete_bmc_user > <password>"
+    echo "USAGE: $0 [OPTIONS] < add_bmc_user|submit_onetime|vnc_control | vnc_config|mail_alarm|snmp_alarm|performance_config|boot_set|numa_config|pxe_config|alarm_config|boot_config|get_sn|get_mac|config_raid|power_status|change_timezone|power_off|power_on|hardreset|delete_bmc_user > <password>"
     echo ""
     echo "Available OPTIONS:"
     echo ""
@@ -19,6 +19,9 @@ function usage()
     echo "  2 is wrong password "
     echo "  3 is wrong ip address "
     echo ""
+    echo " compatible bios version including 2.2.11 | 2.5.4"
+    echo " compatible idrac version including 3.34.34.34 | 4.10.10.10"
+    echo " compatible nics type including 4 nics | 4 nics + 2 sub-nics"
     exit 0
 }
 
@@ -101,7 +104,7 @@ function parse_options()
 function is_valid_action()
 {
     action=$1
-    valid_action=(add_bmc_user vnc_config mail_alarm submit_onetime snmp_alarm performance_config boot_set numa_config pxe_config alarm_config boot_config get_sn get_mac config_raid power_status power_off power_on hardreset delete_bmc_user)
+    valid_action=(add_bmc_user vnc_control vnc_config mail_alarm submit_onetime snmp_alarm performance_config boot_set numa_config pxe_config alarm_config boot_config get_sn get_mac config_raid power_status power_off power_on change_timezone hardreset delete_bmc_user)
     for val in ${valid_action[@]}; do
         if [[ "${val}" == "${action}" ]]; then
             return 0
@@ -116,6 +119,10 @@ is_valid_action ${action} || echo "invalid action"
 path=`dirname $0`
 
 Product_Name=`ipmitool -U $name -P $password -H $ipaddr -I lanplus  fru  |grep "Product Manufacturer" |awk '{print  $4}' `
+ipmitool -U $name -P $password -H $ipaddr -I lanplus  fru  |grep "Product Manufacturer" |awk '{print  $4}' |grep Lenovo
+if [[ $? == 0 ]]; then
+    Product_Name="Lenovo"
+fi
 ipmitool -U $name -P $password -H $ipaddr -I lanplus chassis power status 1>/dev/null 2>&1
 
 if [[ $? != 0 ]]; then
@@ -128,6 +135,12 @@ case "${Product_Name}" in
 
     Inspur)
         source $path/inspur.sh ;;
+
+    Lenovo)
+        source $path/lenovo.sh ;;
+
+    Supermicro)
+        source $path/supermicro.sh ;;
     *)
         echo "Unknown Action:${action}!"
 	usage
@@ -165,6 +178,9 @@ case "${action}" in
     submit_onetime)
     	function_cds_submit_onetime $ipaddr $name $password $pxe_device $flag_type
         ;;
+    vnc_control)
+    	function_cds_vnc_control $ipaddr $name $password
+        ;;
     boot_config)
         function_cds_boot_config $ipaddr $name $password $flag_type
         ;;
@@ -186,12 +202,15 @@ case "${action}" in
     power_on) 
         function_cds_power_on $ipaddr $name $password 
         ;;
+    change_timezone)
+        function_cds_change_timezone
+        ;;
     hardreset)
         function_cds_hardreset $ipaddr $name $password 
         ;;
     delete_bmc_user)
-	function_cds_delete_bmc_user $ipaddr $name $password $username $flag_type
-	;;
+        function_cds_delete_bmc_user $ipaddr $name $password $username $flag_type
+        ;;
     *)
         echo "Unknown Action:${action}!"
         usage
