@@ -76,6 +76,8 @@ bios_opts = [
     cfg.StrOpt('bios_set',
                default='/root/bms_api/ipmi',
                help='bios set script file path'),
+    cfg.StrOpt('nginx_ip',
+               help='bios set script file path'),
 ]
 
 def list_opts():

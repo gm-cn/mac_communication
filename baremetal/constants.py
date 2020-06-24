@@ -83,6 +83,9 @@ V2_RAID_CONFIG_PATH = "/v2/baremetal/ipmi/config_raid"
 V2_SET_ALARM_CPU_PATH = "/v2/baremetal/ipmi/alarm_cpu"
 
 V2_HARDWARE_TEST_PATH = "/v2/baremetal/hardware_test"
+V2_CRC_TEST_PATH = "/v2/baremetal/crc_test"
+V2_SW_CRC_PATH= "/v2/baremetal/sw_crc"
+V2_HW_LOG_SCP_PATH = "/v2/baremetal/hw_log"
 V2_PING_HOST_PATH = "/v2/baremetal/ping"
 
 V2_CHECK_IMAGE_PATH = "/v2/baremetal/image/check"

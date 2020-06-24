@@ -47,7 +47,7 @@ EOF
 
     if [[ ! -d "/tftpboot/code/pxe_agent" ]]; then
 
-        git clone -b develop https://repos.capitalonline.net/baremetal/pxe_agent.git /tftpboot/code/pxe_agent
+        git clone https://cdsdevops:cds-china%402019@repos.capitalonline.net/baremetal/pxe_agent.git /tftpboot/code/pxe_agent
     fi
 }
 

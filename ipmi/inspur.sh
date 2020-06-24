@@ -338,7 +338,7 @@ function function_cds_get_sn()
 function function_cds_get_mac()
 {
 	ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
-        mac=`$ipmitool_commd lan print | grep -w "MAC Address" | awk '{print $4}'`
+    mac=`$ipmitool_commd lan print | grep -w "MAC Address" | awk '{print $4}'`
 	echo "mac address is $mac"
 	return 0
 }
@@ -434,15 +434,23 @@ function function_cds_power_on()
 
 function function_cds_hardreset()
 {
-        ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
-        $ipmitool_commd  power reset
+    ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
+    $ipmitool_commd  power reset
 
 	ret=`echo $?`
 	if [[ $ret != 0 ]];then
 		echo "hostip:$1 $date_info power reset   error" >> $log_file
 		return 0
-	fi
+	else
         echo "hostip:$1 $date_info power reset   success" >> $log_file
+    fi
 }
+
+function function_cds_change_timezone()
+{
+    echo "inspur does not support change timezone"
+    return 0
+}
+
 
 
