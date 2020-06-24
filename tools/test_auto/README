@@ -1,0 +1,37 @@
+1. 自动化安装条件
+   需要将excel模板文件放在如下目录：bms_api/tools/test_auto/base.xlsx
+2. 执行自动化安装脚本，输出自动化安装报告
+   1. 执行目录：
+       bms_api/tools/test_auto/
+       执行程序如下：
+ 	  python  notify.py &
+          python  open_bms.py
+   2.  输出报告目录
+        bms_api/tools/test_auto/pxe_log
+   3.   输出格式：
+        10.177.178.18 pxe boot success
+        其中输出格式只有success 和error，success 代表安装成功，error 代表
+        安装失败。
+   4.   错误原因如下：
+        1.   pxe小镜像启动失败 
+        2.   进入pxe 带外ip 获得不到
+        3.   克隆错误
+        4.   初始化错误
+        5.   系统盘无法失败
+    5. 执行时间
+        标准镜像模板，100台并发 2个小时。
+    
+3. 执行压测脚本
+   执行目录：
+   bms_api/auto_test/extension_test.sh
+   输出报告目录
+   报告目录：bms_api/auto_test
+   报告名字：
+   CRC 报告：auto_network_test_log
+   交换机报告：auto_switch_crc_log
+   cpu 报告：auto_cpu_log
+   内存报告：auto_mem_log
+   硬盘报告：auto_disk_test_log
+   电源报告：auto_power_status_log
+   报告输出格式参考：裸金属交付压测规范
+   

@@ -1,0 +1,226 @@
+#!/bin/bash
+
+#####################################
+#
+#rongjq@inspur.com 2018-1-8
+#
+#############################################
+debug=0
+#IPMI="-I lanplus -H 10.7.11.183 -U admin -P admin"
+dir=`echo $0 |sed 's/\/biosinfo//g'`
+
+function hextoasiic()
+{
+ Hex=`echo $*|awk '{for(i=1;i<=NF;i++)print " "$i;}'`
+ hexasiic="\\x"`echo $Hex|sed 's/ /\\\x/g'`
+ echo -e "$hexasiic"
+
+}
+function hextodec()
+{
+  ((dec=16#$1))  
+  echo $dec
+}
+
+function dectohex()
+{
+ hex=`echo "obase=16;$1"|bc`
+ echo 0x$hex
+}
+
+function setcur_defualt()
+{
+  ipmitool $IPMI raw 0x3c 0x4A 0X04  >/dev/null
+  if [ ! $? -eq 0 ];then
+     echo "Takes effect and set default Falied!!"
+     exit
+  fi
+
+}
+
+function setcur_effect()
+{
+  ipmitool $IPMI raw 0x3c 0x4A 0X02 2>/dev/null  >/dev/null
+  ipmitool $IPMI raw 0x3c 0x4A 0X02 >/dev/null
+  if [ ! $? -eq 0 ];then
+     echo "Takes effect Falied!!"
+     exit
+  fi
+
+}
+
+
+
+h_addr=  #bios address high 8 bit 0x01
+l_addr=  #bios address low  8 bit 0x11
+function addrtohex(){
+    addr=$1
+    let "h_addr=$addr>>8"
+    let "l_addr=$addr&0xff"
+    
+    
+    h_addr=`dectohex $h_addr`
+    l_addr=`dectohex $l_addr`
+}
+
+
+biosaddr=
+function findaddr()
+{
+  addr=`cat $dir/configurev5.txt |grep -i "$1"|awk -F : '{print $1}' |sort|uniq`
+ # echo $addr $1
+  cnt=`echo $addr |awk '{print $2}'`
+  cnt1=`echo $addr |awk '{print $1}'`
+  if [ ! "x"$cnt = "x"  ];then
+     cat $dir/configurev5.txt |grep -i "$1" | awk -F : '{print $1" "$2}'|sort|uniq
+     echo "error! Too many Item $1 found in bios config file configurev5.txt "
+      
+     exit
+
+  fi
+
+
+ if [  "x"$cnt1 = "x"  ];then
+
+     echo "No Item $1  found in bios config file configurev5.txt " 
+     exit
+
+ fi
+
+ biosaddr="$addr"
+    
+ 
+  
+}
+
+ #get bios addr $h_addr $l_addr apend item
+function getaddr_HL(){
+findaddr "$1"
+addrtohex $biosaddr
+
+
+}
+
+value_cur=  #bios current value
+value_def=  #bios defualt value
+
+readbios(){
+ #get bios addr $h_addr $l_addr apend item
+ getaddr_HL "$1"
+ if [ debug = 1 ] ;then
+    echo  "ipmitool $IPMI raw 0x3c 0x49 $h_addr $l_addr"
+
+ fi
+
+  value=`ipmitool $IPMI raw 0x3c 0x49 $h_addr $l_addr 2>/dev/null`
+  num=`echo $value |awk '{print $1$2}'`
+  mod_sign=`echo $value |awk '{print $5}'`
+  read_addr=`echo $value |awk '{print $4$3}'`
+  value_cur=`echo $value |awk '{print $7$6}'`
+  value_def=`echo $value |awk '{print $9$8}'`
+ 
+  value_cur=`hextodec $value_cur`
+  value_def=`hextodec $value_def`
+
+  biosval=`cat $dir/configurev5.txt|grep -i "$1" |awk -F : '{print $3}'| awk  -v value=$value_cur -F '=' 'BEGIN{val=value;val_b=value} {  
+          temval=$1;
+          if(val==temval){
+             val_b=$2
+          }
+        } END{
+          if(val_b=="42405")val_b="Update FW to Support"
+          print val_b;
+  }'`
+ 
+ biositem=`cat $dir/configurev5.txt|grep -i "$1" |awk -F : '{print $2}'|sort|uniq`
+ if [ "x"$mod_sign = "x01"  ] ;then
+     info="*"
+ else
+     info=""
+ fi
+
+
+ note=`cat $dir/configurev5.txt|grep -i "$1" |awk -F : '{print $4}'`
+
+ #if bios has been modify will show * follow bios value.
+  printf "%-40s:%-20s\n" "$biositem"  "$biosval$info"
+  
+}
+
+
+#readbios "$1"
+
+function writebios(){
+  biositem="$1"
+  value="$2"
+  findaddr "$biositem" #get biosaddr
+  row=`cat $dir/configurev5.txt|grep -i "$biosaddr" |awk -F : '{print $3}'| grep -i "$value"| awk  -F '=' '{print $1}'|wc -l` 
+  #echo $row
+  case $row in
+
+    1)
+     biossetvalue=`cat $dir/configurev5.txt|grep -i "$biosaddr" |awk -F : '{print $3}'| grep -i "$value"| awk  -F '=' '{print $1}'`
+     #echo $biosvalue
+    ;;
+    0)
+      echo "$biositem no value $value be found in "
+      cat $dir/configurev5.txt|grep -i "$biosaddr" |awk -F : '{print $3}'
+      exit
+    ;;
+     *)
+       echo "$biositem too Many value $value be found in "
+      cat $dir/configurev5.txt|grep -i "$biosaddr" |awk -F : '{print $3}'
+       exit
+      ;;
+  esac
+
+    #echo "dec="$biosvalue
+    biosvalue=`dectohex $biossetvalue` 
+    addrtohex $biosvalue 
+    value_h8=$h_addr 
+    value_l8=$l_addr
+
+    #get biositem's l_addr and h_addr 
+    getaddr_HL "$biositem"
+
+    #get cur_value vs set value ,exit when same############
+    cur_value=`ipmitool $IPMI raw 0x3c 0x49 $h_addr $l_addr |awk '{print $7$6}' `
+    cur_value=`hextodec $cur_value`
+   # echo $biossetvalue = $cur_value
+    if [ "x"$biossetvalue = "x"$cur_value  ];then
+         readbios "$1"
+         exit
+    fi
+   #########################################
+
+
+    ipmitool $IPMI raw 0x3c 0x48 $h_addr $l_addr $value_l8 $value_h8 2>&1 >/dev/null
+    if [ $? -eq 0 ];then
+      setcur_effect  #try to effect 
+      readbios "$1"   
+    else
+      echo "error!!Please be ture bios and bmc supported!!"
+    fi
+}
+#writebios "$1" "$2"
+#readbios "$1"
+ 
+IPMI=$1
+biositem="$2"
+biosvalue="$3"
+#main
+ 
+  case $# in
+
+   3)
+     writebios "$biositem" "$biosvalue"
+   ;;
+   2)
+     readbios "$biositem"
+   ;;
+
+ *)
+   echo "args error ";
+  exit
+;;
+ esac

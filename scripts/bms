@@ -1,0 +1,576 @@
+#!/usr/bin/env python
+
+import httplib
+import os
+import socket
+import struct
+import time
+import uuid
+import sys
+
+import simplejson
+from configparser import ConfigParser
+
+REST_SERVER = 'localhost'
+REST_SERVER_PORT = 8989
+
+
+class ConfigData(object):
+
+    def __init__(self):
+        self.conf = ConfigParser()
+        self.interfaces = self.get_conf("interfaces", "interfaces")
+        self.switch_username = self.get_conf("switch", "username")
+        self.switch_password = self.get_conf("switch", "password")
+        self.switch_host = self.get_conf("switch", "host")
+        self.customer = self.get_conf("metadata", "customer")
+        self.is_bound = self.str2bool(self.get_conf("metadata", "is_bound"))
+        self.public_bandwidth = int(self.get_conf("network", "public_bandwidth"))
+        self.private_bandwidth = int(self.get_conf("network", "private_bandwidth"))
+        self.public_vlan = self.get_conf("network", "public_vlan")
+        self.private_vlan = self.get_conf("network", "private_vlan")
+        self.new_password = self.get_conf("password", "new_password")
+        self.public_limit_template_name = self.customer + ("-%sM" % self.public_bandwidth)
+        self.private_limit_template_name = self.get_conf("network", "private_limit_template_name")
+
+    def get_conf(self, section, name):
+        self.conf.read('/etc/baremetal-api/init-image.ini', encoding='utf-8')
+        return self.conf.get(section, name)
+
+    def str2bool(self, v):
+        return v.lower() in ("yes", "true", "t", "1")
+
+    def str_to_list(self, str):
+        str_list = []
+        str_arr = str.split(",")
+        for s in str_arr:
+            str_list.append(s)
+        return str_list
+
+    def cidr_to_netmask(self, cidr):
+        network, net_bits = cidr.split('/')
+        host_bits = 32 - int(net_bits)
+        netmask = socket.inet_ntoa(struct.pack('!I', (1 << 32) - (1 << host_bits)))
+        return network, netmask
+
+    def network_body(self):
+        networks = {}
+        interfaces = self.interfaces
+        bonds = self.conf.items("bonds")
+        bonds_mode = self.get_conf("bonds", "mode")
+        dnses = self.conf.items("dns")
+        networks['interfaces'] = []
+        if self.is_bound:
+            intefaces_arr = interfaces.split(",")
+            for iface in intefaces_arr:
+                info = {
+                    "name": iface
+                }
+                networks['interfaces'].append(info)
+
+            bands_arr = []
+            for bond in bonds[2:]:
+                bond_object = {
+                    'mode': bonds_mode,
+                    "bond_miimon": self.get_conf("bonds", "miimon")
+                }
+                bond_info = bond[1].split(";")
+                bond_object['name'] = bond[0]
+                bond_object['bond'] = self.str_to_list(bond_info[0])
+
+                if len(bond_info) > 1 and bond_info[1]:
+                    ip, netmask = self.cidr_to_netmask(bond_info[1])
+                    bond_object['ipaddr'] = ip
+                    bond_object['netmask'] = netmask
+                if len(bond_info) > 2 and bond_info[2]:
+                    bond_object['gateway'] = bond_info[2]
+
+                bands_arr.append(bond_object)
+            networks['bonds'] = bands_arr
+
+        else:
+            ifaces = self.conf.items("interfaces")
+            for iface in ifaces[1:]:
+                ipinfo = iface[1].split(";")
+                ip, netmask = self.cidr_to_netmask(ipinfo[0])
+                info = {
+                    "name": iface[0],
+                    "ipaddr": ip,
+                    "netmask": netmask
+                }
+                if len(ipinfo) == 2:
+                    info.update({"gateway": ipinfo[1]})
+                networks['interfaces'].append(info)
+            networks['bonds'] = []
+
+        dns_list = []
+        for dns in dnses:
+            dns_list.append(dns[1])
+        networks['dns'] = dns_list
+
+        return networks
+
+    def init_image_body(self, device):
+        body = {}
+        networks = self.network_body()
+
+        body["uuid"] = str(uuid.uuid4())
+        body["username"] = self.get_conf("metadata", "username")
+        body["hostname"] = self.get_conf("metadata", "hostname")
+        body["password"] = self.get_conf("metadata", "password")
+        body["root_ldev_id"] = device
+        body['networks'] = networks
+
+        return body
+
+    def change_ip_body(self, device):
+        body = {}
+        networks = self.network_body()
+
+        body["uuid"] = str(uuid.uuid4())
+        body["root_ldev_id"] = device
+        body["networks"] = networks
+
+        return body
+
+    def set_vlan_body(self):
+        body = {}
+        body["username"] = self.switch_username
+        body["password"] = self.switch_password
+        body["host"] = self.switch_host
+        body["ports"] = []
+        if self.is_bound:
+            ports = self.get_conf("network", "trunk_ports")
+            public_bond = {
+                "port_name": ports.split(",")[0],
+                "vlan_id": self.public_vlan
+            }
+            private_bond = {
+                "port_name": ports.split(",")[1],
+                "vlan_id": self.private_vlan
+            }
+        else:
+            public_bond = {
+                "port_name": self.get_conf("network", "public_ports"),
+                "vlan_id": self.public_vlan
+            }
+            private_bond = {
+                "port_name": self.get_conf("network", "private_ports"),
+                "vlan_id": self.private_vlan
+            }
+
+        body["ports"].append(public_bond)
+        body["ports"].append(private_bond)
+
+        return body
+
+    def unset_vlan_body(self):
+        body = {}
+        body["username"] = self.switch_username
+        body["password"] = self.switch_password
+        body["host"] = self.switch_host
+        body["ports"] = []
+        if self.is_bound:
+            ports = self.get_conf("network", "trunk_ports")
+            for port in ports.split(","):
+                body["ports"].append(port)
+        else:
+            public_port = self.get_conf("network", "public_ports")
+            private_port = self.get_conf("network", "private_ports")
+            body["ports"].append(public_port)
+            body["ports"].append(private_port)
+
+        return body
+
+    def set_limit_body(self):
+        body = {}
+        body["username"] = self.switch_username
+        body["password"] = self.switch_password
+        body["host"] = self.switch_host
+        body["limit_infos"] = []
+
+        public_ports = self.get_conf("network", "public_ports")
+        private_ports = self.get_conf("network", "private_ports")
+
+        if self.is_bound:
+            ports = self.get_conf("network", "trunk_ports")
+
+            public_port = ports.split(",")[0]
+            private_port = ports.split(",")[1]
+
+            public_info = {
+                "inbound_port": public_port,
+                "bandwidth": self.public_bandwidth,
+                "template_name": self.public_limit_template_name,
+                "outbound_ports": self.str_to_list(public_ports)
+            }
+            private_info = {
+                "inbound_port": private_port,
+                "bandwidth": int(self.private_bandwidth),
+                "template_name": self.private_limit_template_name,
+                "outbound_ports": self.str_to_list(private_ports)
+            }
+
+        else:
+            public_info = {
+                "inbound_port": public_ports,
+                "bandwidth": self.public_bandwidth,
+                "template_name": self.public_limit_template_name,
+                "outbound_ports": self.str_to_list(public_ports)
+            }
+            private_info = {
+                "inbound_port": private_ports,
+                "bandwidth": self.private_bandwidth,
+                "template_name": self.private_limit_template_name,
+                "outbound_ports": self.str_to_list(private_ports)
+            }
+
+        body["limit_infos"].append(public_info)
+        body["limit_infos"].append(private_info)
+        return body
+
+    def unset_limit_body(self):
+        body = {}
+        body["username"] = self.switch_username
+        body["password"] = self.switch_password
+        body["host"] = self.switch_host
+        public_ports = self.get_conf("network", "public_ports")
+        private_ports = self.get_conf("network", "private_ports")
+        body["outbound_ports"] = self.str_to_list(public_ports) + self.str_to_list(private_ports)
+        if self.is_bound:
+            ports = self.get_conf("network", "trunk_ports")
+            body["inbound_ports"] = []
+            for port in ports.split(","):
+                body["inbound_ports"].append(port)
+
+        else:
+            body["inbound_ports"] = body["outbound_ports"]
+
+        return body
+
+    def create_limit_template_body(self, **kwargs):
+        body = {}
+        body["username"] = self.switch_username
+        body["password"] = self.switch_password
+        body["host"] = self.switch_host
+        body["templates"] = []
+        info = {
+            "name": kwargs["template_name"],
+            "bandwidth": kwargs["bandwidth"]
+        }
+        body["templates"].append(info)
+        return body
+
+    def delete_limit_template_body(self, **kwargs):
+        body = {}
+        body["username"] = self.switch_username
+        body["password"] = self.switch_password
+        body["host"] = self.switch_host
+        body["templates"] = []
+        templates = kwargs["templates"]
+        for template in templates:
+            body["templates"].append(template)
+        return body
+
+    def change_passwd_body(self, **kwargs):
+        body = {}
+        body["baremetal_id"] = str(uuid.uuid4())
+        body["root_ldev_id"] = kwargs["device"]
+        body["username"] = "root"
+        body["password"] = kwargs["password"]
+        return body
+
+    def power_body(self, **kwargs):
+        body = {}
+        body["ip"] = kwargs["ip"]
+        body["username"] = self.get_conf("ipmi", "username")
+        body["password"] = self.get_conf("ipmi", "password")
+        return body
+
+
+class RestException(Exception):
+    pass
+
+
+class RestRequest(object):
+    def __init__(self):
+        self.host = REST_SERVER
+        self.port = REST_SERVER_PORT
+        self.callbackuri = 'http://%s:%s/debug/result' % (REST_SERVER,
+                                                          REST_SERVER_PORT)
+        self.headers = self._build_header()
+
+    def _build_header(self):
+        headers = {"Content-Type": "application/json",
+                   "Accept": "application/json",
+                   "taskuuid": str(uuid.uuid4()),
+                   'callbackuri': self.callbackuri}
+        return headers
+
+    def _send_request(self, uri, method, body, token):
+        if not uri:
+            raise RestException("uri is required!")
+
+        conn = None
+        try:
+            conn = httplib.HTTPConnection(self.host, self.port)
+            if token:
+                self.headers["Cookie"] = token
+            conn.request(method, uri, body, self.headers)
+            response = conn.getresponse()
+            status = response.status
+            result = response.read()
+        except Exception, e:
+            print "Exception: %s" % e
+            raise e
+        finally:
+            if conn:
+                conn.close()
+        return (status, result)
+
+    def get(self, uri, body=None, token=None):
+        return self._send_request(uri, "GET", body, token)
+
+    def post(self, uri, body, token):
+        return self._send_request(uri, "POST", body, token)
+
+    def put(self, uri, body, token):
+        return self._send_request(uri, "PUT", body, token)
+
+    def delete(self, uri, body, token):
+        return self._send_request(uri, "DELETE", body, token)
+
+
+def get_result(path):
+    while True:
+        with open(path, "r") as f:
+            data = f.read()
+        if data:
+            udata = simplejson.loads(data)
+            return simplejson.loads(udata)
+        else:
+            time.sleep(1)
+
+
+class Functions(object):
+
+    def post(self, req, url, data, path, action):
+        status, result = req.post(url, data, None)
+        if status != 200:
+            print "%s failed." % action
+        count = 0
+        while count < 20:
+            result = get_result(path)
+            if result.get("success"):
+                print "%s successfully." % action
+                return "success"
+            else:
+                count += 1
+                time.sleep(1)
+        return "error"
+
+    def init_image(self, req, path, configdata, **kwargs):
+        url = '/baremetal/image/init'
+        body = configdata.init_image_body(kwargs["device"])
+        data = simplejson.dumps(body)
+        return self.post(req, url, data, path, action="init image")
+
+    def set_vlan(self, req, path, configdata, **kwargs):
+        url = '/baremetal/switch/vlan/set'
+        body = configdata.set_vlan_body()
+        data = simplejson.dumps(body)
+        return self.post(req, url, data, path, action="set vlan")
+
+    def unset_vlan(self, req, path, configdata, **kwargs):
+        url = '/baremetal/switch/vlan/unset'
+        body = configdata.unset_vlan_body()
+        data = simplejson.dumps(body)
+        return self.post(req, url, data, path, action="unset vlan")
+
+    def set_limit(self, req, path, configdata, **kwargs):
+        url = "/baremetal/switch/limit/set"
+        body = configdata.set_limit_body()
+        data = simplejson.dumps(body)
+        return self.post(req, url, data, path, action="set limit")
+
+    def unset_limit(self, req, path, configdata, **kwargs):
+        url = "/baremetal/switch/limit/unset"
+        body = configdata.unset_limit_body()
+        data = simplejson.dumps(body)
+        return self.post(req, url, data, path, action="unset limit")
+
+    def create_limit_template(self, req, path, configdata, **kwargs):
+        url = "/baremetal/switch/limit/create"
+        body = configdata.create_limit_template_body(**kwargs)
+        data = simplejson.dumps(body)
+        return self.post(req, url, data, path, action="create limit template")
+
+    def delete_limit_template(self, req, path, configdata, **kwargs):
+        url = "/baremetal/switch/limit/delete"
+        body = configdata.delete_limit_template_body(**kwargs)
+        data = simplejson.dumps(body)
+        return self.post(req, url, data, path, action="delete limit template")
+
+    def poweron(self, req, path, configdata, **kwargs):
+        url = "/baremetal/ipmi/start"
+        body = configdata.power_body(**kwargs)
+        data = simplejson.dumps(body)
+        return self.post(req, url, data, path, action="poweron")
+
+    def power_status(self, req, path, configdata, **kwargs):
+        url = "/baremetal/ipmi/status"
+        body = configdata.power_body(**kwargs)
+        data = simplejson.dumps(body)
+        status, result = req.post(url, data, None)
+        if status != 200:
+            print "%s failed." % action
+        count = 0
+        while count < 20:
+            result = get_result(path)
+            if result.get("success"):
+                print result.get("status")
+                return "success"
+            else:
+                count += 1
+                time.sleep(1)
+        return "error"
+
+    def poweroff(self, req, path, configdata, **kwargs):
+        url = "/baremetal/ipmi/stop"
+        body = configdata.power_body(**kwargs)
+        data = simplejson.dumps(body)
+        return self.post(req, url, data, path, action="poweroff")
+
+    def host_scan(self, req, path, configdata, **kwargs):
+        url = "/baremetal/host/scan"
+        status, result = req.post(url, None, None)
+        if status != 200:
+            print "%s failed." % action
+
+    def delete_disk(self, req, path, configdata, **kwargs):
+        url = "/baremetal/disk/delete"
+        body = {"dev_id": kwargs["device"]}
+        data = simplejson.dumps(body)
+        return self.post(req, url, data, path, action="delete disk")
+
+    def change_passwd(self, req, path, configdata, **kwargs):
+        url = '/baremetal/changepasswd'
+        body = configdata.change_passwd_body(**kwargs)
+        data = simplejson.dumps(body)
+        return self.post(req, url, data, path, action="change password")
+
+    def change_ip(self, req, path, configdata, **kwargs):
+        url = '/baremetal/changeip'
+        body = configdata.change_ip_body(kwargs["device"])
+        data = simplejson.dumps(body)
+        return self.post(req, url, data, path, action="change ip")
+
+    def action_exe(self, req, action, configdata, **kwargs):
+        action = action.replace("-", "_")
+        taskuuid = str(uuid.uuid4())
+        req.headers['taskuuid'] = taskuuid
+        result_dir = "/root/result"
+        if not os.path.isdir(result_dir):
+            os.makedirs(result_dir)
+        path = '/root/result/%s.result' % taskuuid
+        req.headers['filename'] = path
+        if not os.path.exists(path):
+            with open(path, 'w'):
+                pass
+        action_func = getattr(self, action)
+        result = action_func(req, path, configdata, **kwargs)
+        if result == "success":
+            os.remove(path)
+
+
+if __name__ == '__main__':
+    rest = RestRequest()
+    usage = 'usage: bms init-image <ldev_id>\n       ' \
+            'bms set-vlan\n       ' \
+            'bms unset-vlan\n       ' \
+            'bms set-limit\n       ' \
+            'bms unset-limit\n       ' \
+            'bms create-limit-template [template_name] [bandwidth]\n       ' \
+            'bms delete-limit-template <template_name>\n       ' \
+            'bms change-ip <ldev_id>\n       ' \
+            'bms change-passwd <ldev_id> [password]\n       ' \
+            'bms poweron <ip>\n       ' \
+            'bms poweroff <ip>\n       ' \
+            'bms power-status <ip>\n       ' \
+            'bms host-scan\n       ' \
+            'bms delete-disk <ldev_id>\n       ' \
+            'bms init-all <ldev_id>\n       ' \
+            'bms delete-all\n       ' \
+            'info: <***> is required, [***] is optional'
+
+    if len(sys.argv) < 2 or len(sys.argv) > 4 \
+            or sys.argv[1] not in [
+                "set-vlan", "unset-vlan", "init-image",
+                "set-limit", "unset-limit", "change-ip",
+                "change-passwd", "create-limit-template",
+                "delete-limit-template", "init-all", "delete-all",
+                "poweron", "poweroff", "power-status", "host-scan",
+                "delete-disk"]:
+        print usage
+        sys.exit(1)
+
+    action = sys.argv[1]
+    kwargs = {}
+    configdata = ConfigData()
+    function = Functions()
+    if action in ["init-image", "change-ip", "delete-disk"]:
+        device = sys.argv[2]
+        kwargs["device"] = device
+        function.action_exe(rest, action, configdata, **kwargs)
+    if action in ["set-vlan", "unset-vlan", "unset-limit", "set-limit"]:
+        function.action_exe(rest, action, configdata, **kwargs)
+    if action in ["poweron", "poweroff", "power-status"]:
+        kwargs["ip"] = sys.argv[2]
+        function.action_exe(rest, action, configdata, **kwargs)
+    if action == "host-scan":
+        function.action_exe(rest, action, configdata, **kwargs)
+    if action == "change-passwd":
+        device = sys.argv[2]
+        kwargs["device"] = device
+        kwargs["password"] = sys.argv[3] if len(sys.argv) == 4 else configdata.new_password
+        function.action_exe(rest, action, configdata, **kwargs)
+    if action == "create-limit-template":
+        template_name = configdata.public_limit_template_name
+        bandwidth = configdata.public_bandwidth
+        kwargs["template_name"] = sys.argv[2] if len(sys.argv) == 4 else template_name
+        kwargs["bandwidth"] = int(sys.argv[3]) if len(sys.argv) == 4 else int(bandwidth)
+        function.action_exe(rest, action, configdata, **kwargs)
+    if action == "delete-limit-template":
+        template_name = configdata.public_limit_template_name
+        kwargs["templates"] = [sys.argv[2] if len(sys.argv) == 3 else template_name]
+        function.action_exe(rest, action, configdata, **kwargs)
+    if action == "init-all":
+        kwargs["device"] = sys.argv[2]
+        function.action_exe(rest, "set-vlan", configdata, **kwargs)
+        template_name = configdata.public_limit_template_name
+        bandwidth = configdata.public_bandwidth
+        kwargs["template_name"] = template_name
+        kwargs["bandwidth"] = int(bandwidth)
+        function.action_exe(rest, "create-limit-template", configdata, **kwargs)
+        template_name = configdata.private_limit_template_name
+        bandwidth = configdata.private_bandwidth
+        kwargs["template_name"] = template_name
+        kwargs["bandwidth"] = int(bandwidth)
+        function.action_exe(rest, "create-limit-template", configdata, **kwargs)
+        function.action_exe(rest, "set-limit", configdata, **kwargs)
+        function.action_exe(rest, "init-image", configdata, **kwargs)
+    if action == "delete-all":
+        function.action_exe(rest, "unset-limit", configdata, **kwargs)
+        public_template_name = configdata.public_limit_template_name
+        private_template_name = configdata.private_limit_template_name
+        kwargs["templates"] = []
+        kwargs["templates"].append(public_template_name)
+        kwargs["templates"].append(private_template_name)
+        function.action_exe(rest, "delete-limit-template", configdata, **kwargs)
+        function.action_exe(rest, "unset-vlan", configdata, **kwargs)
+
+
+
+
+
+

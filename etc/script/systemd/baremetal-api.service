@@ -1,0 +1,10 @@
+[Unit]
+Description=baremetal api service
+
+[Service]
+Restart=always
+User=root
+ExecStart=/usr/bin/baremetal-api
+
+[Install]
+WantedBy=multi-user.target

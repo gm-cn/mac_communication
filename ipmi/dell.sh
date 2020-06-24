@@ -1,0 +1,685 @@
+#!/bin/sh
+log_file="dell_log"
+date_info=`date`
+cmd_dir="/opt/dell/srvadmin/sbin/racadm"
+function_cds_add_bmc_user()
+{
+	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+	flag=0
+	m=3
+	for((i=3;i<17;i++));
+	do
+		$racadm_comm get iDRAC.Users.$i.UserName | grep $4
+		if [[ $? == 0 ]]; then
+			$racadm_comm set iDRAC.Users.$i.Password "$5"
+			echo "hostip:$1 $date_info change password username:$4  password:$5 success" >> $log_file
+			flag=1
+			return 0
+		fi
+		
+		$racadm_comm get iDRAC.Users.$i.Enable | grep Disabled
+		if [[ $? == 0 ]]; then
+			break
+		fi
+	done
+	
+	if [[ $flag == 0 ]]; then			
+		for((j=3;j<17;j++));
+		do
+			$racadm_comm get iDRAC.Users.$j.Enable | grep Disabled
+			if [[ $? == 0 ]]; then
+				m=$j
+				break
+			fi
+		done
+	fi
+
+    $racadm_comm set iDRAC.Users.$m.UserName "$4"
+	$racadm_comm set iDRAC.Users.$m.Password "$5"
+	$racadm_comm set iDRAC.Users.$m.IpmiLanPrivilege 4
+	$racadm_comm set iDRAC.Users.$m.IpmiSerialPrivilege 4
+	$racadm_comm set iDRAC.Users.$m.ProtocolEnable 1
+	$racadm_comm set iDRAC.Users.$m.Privilege 1
+	$racadm_comm set iDRAC.Users.$m.SolEnable 1
+	$racadm_comm set iDRAC.Users.$m.Enable 1
+	$racadm_comm set iDRAC.Users.$m.Privilege 511
+	$racadm_comm get iDRAC.Users.$m.UserName | grep $4 
+	if [[ $? == 0 ]]; then
+                echo "hostip:$1 $date_info add bmc username:$4  password:$5 success" >> $log_file
+                return 0
+        else
+                echo "hostip:$1 $data_info add bmc username:$4  password:$5 error" >> $log_file
+                return 1
+        fi
+}
+
+function function_cds_delete_bmc_user()
+{
+	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+	for((i=3;i<17;i++));
+	do 
+		$racadm_comm get iDRAC.Users.$i.UserName | grep $4
+		if [[ $? == 0 ]]; then
+			$racadm_comm set iDRAC.Users.$i.IpmiLanPrivilege 15
+			$racadm_comm set iDRAC.Users.$i.IpmiSerialPrivilege 15
+			$racadm_comm set iDRAC.Users.$i.ProtocolEnable 0
+			$racadm_comm set iDRAC.Users.$i.Privilege ""
+			$racadm_comm set iDRAC.Users.$i.SolEnable 0
+			$racadm_comm set iDRAC.Users.$i.Enable 0
+			$racadm_comm set iDRAC.Users.$i.UserName ""
+			
+			echo "hostip:$1 $date_info delete username:$4  success" >> $log_file
+			echo "$i"
+			return 0
+		fi
+	done
+	echo "hostip:$1 $date_info delete username:$4 error user name does not exist" >> $log_file
+	return 1
+}
+
+function function_cds_vnc_config()
+{
+	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+        $racadm_comm  set iDRAC.VNCServer.Enable 1
+        $racadm_comm  set iDRAC.VNCServer.Password "$4"
+	$racadm_comm  get iDRAC.VNCServer.Enable | grep Enabled
+	if [[ $? == 0 ]]; then
+                echo "hostip:$1 $date_info vnc config  success" >> $log_file
+                return 0
+        else
+                echo "hostip:$1 $data_info vnc config error" >> $log_file
+                return 1
+        fi
+        
+        
+}
+
+function function_cds_mail_alarm()
+{
+	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+    	$racadm_comm set iDRAC.IPMILan.AlertEnable Enabled
+	$racadm_comm set iDRAC.IPMILan.Enable 1
+	$racadm_comm set iDRAC.EmailAlert.1.Enable 1
+	$racadm_comm set iDRAC.EmailAlert.1.Address baremetal.alarm@capitalonline.net
+	$racadm_comm set idrac.remotehosts.SMTPServerIPAddress 117.79.130.234
+	$racadm_comm get iDRAC.EmailAlert.1.Enable | grep Enabled
+	sleep 1 
+	if [[ $? == 0 ]]; then
+                echo "hostip:$1 $date_info mail:baremetal.alarm@capitalonline.net alarm  success" >> $log_file
+                return 0
+        else
+                echo "hostip:$1 $data_info mail:baremetal.alarm@capitalonline.net alarm error" >> $log_file
+                return 1
+        fi
+	
+}
+
+function function_cds_snmp_alarm()
+{
+	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+	$racadm_comm set iDRAC.SNMP.TrapFormat SNMPv2
+	$racadm_comm set iDRAC.SNMP.Alert.1.DestAddr 10.128.101.54
+	$racadm_comm set iDRAC.SNMP.Alert.1.Enable 1
+        $racadm_comm get iDRAC.SNMP.Alert.1.DestAddr | grep "10.128.101.54"       
+ 	
+	if [[ $? == 0 ]]; then
+                echo "hostip:$1 $date_info snmp addr 10.128.101.54 success" >> $log_file
+                return 0
+        else
+		echo "hostip:$1 $data_info snmp snmp addr 10.128.101.54 error" >> $log_file
+                return 1
+        fi
+}
+
+function function_cds_performance_config()
+{
+	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+        $racadm_comm set System.ThermalSettings.ThermalProfile 1
+        $racadm_comm set bios.sysprofilesettings.sysprofile PerfOptimized
+
+        sysprofile=`$racadm_comm get  bios.sysprofilesettings.sysprofile | grep PerfOptimized | wc -l`
+	if [[ $sysprofile == 1 ]];then
+	        echo "hostip:$1 $date_info performance_config PerfOptimized success" >> $log_file
+                return 0
+        else
+                echo "hostip:$1 $date_info performance_config PerfOptimized error" >> $log_file
+                return 1
+        fi
+}
+
+function check()
+{
+	jobID=$4
+	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+	start=`date`
+	let limit=0
+	while [ 1 ] 
+	do
+		sleep 20
+		let limit++
+		$racadm_comm jobqueue view -i $jobID | grep -w Percent | tr -d "Percent Complete=[]" | grep -w 100
+		if [[ $? == 0 ]]; then
+			end=`date`
+			echo "Job start at: $start end at : $end  success" >> $log_file
+			return 0
+			break
+		fi
+		if [[ $limit -ge 20 ]]; then
+			echo "Job timeout  error" >> $log_file
+			return 1
+			break
+		fi
+	done
+	
+}
+
+function boot_bios()
+{
+	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+	$racadm_comm set BIOS.BiosBootSettings.BootMode $4
+	jobID=`$racadm_comm jobqueue create BIOS.Setup.1-1 -s TIME_NOW -r Forced | grep -w "Commit JID =" | tr -d "\n\r" | awk '{print $4}' `
+        if [[ $jobID != "" ]];	then
+		#function_cds_power_off $1 $2 $3
+        	#function_cds_power_on $1 $2 $3
+	        check $1 $2 $3 $jobID
+	fi
+	$racadm_comm get BIOS.BiosBootSettings.BootMode | grep $4
+	return $?
+	
+
+}
+
+function function_cds_boot_set()
+{
+	type=$4
+	boot_bios $1 $2 $3 $type
+	if [[ $? == 0 ]];then
+	        echo "hostip:$1 $date_info set boot type: $type success" >> $log_file
+	        return 0
+        else
+                echo "hostip:$1 $date_info set boot type: $type error" >> $log_file
+                return 1
+        fi
+}
+
+function function_cds_numa_config()
+{
+	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+	$racadm_comm set bios.memsettings.nodeinterleave Enabled
+     	nodeinterleave=`$racadm_comm get  bios.memsettings.nodeinterleave | grep Enabled | wc -l`
+
+	if [[ $nodeinterleave == 1 ]];then
+	        echo "hostip:$1 $date_info close numa   success" >> $log_file
+                return 0
+        else
+                echo "hostip:$1 $date_info close numa  Bios error" >> $log_file
+                return 1
+        fi
+}
+
+function function_cds_pxe_config()
+{
+	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+	bios_mode=`$racadm_comm get BIOS.BiosBootSettings.BootMode | sed -n '2p' | tr -s "=" " " | tr -d "\r" | awk '{print $2}'`
+	if [[ $bios_mode == "Uefi" ]]; then	
+		str=$4
+		if [[ $str == "" ]]; then
+			str="1,2,3,4"
+		fi
+		let device_number=1
+		for((a=0;a<${#str};a++));
+		do
+	        	i=${str:$a:1}
+		        if [[ $i != "," ]]; then
+        	        	NIC_info=`$racadm_comm get NIC.nicconfig.$device_number | sed -n '1,1'p | tr -s "=#" : | cut -d ":" -f 2`
+				NIC_info1=`$racadm_comm hwinventory NIC | grep "$NIC_info" | cut -d  ":" -f 1 | sed -n "2p"`
+				$racadm_comm hwinventory $NIC_info | grep "Link Speed" | grep "Not Applicable"
+				nic_result=$?
+				$racadm_comm hwinventory $NIC_info1 | grep "Link Speed" | grep "Not Applicable"
+                        	nic1_result=$?
+
+				if [[ $NIC_info1 == "" ]]; then
+					nic1_result=0
+				fi
+				if [[ $nic_result == 0 && $nic1_result == 0 ]]; then
+                                	echo "NIC $NIC_info is not avaiable" >> $log_file
+					let device_number++
+        	        	else
+                	        	$racadm_comm  set  BIOS.NetworkSettings.PxeDev${device_number}EnDis Enabled
+                        		$racadm_comm  set  BIOS.PxeDev${device_number}Settings.PxeDev${device_number}Interface $NIC_info
+	                        	$racadm_comm  set  nic.nicconfig.${device_number}.WakeOnLan Disabled
+					$racadm_comm get nic.nicconfig.${device_number} | grep LegacyBootProto
+					if [[ $? == 0 ]]; then
+						$racadm_comm  set  nic.nicconfig.${device_number}.LegacyBootProto PXE
+	                                        LegacyBootProto=`$racadm_comm  get  nic.nicconfig.${device_number}.LegacyBootProto | grep PXE | wc -l`
+					else
+						LegacyBootProto=1
+					fi
+		
+        		                PxeDevInterface=`$racadm_comm get  BIOS.PxeDev${device_number}Settings.PxeDev${device_number}Interface | grep $NIC_info | wc -l`
+                        		WakeOnLan=`$racadm_comm get  nic.nicconfig.${device_number}.WakeOnLan | grep Disabled | wc -l`
+		                        PxeDevEnDis=`$racadm_comm get BIOS.NetworkSettings.PxeDev${device_number}EnDis | grep Enabled | wc -l`
+
+        		                if [[ $PxeDevInterface == 1  && $LegacyBootProto == 1 && $WakeOnLan == 1 && $PxeDevEnDis == 1 ]];then
+                		                echo "hostip:$1 $date_info device $device_number NIC  $NIC_info pxe config   success" >> $log_file
+                        		else
+                                		echo "hostip:$1 $date_info device $device_number NIC  $NIC_info pxe config error" >> $log_file
+		                                return 1
+        		                fi
+					let device_number++
+				fi
+			fi
+		done
+		jobID=`$racadm_comm jobqueue create BIOS.Setup.1-1 -s TIME_NOW -r Forced | grep -w "Commit JID =" | tr -d "\n\r" | awk '{print $4}'`
+                if [[ $jobID != "" ]]; then                       
+			#function_cds_power_off $1 $2 $3
+                        #function_cds_power_on $1 $2 $3
+                        check $1 $2 $3 $jobID
+                        return $?
+                fi
+                return 0
+	else 	
+		local boot_seq=""
+		str=$4
+                if [[ $str == "" ]]; then
+                        str="1,2,3,4"
+                fi
+                let device_number=1
+                for((a=0;a<${#str};a++));
+                do
+                        i=${str:$a:1}
+                        if [[ $i != "," ]]; then
+                                NIC_info=`$racadm_comm get NIC.nicconfig.$i | sed -n '1,1'p | tr -s "=#" : | cut -d ":" -f 2`
+                                $racadm_comm hwinventory $NIC_info | grep "Link Speed" | grep "Not Applicable"
+                                if [[ $? == 0 ]]; then
+                                        echo "NIC $NIC_info is not avaiable" >> $log_file
+                                else
+					$racadm_comm get bios.biosbootsettings.bootseq | grep $NIC_info
+					if [[ $? == 0 ]]; then
+						#$racadm_comm set NIC.nicconfig.$i.Legacybootproto PXE
+						if [[ $boot_seq == "" ]]; then
+							boot_seq="$NIC_info"
+						else
+							boot_seq="$boot_seq,$NIC_info"
+						fi
+					fi
+				fi
+                        fi
+                done
+		$racadm_comm set BIOS.BiosBootSettings.BootSeq $boot_seq
+		jobID=`$racadm_comm jobqueue create BIOS.Setup.1-1 -s TIME_NOW -r Forced| grep -w "Commit JID =" | tr -d "\n\r" | awk '{print $4}'`
+	        if [[ $jobID != "" ]]; then
+        	        #function_cds_power_off $1 $2 $3
+                	#function_cds_power_on $1 $2 $3
+	                check $1 $2 $3 $jobID
+        	fi
+	        
+                $racadm_comm get BIOS.BiosBootSettings.BootSeq | grep "$boot_seq"
+	       
+        	if [[ $? == 0 ]]; then
+                	echo "PXE setting success" >> $log_file
+	                return 0
+        	else
+                	echo "PXE setting error" >> $log_file
+			return 1
+		fi
+	fi
+}
+
+function function_cds_alarm_config()
+{
+        if [[ $? == 0 ]];then
+	        echo "hostip:$1 $date_info alarm_config success" >> $log_file
+        else
+                echo "hostip:$1 $date_info alarm_config error" >> $log_file
+        fi
+}
+
+function bios_bootseq()
+{
+        racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+
+        local boot_seq_info=""
+        for((a=1;a<5;a++));
+        do
+                NIC_info=`$racadm_comm get NIC.nicconfig.$a | sed -n '1,1'p | tr -s "=#" : | cut -d ":" -f 2`
+                $racadm_comm get BIOS.BiosBootSettings.BootSeq | grep $NIC_info
+		ret=`echo $?`
+		if [[ $ret == 0 ]]; then
+			$racadm_comm hwinventory $NIC_info | grep "Link Speed" | grep "Not Applicable"
+			if [[ $? == 1 ]]; then
+				if [[ $boot_seq_info == "" ]]; then
+					boot_seq_info="$NIC_info"
+				else
+	                                boot_seq_info="$boot_seq_info,$NIC_info"
+				fi
+			fi
+        	fi
+	done
+        $racadm_comm set BIOS.BiosBootSettings.BootSeq $boot_seq_info
+        if [[ $jobID != "" ]]; then
+		jobID=`$racadm_comm jobqueue create BIOS.Setup.1-1 -s TIME_NOW -r Forced | grep -w "Commit JID =" | tr -d "\n\r" | awk '{print $4}' `
+	        #function_cds_power_off $1 $2 $3
+        	#function_cds_power_on $1 $2 $3
+	        check $1 $2 $3 $jobID
+	fi
+	$racadm_comm get BIOS.BiosBootSettings.BootSeq | grep "$boot_seq_info"
+	if [[ $? == 0 ]];then
+	        echo "hostip:$1 $date_info BootSeq $boot_seq_info success" >> $log_file
+	        return 0
+        else
+                echo "hostip:$1 $date_info BootSeq $boot_seq_info error" >> $log_file
+                return 1
+        fi
+        
+}
+
+function uefi_bootseq()
+{
+        racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+	local boot_seq_info=""
+	$racadm_comm get BIOS.BiosBootSettings.UefiBootSeq | grep -w NIC.PxeDevice.1-1
+	if [[ $? == 0 ]]; then
+		boot_seq_info="NIC.PxeDevice.1-1"
+	fi
+	
+	$racadm_comm get BIOS.BiosBootSettings.UefiBootSeq | grep -w NIC.PxeDevice.2-1
+        if [[ $? == 0 ]]; then
+                if [[ $boot_seq_info == "" ]]; then
+			boot_seq_info="NIC.PxeDevice.2-1"
+		else
+			boot_seq_info="$boot_seq_info,NIC.PxeDevice.2-1"
+        	fi
+	fi
+	
+	$racadm_comm get BIOS.BiosBootSettings.UefiBootSeq | grep -w NIC.PxeDevice.3-1
+        if [[ $? == 0 ]]; then
+                if [[ $boot_seq_info == "" ]]; then
+			boot_seq_info="NIC.PxeDevice.3-1"
+		else
+			boot_seq_info="$boot_seq_info,NIC.PxeDevice.3-1"
+        	fi
+	fi
+
+	$racadm_comm get BIOS.BiosBootSettings.UefiBootSeq | grep -w NIC.PxeDevice.4-1
+        if [[ $? == 0 ]]; then
+                if [[ $boot_seq_info == "" ]]; then
+			boot_seq_info="NIC.PxeDevice.4-1"
+		else
+			boot_seq_info="$boot_seq_info,NIC.PxeDevice.4-1"
+        	fi
+	fi
+
+	
+        $racadm_comm set BIOS.BiosBootSettings.UefiBootSeq $boot_seq_info
+	
+	jobID=`$racadm_comm jobqueue create BIOS.Setup.1-1 -s TIME_NOW -r Forced | grep -w "Commit JID =" | tr -d "\n\r" | awk '{print $4}'`
+	if [[ $jobID != "" ]]; then
+		#function_cds_power_off $1 $2 $3
+        	#function_cds_power_on $1 $2 $3
+        	check $1 $2 $3 $jobID
+	fi
+	$racadm_comm get BIOS.BiosBootSettings.UefiBootSeq | grep "$boot_seq_info"
+	if [[ $? == 0 ]]; then
+	        echo "hostip:$1 $date_info BootSeq $boot_seq_info success" >> $log_file
+	        return 0
+        else
+                echo "hostip:$1 $date_info BootSeq $boot_seq_info error" >> $log_file
+                return 1
+        fi     
+}
+
+function function_cds_boot_config_set()
+{
+	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+	type_boot=`$racadm_comm get BIOS.BiosBootSettings.BootMode |grep BootMode | cut -d '=' -f 2 |tr -d '\\r' `
+
+	if [[ "$type_boot" == "Bios" ]];then
+	        bios_bootseq $1 $2 $3
+	else
+	        uefi_bootseq $1 $2 $3
+	fi
+	return $?
+}
+
+function function_cds_boot_config_get()
+{
+	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+	type_boot=`$racadm_comm get BIOS.BiosBootSettings.BootMode |grep BootMode | cut -d '=' -f 2 |tr -d '\\r' `
+	if [[ "$type_boot" == "Bios" ]];then
+	        $racadm_comm get BIOS.BiosBootSettings.Bootseq
+	else
+	        $racadm_comm get BIOS.BiosBootSettings.UefiBootseq
+	fi
+	return 0
+}
+
+function function_cds_boot_config()
+{
+        flag_type="$4"
+	if [[ "$flag_type" == "set" || "$flag_type" == "" ]];then
+	        function_cds_boot_config_set $1 $2 $3
+	else
+	        function_cds_boot_config_get $1 $2 $3
+	fi
+	return $?
+}
+
+function function_cds_get_sn()
+{
+    	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+    	Service_Tag=`$racadm_comm getsysinfo | grep "Service Tag" | awk '{print $4}' | tr "\n" "\t"` 
+	Firmware_Version=`$racadm_comm getsysinfo | grep "Firmware Version" | awk '{print $4}' | tr "\n" "\t"`
+	BIOS_Version=`$racadm_comm getsysinfo | grep "System BIOS Version" | awk '{print $5}' | tr "\n" "\t"`
+	string="$BIOS_Version,$Firmware_Version,$Service_Tag"
+	echo $string
+}
+
+function function_cds_get_mac()
+{
+	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+	Service_Tag=`$racadm_comm getsysinfo | grep "Service Tag" | awk '{print $4}' | tr "\n" "\t"`
+	MAC_address=`$racadm_comm getsysinfo | grep Ethernet | sort | awk '{print $4}' | tr "\n" "\t"`
+	result1="$ipmi_ip \t $Service_Tag \t $MAC_address"
+	echo -e $result1 >>mac_list.txt
+}
+
+function function_cds_config_raid()
+{
+	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+	
+	controller=`$racadm_comm storage get controllers | grep RAID | tr -d "\r" | sed s/[[:space:]]//g`
+	str=$5
+	local raid="$racadm_comm storage createvd:$controller -rl r$4 -pdkey:"
+	
+	for((a=0;a<${#str};a++));
+	do
+		i=${str:$a:1}
+		if [[ $i != "." && $i != "," ]]; then
+			
+			pdisk=`$racadm_comm storage get pdisks | grep -w "Disk.Bay.$i" | tr -d "\r" | sed s/[[:space:]]//g`
+			if [[ $4 == 0 ]]; then
+				raid=`echo ${raid}$pdisk,\\`
+        		fi
+
+	       		if [[ $4 == 1 ]]; then
+        			raid=`echo ${raid}$pdisk,\\`
+			fi
+
+		        if [[ $4 == 5 ]]; then
+				raid=`echo ${raid}$pdisk,\\`
+	        	fi
+	
+	       		if [[ $4 == 10 ]]; then
+				raid=`echo ${raid}$pdisk,\\`
+	        	fi
+
+		fi
+	    		
+		if [[ $i == "," ]]; then
+			if [[ $4 == 0 ]]; then
+                                $raid
+                        fi
+
+                        if [[ $4 == 1 ]]; then
+                                $raid
+                        fi
+
+                        if [[ $4 == 5 ]]; then
+                                $raid
+                        fi
+
+                        if [[ $4 == 10 ]]; then
+                                $raid
+                        fi
+			
+			$racadm_comm jobqueue create $controllers -r Forced
+		        if [[ $? == 0 ]]; then
+                		echo "hostip:$1 $date_info raid created success" >>$log_file
+                		
+        		else
+        		        echo "hostip:$1 $date_info raid created error" >>$log_file
+                		return 1
+        		fi
+
+
+		fi
+	done
+	
+	if [[ $4 == 0 ]]; then                  
+		$raid
+        fi
+
+        if [[ $4 == 1 ]]; then
+                $raid
+        fi
+
+        if [[ $4 == 5 ]]; then
+                $raid
+        fi
+
+        if [[ $4 == 10 ]]; then
+                $raid
+        fi
+	$racadm_comm jobqueue create $controller -r Forced
+	if [[ $? == 0 ]]; then
+		echo "hostip:$1 $date_info raid created success" >>$log_file
+		return 0
+	else
+		echo "hostip:$1 $date_info raid created error" >>$log_file
+		return 1
+	fi
+
+
+}
+	
+function function_cds_power_status()
+{
+        ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
+        status=`$ipmitool_commd  power status |awk '{print $4}'`
+        echo "hostip:$1 $date_info power status:   $status" >> $log_file
+}
+
+function function_cds_power_off()
+{
+        ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
+        $ipmitool_commd  power off
+
+	ret=`echo $?`
+	if [[ $ret != 0 ]];then
+		echo "hostip:$1 $date_info power off   error" >> $log_file	
+		return 0
+	fi
+	
+	let totle_number=1
+	let retry_number=1
+	while [ 1 ]
+	do
+		status=`$ipmitool_commd  power status |awk '{print $4}'`
+		sleep 1
+		if [[ "$status" ==  "off" ]];then
+		        echo "hostip:$1 $date_info power off success" >> $log_file
+	        	break;
+		fi
+		
+		if [[ $retry == 10 ]];then
+			$ipmitool_commd  power off
+			let retry=1
+		fi
+
+		let retry++
+		let totle_number++
+		if [[ $totle_number == 200 ]];then
+		        echo "hostip:$1 $date_info power off error" >> $log_file
+			break
+		fi
+
+	done
+}
+function function_cds_power_on()
+{
+        ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
+        $ipmitool_commd  power on
+
+	ret=`echo $?`
+	if [[ $ret != 0 ]];then
+		echo "hostip:$1 $date_info power on   error" >> $log_file
+		return 0
+	fi
+	
+	let totle_number=1
+	let retry_number=1
+	while [ 1 ]
+	do
+		status=`$ipmitool_commd  power status |awk '{print $4}'`
+		sleep 1
+		if [[ "$status" ==  "on" ]];then
+		        echo "hostip:$1 $date_info power on   success" >> $log_file
+	        	break;
+		fi
+		
+		if [[ $retry == 10 ]];then
+			$ipmitool_commd  power on
+			let retry=1
+		fi
+
+		let retry++
+		let totle_number++
+		if [[ $totle_number == 200 ]];then
+		        echo "hostip:$1 $date_info power on   error" >> $log_file
+			break
+		fi
+
+	done
+}
+
+function function_cds_hardreset()
+{
+        ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
+        $ipmitool_commd  power reset
+
+	ret=`echo $?`
+	if [[ $ret != 0 ]];then
+		echo "hostip:$1 $date_info power reset   error" >> $log_file
+		return 0
+	fi
+        echo "hostip:$1 $date_info power reset   success" >> $log_file
+}
+
+function function_cds_submit_onetime()
+{
+	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+	function_cds_pxe_config $1 $2 $3 $pxe_device
+	function_cds_boot_config $1 $2 $3 $flag_type
+	function_cds_performance_config $1 $2 $3 
+	function_cds_numa_config $1 $2 $3 
+	jobID=`$racadm_comm jobqueue create BIOS.Setup.1-1 -s TIME_NOW | grep -w "Commit JID =" | tr -d "\n\r" | awk '{print $4}'`
+	if [[ $jobID == "" ]]; then
+		echo "job cannot create error"
+		return 1
+	fi
+	function_cds_power_off $1 $2 $3
+	function_cds_power_on $1 $2 $3
+	check $1 $2 $3 $jobID
+	return $?
+}

@@ -1,0 +1,6 @@
+default deploy
+
+label deploy
+    kernel {{ pxe_options.deploy_kernel }}
+    append initrd={{ pxe_options.deploy_ramdisk }}  rw selinux=0 scheduler-callback={{ pxe_options.scheduler_callback }} user-image-nfs-path={{ pxe_options.user_image_path }}
+
