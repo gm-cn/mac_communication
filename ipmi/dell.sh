@@ -702,27 +702,44 @@ function function_cds_submit_onetime()
 
 function function_cds_vnc_control()
 {
-    racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
-    $racadm_comm set idrac.vncserver.enable 0
-    $racadm_comm set idrac.virtualconsole.enable 0
-    $racadm_comm set idrac.vncserver.enable 1
-    $racadm_comm get idrac.vncserver.enable | grep Enabled
-    if [[ $? == 1 ]]; then
-        echo "hostip:$1 $date_info vnc conflict fixed fail" >>$log_file
-		return 1
-    fi
-    $racadm_comm set idrac.virtualconsole.enable 1
-    $racadm_comm set idrac.virtualconsole.accessprivilege 0
-    $racadm_comm get idrac.virtualconsole.enable | grep Enabled
-    if [[ $? == 0 ]]; then
-        echo "hostip:$1 $date_info vnc conflict fixed success" >>$log_file
+    start=`date`
+	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+    vncSession=`$racadm_comm get idrac.vncserver.activesessions | grep ActiveSessions | tr '=' ' ' | awk '{print $2}'| tr -d '\r'`
+    if [[ $vncSession != 0 ]]; then
+        $racadm_comm set idrac.vncserver.enable 0
+        $racadm_comm set idrac.vncserver.enable 1
+		end=`date`
+        start_seconds=$(date --date="$start" +%s)
+        end_seconds=$(date --date="$end" +%s)
+        echo "hostip:$1 $date_info vnc conflict fixed success ,run in "$((end_seconds-start_seconds))"s" >> $log_file
 		return 0
-    else
-        echo "hostip:$1 $date_info vnc conflict fixed fail" >>$log_file
-		return 1
-	fi
+    fi
 
+    $racadm_comm getssninfo | grep "Virtual Console"
+    if [[ $? == 0 ]]; then
+		$racadm_comm closessn -a
+	fi
+	end=`date`
+    start_seconds=$(date --date="$start" +%s)
+    end_seconds=$(date --date="$end" +%s)
+    echo "hostip:$1 $date_info vnc conflict fixed success ,run in "$((end_seconds-start_seconds))"s" >> $log_file
+    return 0
 }
+
+function function_cds_vnc_control_new()
+{
+	start=`date`
+	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+	#$racadm_comm set idrac.vncserver.enable 0
+    #$racadm_comm set idrac.vncserver.enable 1
+    $racadm_comm closessn -a
+	end=`date`
+    start_seconds=$(date --date="$start" +%s)
+    end_seconds=$(date --date="$end" +%s)
+    echo "hostip:$1 $date_info vnc conflict fixed success ,run in "$((end_seconds-start_seconds))"s" >> $log_file
+	return 0
+}
+
 function function_cds_change_timezone()
 {
     racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
