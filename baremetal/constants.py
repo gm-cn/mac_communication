@@ -89,3 +89,4 @@ V2_HW_LOG_SCP_PATH = "/v2/baremetal/hw_log"
 V2_PING_HOST_PATH = "/v2/baremetal/ping"
 
 V2_CHECK_IMAGE_PATH = "/v2/baremetal/image/check"
+V2_VNC_CHECK_PATH = "/v2/baremetal/ipmi/vnc_check"

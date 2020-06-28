@@ -236,3 +236,20 @@ class BiosSetPlugin_v2(object):
             self.execute_cmd(func, body)
 
         return jsonobject.dumps(rsp)
+
+    @utils.replyerror_v2
+    def vnc_check(self, req):
+        body = jsonobject.loads(req[http.REQUEST_BODY])
+        header = req[http.REQUEST_HEADER]
+        logger.debug("vnc console check taskuuid:%s body:%s" % (header[V2_REQUEST_ID], req[http.REQUEST_BODY]))
+
+        rsp = models.BiosconfigSet()
+        rsp.requestId = header[V2_REQUEST_ID]
+
+        func = 'vnc_control'
+        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={}"
+        executor = shell.call(cmd.format(body.username, body.password, body.ip, body.pxe_device))
+        if executor.return_code != 0:
+            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
+
+        return jsonobject.dumps(rsp)
