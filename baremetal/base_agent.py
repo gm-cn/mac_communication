@@ -167,6 +167,8 @@ class RestService(object):
                                      self.bios_v2.config_raid)
         self.rest.register_async_uri(constants.V2_SET_ALARM_CPU_PATH,
                                      self.bios_v2.set_alarm_and_cpu)
+        self.rest.register_sync_uri(constants.V2_VNC_CHECK_PATH,
+                                     self.bios_v2.vnc_check)
         self.rest.register_async_uri(constants.V2_HARDWARE_TEST_PATH,
                                      self.hardware_v2.hareware_test)
         self.rest.register_async_uri(constants.V2_CRC_TEST_PATH,
