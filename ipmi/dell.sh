@@ -711,8 +711,8 @@ function function_cds_vnc_control()
 		end=`date`
         start_seconds=$(date --date="$start" +%s)
         end_seconds=$(date --date="$end" +%s)
-        echo "hostip:$1 $date_info vnc conflict fixed success ,run in "$((end_seconds-start_seconds))"s" >> $log_file
-		return 0
+        echo "hostip:$1 $date_info vnc conflict fixed success ,run in "$((end_seconds-start_seconds))"s"
+		return 0 
     fi
 
     $racadm_comm getssninfo | grep "Virtual Console"
@@ -722,8 +722,7 @@ function function_cds_vnc_control()
 	end=`date`
     start_seconds=$(date --date="$start" +%s)
     end_seconds=$(date --date="$end" +%s)
-    echo "hostip:$1 $date_info vnc conflict fixed success ,run in "$((end_seconds-start_seconds))"s" >> $log_file
-    return 0
+    echo "hostip:$1 $date_info vnc conflict fixed success ,run in "$((end_seconds-start_seconds))"s"
 }
 
 function function_cds_vnc_control_new()
@@ -736,8 +735,7 @@ function function_cds_vnc_control_new()
 	end=`date`
     start_seconds=$(date --date="$start" +%s)
     end_seconds=$(date --date="$end" +%s)
-    echo "hostip:$1 $date_info vnc conflict fixed success ,run in "$((end_seconds-start_seconds))"s" >> $log_file
-	return 0
+    echo "hostip:$1 $date_info vnc conflict fixed success ,run in "$((end_seconds-start_seconds))"s"
 }
 
 function function_cds_change_timezone()
@@ -752,4 +750,9 @@ function function_cds_change_timezone()
         $racadm_comm set idrac.time.timezoneoffset 480
         echo "changing success now is $date_info"
     fi
+}
+
+function function_cds_power_policy
+{
+	racadm -r 10.128.125.25 -u usera -p test123. --nocertwarn get system.power.redundancypolicy
 }
