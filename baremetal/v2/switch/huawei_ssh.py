@@ -171,7 +171,7 @@ class HuaweiSwitch_v2(huawei_ssh.HuaweiSwitch):
 
     def alter_vlan(self, port):
         commands = switch_utils.alter_vlan(port)
-        return self._execute(commands)
+        return self.my_send_config_set(commands)
 
     def set_limit(self, limit_infos):
         commands = switch_utils.set_limit(limit_infos)
