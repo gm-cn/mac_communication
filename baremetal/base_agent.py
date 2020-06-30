@@ -128,6 +128,8 @@ class RestService(object):
                                      self.switches_v2.get_relations)
         self.rest.register_async_uri(constants.V2_SET_VLAN_PATH,
                                      self.switches_v2.set_vlan)
+        self.rest.register_sync_uri(constants.V2_ALTER_VLAN_PATH,
+                                     self.switches_v2.alter_vlan)
         self.rest.register_async_uri(constants.V2_UNSET_VLAN_PATH,
                                      self.switches_v2.unset_vlan)
         self.rest.register_async_uri(constants.V2_SET_LIMIT_PATH,
