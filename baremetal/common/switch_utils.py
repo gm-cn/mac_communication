@@ -1,8 +1,9 @@
 import re
+import logging
 from oslo_config import cfg
 
 CONF = cfg.CONF
-CONN_TYPE = CONF.sw_conn.conn_type
+logger = logging.getLogger(__name__)
 
 pattern = re.compile(r'\w{4}-\w{4}-\w{4}')
 
