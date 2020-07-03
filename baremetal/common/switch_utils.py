@@ -214,16 +214,15 @@ def get_port_config(ports):
 def screen_port_config(host, datas):
     res = []
     for line in datas.split('\n'):
-        if any([j in line for j in ["Link Type", "-----", "port vlan"]]) or line == "":
-            continue
         info = line.split()
         port_config = {}
 
         if "trunk" in info:
             vlans = ",".join(info[4:]) if len(info) > 4 else ",".join(info[3:])
-
-        if "access" in info:
+        elif "access" in info:
             vlans = info[2]
+        else:
+            continue
 
         port_config.update({"host": host, "port": info[0],
                             "link_type": info[1], "vlan": vlans})
