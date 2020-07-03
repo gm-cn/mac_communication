@@ -464,16 +464,44 @@ def scp_hw_log(req):
     (status, result) = req.post(path, data, None)
     print " result: %s" % result
 
+def get_port_config(req):
+    path = "/v2/baremetal/switch/port/config"
+    body = {
+                "username": sw_username,
+                "password": sw_password,
+                "host": sw_ip,
+                "ports": ["10GE1/0/1","10GE1/0/2"]
+    }
+    data = simplejson.dumps(body)
+    (status, result) = req.post(path, data, None)
+    print "get port config result: %s" % result
+
+def alter_vlan(req):
+    path = "/v2/baremetal/switch/vlan/alter"
+    body = {
+                "username": sw_username,
+                "password": sw_password,
+                "host": sw_ip,
+                "port": {
+                    "port_name": "10GE1/0/3",
+                    "vlan_id": ["1799"],
+                    "link_type": "access"
+                }
+    }
+    data = simplejson.dumps(body)
+    (status, result) = req.post(path, data, None)
+    print " alter vlan config result: %s" % result
+
 if __name__ == "__main__":
-    ip = "10.177.178.86"
+    ip = "10.128.125.23"
     username = "admin"
     password = "admin"
     adminname = "root"
     adminpassword = "calvin"
     vnc_password = "usera"
-    sw_ip = "10.177.178.241"
-    sw_username = "admin123"
-    sw_password = "CDS-china1"
+    sw_ip = "10.128.125.251"
+    sw_username = "cdsadmin"
+    sw_password = "cds-P@$$w0rd"
 
     rest = RestRequest()
 
@@ -510,3 +538,5 @@ if __name__ == "__main__":
     # check_image(rest)
     # crctest(rest)
     # scp_hw_log(rest)
+    get_port_config(rest)
+    alter_vlan(rest)
