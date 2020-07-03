@@ -124,7 +124,7 @@ class RestService(object):
                                      self.switches_v2.init_all_config)
         self.rest.register_async_uri(constants.V2_CLEAN_SWITCH_CONFIG,
                                      self.switches_v2.clean_all_config)
-        self.rest.register_sync_uri(constants.V2_GET_RELATEION_PATH,
+        self.rest.register_async_uri(constants.V2_GET_RELATEION_PATH,
                                      self.switches_v2.get_relations)
         self.rest.register_async_uri(constants.V2_SET_VLAN_PATH,
                                      self.switches_v2.set_vlan)

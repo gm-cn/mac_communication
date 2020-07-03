@@ -411,19 +411,21 @@ class HuaweiSwitch_v2(models.ModelBase):
         return self._execute(commands)
 
     def get_relations_port(self, port=None):
-        pattern = re.compile(r'\S+')
+        pattern = re.compile(r'\w{4}-\w{4}-\w{4}')
 
         if port:
             command = "display mac-address interface %s" % port
             datas = self._execute_relative(["display mac-address interface %s" % port])
-            mac_ports = [line for line in datas.split("\n") if port in line]
-            if len(mac_ports) == 1:
-                raise exceptions.ConfigSwitchV2Error(BmsCodeMsg.SWITCH_ERROR, command=command, error="port-mac does not exist")
-            for mac_p in mac_ports:
-                if 'display mac-address' not in mac_p:
-                    data = pattern.findall(mac_p)
-                    mac = ":".join(i[0:2] + ":" + i[2:4] for i in data[0].split("-"))
-                    return {"mac": mac, "port": data[2]}
+            mac = ""
+            for line in datas.split("\n"):
+                data = pattern.findall(line)
+                if data:
+                    mac = ":".join(i[0:2] + ":" + i[2:4] for i in data[0].split("-")).upper()
+                    break
+            if mac == "":
+                raise exceptions.ConfigSwitchV2Error(BmsCodeMsg.SWITCH_ERROR, command=command,
+                                                     error="port-mac does not exist")
+            return {"mac": mac, "port": port}
 
 
 class SwitchPlugin(object):
