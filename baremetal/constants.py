@@ -68,6 +68,7 @@ V2_SAVE_SWITCH_PATH = "/v2/baremetal/switch/save"
 V2_GET_RELATEION_PATH = "/v2/baremetal/port/mac"
 V2_OPEN_PORT_PATH = "/v2/baremetal/port/open"
 V2_CLOSE_PORT_PATH = "/v2/baremetal/port/close"
+V2_GET_PORT_CFG_PATH = "/v2/baremetal/switch/port/config"
 
 V2_BIOS_ADD_USER_PATH = "/v2/baremetal/ipmi/add_user"
 V2_VNC_CONFIG_PATH = "/v2/baremetal/ipmi/vnc"
