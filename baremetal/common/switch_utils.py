@@ -33,7 +33,7 @@ def alter_vlan(port):
 
     set_vlan_cmd = []
     vlan_string = gen_vlan_string(port.vlan_id)
-    if port.sw_type == "trunk":
+    if port.link_type == "trunk":
         set_vlan_cmd += ["interface " + port.port_name,
                          "port link-type trunk",
                          "port trunk allow-pass vlan %s" % vlan_string,
