@@ -45,7 +45,7 @@ class HuaweiSwitch_v2(huawei_ssh.HuaweiSwitch):
 
     def send_command(self, net_connect, command):
         try:
-            if command.startswith('dis'):
+            if command[0].startswith('dis'):
                 net_connect.session_preparation()
             else:
                 net_connect.config_mode()
@@ -301,7 +301,7 @@ class HuaweiSwitch_v2(huawei_ssh.HuaweiSwitch):
     def get_port_config(self, ports):
         commands = switch_utils.get_port_config(ports)
         datas = self.my_send_command(commands)
-        return switch_utils.screen_port_config(self.host, datas)
+        return switch_utils.screen_port_config(self.config["ip"], datas)
 
 
 class SwitchPlugin(object):
@@ -620,11 +620,7 @@ class SwitchPlugin(object):
                 result = client.alter_vlan(body.port)
             except Exception as ex:
                 raise exceptions.SwitchTaskV2Error(BmsCodeMsg.SWITCH_ERROR, error=str(ex))
-            if "successfully" in result:
-                logger.debug("switch %s save config successfully." % body.host)
-            else:
-                logger.error("switch %s save config config result: %s." %
-                             (body.host, result))
+
         return jsonobject.dumps(rsp)
 
     @utils.replyerror_v2
