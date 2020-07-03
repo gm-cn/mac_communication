@@ -142,6 +142,8 @@ class RestService(object):
                                      self.switches_v2.delete_limit_template)
         self.rest.register_sync_uri(constants.V2_SAVE_SWITCH_PATH,
                                      self.switches_v2.save)
+        self.rest.register_async_uri(constants.V2_GET_PORT_CFG_PATH,
+                                     self.switches_v2.get_port_config)
         # bios set
         self.rest.register_async_uri(constants.V2_BIOS_ADD_USER_PATH,
                                      self.bios_v2.add_bmc_user)
