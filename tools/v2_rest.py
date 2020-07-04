@@ -250,7 +250,7 @@ def save_switch(req):
     print "save switch result: %s" % result
 
 def get_relation_mac_and_port(req):
-    path = "/v2/baremetal/switch/relationship"
+    path = "/v2/baremetal/port/mac"
     body = [{
         "username": sw_username,
         "password": sw_password,
@@ -538,5 +538,5 @@ if __name__ == "__main__":
     # check_image(rest)
     # crctest(rest)
     # scp_hw_log(rest)
-    get_port_config(rest)
-    alter_vlan(rest)
+    # get_port_config(rest)
+    # alter_vlan(rest)
