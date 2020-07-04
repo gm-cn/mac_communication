@@ -291,7 +291,7 @@ class HuaweiSwitch_v2(huawei_ssh.HuaweiSwitch):
     def get_relations_port(self, port=None):
         if port:
             command = "display mac-address interface %s" % port
-            datas = self.my_send_command("display mac-address interface %s" % port)
+            datas = self.my_send_command(["display mac-address interface %s" % port])
             mac = switch_utils.get_relations_port(datas)
             if mac == "":
                 raise exceptions.ConfigSwitchV2Error(BmsCodeMsg.SWITCH_ERROR, command=command,
