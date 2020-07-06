@@ -33,7 +33,7 @@ def alter_vlan(port):
 
     set_vlan_cmd = []
     vlan_string = gen_vlan_string(port.vlan_id)
-    if port.sw_type == "trunk":
+    if port.link_type == "trunk":
         set_vlan_cmd += ["interface " + port.port_name,
                          "port link-type trunk",
                          "port trunk allow-pass vlan %s" % vlan_string,
@@ -204,4 +204,29 @@ def get_relations_port(datas):
             mac = ":".join(i[0:2] + ":" + i[2:4] for i in data[0].split("-")).upper()
             break
     return mac
+
+def get_port_config(ports):
+    commands = []
+    for port in ports:
+        commands.append("display port vlan %s" % port)
+    return commands
+
+def screen_port_config(host, datas):
+    res = []
+    for line in datas.split('\n'):
+        info = line.split()
+        port_config = {}
+
+        if "trunk" in info:
+            vlans = ",".join(info[4:]) if len(info) > 4 else ",".join(info[3:])
+        elif "access" in info:
+            vlans = info[2]
+        else:
+            continue
+
+        port_config.update({"host": host, "port": info[0],
+                            "link_type": info[1], "vlan": vlans})
+        res.append(port_config)
+    return res
+
 

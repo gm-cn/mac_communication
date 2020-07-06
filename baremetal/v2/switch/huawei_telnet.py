@@ -167,10 +167,21 @@ class HuaweiSwitch_v2(models.ModelBase):
                 net_connect.write((self.username + '\n').encode('utf-8'))
                 net_connect.read_until('Password:')
                 net_connect.write((self.password + '\n').encode('utf-8'))
+
                 for i in command:
                     net_connect.write((i + '\n').encode('utf-8'))
-                result = net_connect.read_until("Error", timeout=5)
-                logger.debug("execute command :%s" % result)
+
+                net_connect.write(('display version  | include BIOS' + '\n').encode('utf-8'))
+                count = 0
+                while count < 10:
+                    error_msg = net_connect.read_until("Error", timeout=5)
+                    result += error_msg
+                    if "display version  | include BIOS" in result:
+                        logger.debug("execute command :%s" % result)
+                        logger.debug("config switch end..")
+                        break
+                    else:
+                        count += 1
         finally:
             logger.debug("session close.")
 
@@ -371,6 +382,11 @@ class HuaweiSwitch_v2(models.ModelBase):
                 raise exceptions.ConfigSwitchV2Error(BmsCodeMsg.SWITCH_ERROR, command=command,
                                                      error="port-mac does not exist")
             return {"mac": mac, "port": port}
+
+    def get_port_config(self, ports):
+        commands = switch_utils.get_port_config(ports)
+        datas = self._execute_relative(commands)
+        return switch_utils.screen_port_config(self.host, datas)
 
 
 class SwitchPlugin(object):
@@ -620,10 +636,20 @@ class SwitchPlugin(object):
                 result = client.alter_vlan(body.port)
             except Exception as ex:
                 raise exceptions.SwitchTaskV2Error(BmsCodeMsg.SWITCH_ERROR, error=str(ex))
-            if "successfully" in result:
-                logger.debug("switch %s save config successfully." % body.host)
-            else:
-                logger.error("switch %s save config config result: %s." %
-                             (body.host, result))
         return jsonobject.dumps(rsp)
 
+    @utils.replyerror_v2
+    def get_port_config(self, req):
+        body = jsonobject.loads(req[http.REQUEST_BODY])
+        header = req[http.REQUEST_HEADER]
+
+        rsp = models.GetSwitchRelationsResp()
+        rsp.requestId = header[V2_REQUEST_ID]
+
+        with HuaweiSwitch_v2(body.username, body.password, body.host) as client:
+            try:
+                result = client.get_port_config(body.ports)
+            except Exception as ex:
+                raise exceptions.SwitchTaskV2Error(BmsCodeMsg.SWITCH_ERROR, error=str(ex))
+        rsp.data = result
+        return jsonobject.dumps(rsp)
