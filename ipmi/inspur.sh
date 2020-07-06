@@ -308,7 +308,7 @@ function function_cds_boot_config()
 
 function function_cds_get_sn()
 {
-        ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
+    ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
 	sn=`$ipmitool_commd fru | grep -w "Product Serial" | awk '{print $4}'`
 	res=`$ipmitool_commd raw 0x3c 0x03 0x01 0x00`
 	local bios=""
@@ -452,5 +452,20 @@ function function_cds_change_timezone()
     return 0
 }
 
+function function_cds_bios_update()
+{
+	echo "inspur does not currently support bios update"
+}
 
 
+function function_cds_idrac_update()
+{
+	echo "inspur does not currently support idrac update"
+}
+
+function function_cds_single_sn()
+{
+    ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
+	sn=`$ipmitool_commd fru | grep -w "Product Serial" | awk '{print $4}'`
+	echo $sn
+}

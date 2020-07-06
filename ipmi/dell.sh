@@ -492,6 +492,13 @@ function function_cds_get_sn()
 	echo $string
 }
 
+function function_cds_single_sn()
+{
+    racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+    Service_Tag=`$racadm_comm getsysinfo | grep "Service Tag" | awk '{print $4}' | tr "\n" "\t"`
+	echo $Service_Tag
+}
+
 function function_cds_get_mac()
 {
 	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
@@ -753,7 +760,14 @@ function function_cds_change_timezone()
     fi
 }
 
-function function_cds_power_policy
+function function_cds_bios_update()
 {
 	racadm -r 10.128.125.25 -u usera -p test123. --nocertwarn get system.power.redundancypolicy
 }
+
+
+function function_cds_idrac_update()
+{
+	racadm -r 10.128.125.25 -u usera -p test123. --nocertwarn get system.power.redundancypolicy
+}
+

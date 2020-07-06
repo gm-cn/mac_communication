@@ -333,4 +333,19 @@ function function_cds_change_timezone()
     return 0
 }
 
+function function_cds_bios_update()
+{
+	echo "supermicro does not currently support bios update"
+}
 
+
+function function_cds_idrac_update()
+{
+	echo "supermicro does not currently support idrac update"
+}
+
+function function_cds_single_sn()
+{
+    Service_Tag=`$smcipmi_dir $1 $2 $3 ipmi fru | grep "Product Serial Number" | awk '{print $6}'`
+	echo $Service_Tag
+}

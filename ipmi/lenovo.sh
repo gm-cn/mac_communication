@@ -304,4 +304,19 @@ function function_cds_change_timezone()
     fi
 }
 
+function function_cds_bios_update()
+{
+	echo "lenovo does not currently support bios update"
+}
 
+
+function function_cds_idrac_update()
+{
+	echo "lenovo does not currently support idrac update"
+}
+
+function function_cds_single_sn()
+{
+    Service_Tag=`$onecli_dir config set SYSTEM_PROD_DATA.SysInfoSerialNum --bmc $2:$3@$1 | grep "SYSTEM_PROD_DATA.SysInfoSerialNum" | tr "=" " "| awk '{print $2}'`
+	echo $Service_Tag
+}

@@ -4,7 +4,7 @@ function usage()
     
     echo "ipmi_function version 1.01  Copyright (C) zhaoec(2020-03-02), capitalonline"
     echo "2020-03-02 version 1.01: R540 R640 R740"
-    echo "USAGE: $0 [OPTIONS] < add_bmc_user|submit_onetime|vnc_control | vnc_config|mail_alarm|snmp_alarm|performance_config|boot_set|numa_config|pxe_config|alarm_config|boot_config|get_sn|get_mac|config_raid|power_status|change_timezone|power_off|power_on|hardreset|delete_bmc_user > <password>"
+    echo "USAGE: $0 [OPTIONS] < add_bmc_user|submit_onetime|vnc_control | bios_update | idrac_update |vnc_config|mail_alarm|snmp_alarm|performance_config|boot_set|numa_config|pxe_config|alarm_config|boot_config|get_sn|single_sn|get_mac|config_raid|power_status|change_timezone|power_off|power_on|hardreset|delete_bmc_user > <password>"
     echo ""
     echo "Available OPTIONS:"
     echo ""
@@ -28,7 +28,7 @@ function usage()
 
 function parse_options()
 {
-    args=$(getopt -o h -l ip_file:,raid_type:,pxe_device:,disk_list:,ipaddr:,username:,userpassword:,boot_type:,flag_type:,vnc_password:,help -- "$@")
+    args=$(getopt -o h -l ip_file:,raid_type:,pxe_device:,disk_list:,ipaddr:,username:,userpassword:,boot_type:,update_file:,flag_type:,vnc_password:,help -- "$@")
 
     if [[ $? -ne 0 ]];then
         usage >&2
@@ -65,6 +65,10 @@ function parse_options()
                 ;;
 	    --vnc_password)
 	        vnc_password=$2
+	        shift 2
+	        ;;
+	    --update_file)
+	        update_file=$2
 	        shift 2
 	        ;;
 	    --raid_type)
@@ -104,7 +108,7 @@ function parse_options()
 function is_valid_action()
 {
     action=$1
-    valid_action=(add_bmc_user vnc_control vnc_config mail_alarm submit_onetime snmp_alarm performance_config boot_set numa_config pxe_config alarm_config boot_config get_sn get_mac config_raid power_status power_off power_on change_timezone hardreset delete_bmc_user)
+    valid_action=(add_bmc_user vnc_control bios_update idrac_update vnc_config mail_alarm submit_onetime snmp_alarm performance_config boot_set numa_config pxe_config alarm_config boot_config get_sn single_sn get_mac config_raid power_status power_off power_on change_timezone hardreset delete_bmc_user)
     for val in ${valid_action[@]}; do
         if [[ "${val}" == "${action}" ]]; then
             return 0
@@ -154,6 +158,8 @@ case "${action}" in
     vnc_config)
         function_cds_vnc_config $ipaddr $name $password $vnc_password $flag_type
         ;;
+    bios_update)
+        function_cds_bios_update $ipaddr $name $password $
     mail_alarm)
         function_cds_mail_alarm $ipaddr $name $password $flag_type
         ;;
@@ -186,6 +192,9 @@ case "${action}" in
         ;;
     get_sn)
         function_cds_get_sn $ipaddr $name $password $flag_type
+        ;;
+    single_sn)
+        function_cds_single_sn $ipaddr $name $password $flag_type
         ;;
     get_mac )
         function_cds_get_mac $ipaddr $name $password $flag_type
