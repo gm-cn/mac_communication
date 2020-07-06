@@ -487,8 +487,8 @@ function function_cds_get_sn()
     	Service_Tag=`$racadm_comm getsysinfo | grep "Service Tag" | awk '{print $4}' | tr "\n" "\t"` 
 	Firmware_Version=`$racadm_comm getsysinfo | grep "Firmware Version" | awk '{print $4}' | tr "\n" "\t"`
 	BIOS_Version=`$racadm_comm getsysinfo | grep "System BIOS Version" | awk '{print $5}' | tr "\n" "\t"`
-	power_reden=`$racadm_comm get system.power.redundancypolicy | head -1 | tr -d "\\r"`
-	string="$BIOS_Version,$Firmware_Version,$Service_Tag,$power_reden"
+	#power_reden=`$racadm_comm get system.power.redundancypolicy | head -1 | tr -d "\\r"`
+	string="$BIOS_Version,$Firmware_Version,$Service_Tag"
 	echo $string
 }
 
