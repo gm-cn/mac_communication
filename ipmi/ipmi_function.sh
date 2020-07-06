@@ -160,7 +160,8 @@ case "${action}" in
         ;;
     bios_update)
         function_cds_bios_update $ipaddr $name $password $
-    mail_alarm)
+    	;;
+	mail_alarm)
         function_cds_mail_alarm $ipaddr $name $password $flag_type
         ;;
     snmp_alarm)

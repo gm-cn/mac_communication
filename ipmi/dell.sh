@@ -773,6 +773,8 @@ function function_cds_idrac_update()
 
 function function_cds_single_sn()
 {
-    Service_Tag=`$racadm_comm getsysinfo | grep "Service Tag" | awk '{print $4}' | tr "\n" "\t"`
+    racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+	Service_Tag=`$racadm_comm getsysinfo | grep "Service Tag" | awk '{print $4}' | tr "\n" "\t"`
 	echo $Service_Tag
 }
+
