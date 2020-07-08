@@ -248,8 +248,32 @@ class BiosSetPlugin_v2(object):
 
         func = 'vnc_control'
         cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={}"
-        executor = shell.call(cmd.format(body.username, body.password, body.ip, body.pxe_device))
+        executor = shell.call(cmd.format(body.username, body.password, body.ip))
         if executor.return_code != 0:
             raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
+
+        return jsonobject.dumps(rsp)
+
+    @utils.replyerror_v2
+    def sn_check(self, req):
+        body = jsonobject.loads(req[http.REQUEST_BODY])
+        header = req[http.REQUEST_HEADER]
+        logger.debug("sn check taskuuid:%s body:%s" % (header[V2_REQUEST_ID], req[http.REQUEST_BODY]))
+
+        rsp = models.BiosconfigSet()
+        rsp.requestId = header[V2_REQUEST_ID]
+
+        func = 'single_sn'
+        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={}"
+        executor = shell.call(cmd.format(body.username, body.password, body.ip))
+        if executor.return_code != 0:
+            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
+        output = executor.stdout.replace("\n", "")
+        logger.debug(output)
+        if body.sn in executor.stdout:
+            logger.debug("%s the record of sn is true" % body.ip)
+        else:
+            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func,
+                                            error="The record of sn is false, actual result is %s" % output)
 
         return jsonobject.dumps(rsp)

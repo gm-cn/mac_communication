@@ -159,6 +159,8 @@ class RestService(object):
                                      self.bios_v2.numa_config)
         self.rest.register_sync_uri(constants.V2_GET_SN_BMC_BIOS_PATH,
                                      self.bios_v2.get_sn)
+        self.rest.register_sync_uri(constants.V2_CHECK_SN_PATH,
+                                    self.bios_v2.sn_check)
         self.rest.register_async_uri(constants.V2_SET_BOOT_TYPE_PATH,
                                      self.bios_v2.boot_set)
         self.rest.register_async_uri(constants.V2_GET_MAC_PATH,
