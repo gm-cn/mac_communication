@@ -28,7 +28,7 @@ function usage()
 
 function parse_options()
 {
-    args=$(getopt -o h -l ip_file:,raid_type:,pxe_device:,disk_list:,ipaddr:,username:,userpassword:,boot_type:,update_file:,flag_type:,vnc_password:,help -- "$@")
+    args=$(getopt -o h -l ip_file:,raid_type:,pxe_device:,disk_list:,ipaddr:,username:,userpassword:,boot_type:,update_file:,flag_type:,vnc_password:,is_restart:,help -- "$@")
 
     if [[ $? -ne 0 ]];then
         usage >&2
@@ -43,7 +43,7 @@ function parse_options()
                 flag_type=$2
                 shift 2
                 ;;
-	    --boot_type)
+		    --boot_type)
                 boot_type=$2
                 shift 2
                 ;;
@@ -51,7 +51,7 @@ function parse_options()
                 userpassword=$2
                 shift 2
                 ;;
-	    --username)
+		    --username)
                 username=$2
                 shift 2
                 ;;
@@ -59,30 +59,34 @@ function parse_options()
                 ipaddr=$2
                 shift 2
                 ;;
+			--is_restart)
+				is_restart=$2
+				shift 2
+				;;
             --ip_file)
                 ip_file=$2
                 shift 2
                 ;;
-	    --vnc_password)
-	        vnc_password=$2
-	        shift 2
-	        ;;
-	    --update_file)
-	        update_file=$2
-	        shift 2
-	        ;;
-	    --raid_type)
-		raid_type=$2
-		shift 2
-		;;
-	    --pxe_device)
+	    	--vnc_password)
+	        	vnc_password=$2
+	        	shift 2
+	        	;;
+	    	--update_file)
+	        	update_file=$2
+	        	shift 2
+	        	;;
+	    	--raid_type)
+				raid_type=$2
+				shift 2
+				;;
+	    	--pxe_device)
                 pxe_device=$2
                 shift 2
                 ;;
-	    --disk_list)
-		disk_list=$2
-		shift 2
-		;;
+	    	--disk_list)
+				disk_list=$2
+				shift 2
+				;;
             -h|--help)
                 usage
                 ;;
@@ -159,8 +163,11 @@ case "${action}" in
         function_cds_vnc_config $ipaddr $name $password $vnc_password $flag_type
         ;;
     bios_update)
-        function_cds_bios_update $ipaddr $name $password $
+        function_cds_bios_update $ipaddr $name $password $update_file $is_restart
     	;;
+	idrac_update)
+		function_cds_idrac_update $ipaddr $name $password $update_file
+		;;
 	mail_alarm)
         function_cds_mail_alarm $ipaddr $name $password $flag_type
         ;;

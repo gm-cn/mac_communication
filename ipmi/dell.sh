@@ -2,6 +2,7 @@
 log_file="dell_log"
 date_info=`date`
 cmd_dir="/opt/dell/srvadmin/sbin/racadm"
+update_file_path="/root/baremetal_server/bms_core/ipmi/update_file/"
 function_cds_add_bmc_user()
 {
 	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
@@ -763,13 +764,48 @@ function function_cds_change_timezone()
 
 function function_cds_bios_update()
 {
-	racadm -r 10.128.125.25 -u usera -p test123. --nocertwarn get system.power.redundancypolicy
+	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+	if [[ $5 == 0 ]]; then
+		$racadm_comm update -f $update_file_path$4 --reboot
+		jobID=`$racadm_comm jobqueue view | tail -n 20 | grep JID | tr "=]" " " | awk '{print $3}'`
+		check $1 $2 $3 $jobID
+		if [[ $? == 0 ]]; then
+            echo "hostip:$1 $date_info idrac update success" >> $log_file
+            return 0
+        else
+            echo "hostip:$1 $date_info idrac update error" >> $log_file
+            return 1
+        fi
+	else
+		$racadm_comm update -f $update_file_path$4
+		if [[ $? == 0 ]]; then
+			echo "hostip:$1 $date_info idrac update success and will take effect on next boot" >> $log_file
+			return 0
+		else
+			echo "hostip:$1 $date_info idrac update error" >> $log_file
+			return 1
+		fi
+	fi
+		
 }
 
 
 function function_cds_idrac_update()
 {
-	racadm -r 10.128.125.25 -u usera -p test123. --nocertwarn get system.power.redundancypolicy
+	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+	$racadm_comm update -f $update_file_path$4
+	sleep 20
+	jobID=`$racadm_comm jobqueue view | tail | grep JID | tr "=]" " " | awk '{print $3}'`
+	check $1 $2 $3 $jobID
+	if [[ $? != 0 ]]; then
+		echo "hostip:$1 $date_info idrac update error" >> $log_file
+	fi
+	ping_test $1
+	if [[ $? == 0 ]]; then
+		echo "hostip:$1 $date_info idrac update success" >> $log_file
+	else
+		echo "hostip:$1 $date_info idrac update error" >> $log_file
+	fi
 }
 
 function function_cds_single_sn()
@@ -779,3 +815,21 @@ function function_cds_single_sn()
 	echo $Service_Tag
 }
 
+function ping_test()
+{
+	let limit=0
+	while [ 1 ]
+	do
+		sleep 60
+		let limit++
+		ping $1 -c1
+		if [[ $? == 0 ]]; then
+			return 0
+			break
+		fi
+		if [[ $limit -ge 20 ]]; then
+			return 1
+			break
+		fi
+	done
+}
