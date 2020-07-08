@@ -506,9 +506,7 @@ function crc_test_return() {
 
 function scp_hw_test_log() {
   nginx_ip=`cat /etc/baremetal-api/baremetal-api.ini | grep -w "nginx_ip" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+"`
-  if [[ $1 == "crc" ]];then
-    $scppass_prefix -r -o StrictHostKeyChecking=no $log_dir root@${nginx_ip}:/var/www/log/bms/hardware_log
-  else
+  if [[ $1 != "crc" ]];then
     echo -e "================ CPU TEST LOG ==============" > $hardware_all_log
     cat $cpu_log_file >> $hardware_all_log
     echo -e "\n\n================ MEM TEST LOG ==============" >> $hardware_all_log
@@ -518,8 +516,8 @@ function scp_hw_test_log() {
     echo -e "\n\n================ POWER STATUS TEST LOG ==============" >> $hardware_all_log
     cat $power_status_log_file >> $hardware_all_log
     rm -rf $cpu_log_file $mem_log_file $disk_test_log $power_status_log_file
-    $scppass_prefix -r -o StrictHostKeyChecking=no $log_dir root@${nginx_ip}:/var/www/log/bms/hardware_log
   fi
+  sshpass scp -r -o StrictHostKeyChecking=no $log_dir root@${nginx_ip}:/var/www/log/bms/hardware_log
 }
 
 function client_to_service_even()
