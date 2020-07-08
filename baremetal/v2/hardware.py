@@ -27,7 +27,7 @@ class HarewarePlugin_v2(object):
         self.bios_script = CONF.auto_test.bios_set
         self.nginx_ip = CONF.auto_test.nginx_ip
         self.nginx_log = "/var/www/log/bms/hardware_log"
-        self.hard_log = "/var/log/cdsstack/"
+        self.hard_log = "/var/log/cdsstack/hardware_log"
         self.hw_path = os.path.join(self.bios_script, "auto_test")
         self.hw_script = os.path.join(self.hw_path, 'extension.sh ')
 
@@ -55,7 +55,7 @@ class HarewarePlugin_v2(object):
         if os.path.exists(log_path):
             return log_path
         else:
-            os.mkdir(log_path)
+            os.makedirs(log_path)
         return log_path
 
     def _disk_test(self, password, ip_file):
