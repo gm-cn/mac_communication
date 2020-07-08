@@ -716,11 +716,12 @@ function function_cds_vnc_control()
     if [[ $vncSession != 0 ]]; then
         $racadm_comm set idrac.vncserver.enable 0
         $racadm_comm set idrac.vncserver.enable 1
+		sleep 3 
 		end=`date`
         start_seconds=$(date --date="$start" +%s)
         end_seconds=$(date --date="$end" +%s)
         echo "hostip:$1 $date_info vnc conflict fixed success ,run in "$((end_seconds-start_seconds))"s"
-		return 0 
+		return 0
     fi
 
     $racadm_comm getssninfo | grep "Virtual Console"

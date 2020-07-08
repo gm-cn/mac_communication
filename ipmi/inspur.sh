@@ -469,3 +469,8 @@ function function_cds_single_sn()
 	sn=`$ipmitool_commd fru | grep -w "Product Serial" | awk '{print $4}'`
 	echo $sn
 }
+
+function function_cds_vnc_control()
+{
+	echo "inspur does not support vnc"
+}
