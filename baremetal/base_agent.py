@@ -128,6 +128,8 @@ class RestService(object):
                                      self.switches_v2.get_relations)
         self.rest.register_async_uri(constants.V2_SET_VLAN_PATH,
                                      self.switches_v2.set_vlan)
+        self.rest.register_sync_uri(constants.V2_ALTER_VLAN_PATH,
+                                     self.switches_v2.alter_vlan)
         self.rest.register_async_uri(constants.V2_UNSET_VLAN_PATH,
                                      self.switches_v2.unset_vlan)
         self.rest.register_async_uri(constants.V2_SET_LIMIT_PATH,
@@ -140,6 +142,8 @@ class RestService(object):
                                      self.switches_v2.delete_limit_template)
         self.rest.register_sync_uri(constants.V2_SAVE_SWITCH_PATH,
                                      self.switches_v2.save)
+        self.rest.register_async_uri(constants.V2_GET_PORT_CFG_PATH,
+                                     self.switches_v2.get_port_config)
         # bios set
         self.rest.register_async_uri(constants.V2_BIOS_ADD_USER_PATH,
                                      self.bios_v2.add_bmc_user)
@@ -155,6 +159,8 @@ class RestService(object):
                                      self.bios_v2.numa_config)
         self.rest.register_sync_uri(constants.V2_GET_SN_BMC_BIOS_PATH,
                                      self.bios_v2.get_sn)
+        self.rest.register_sync_uri(constants.V2_CHECK_SN_PATH,
+                                    self.bios_v2.sn_check)
         self.rest.register_async_uri(constants.V2_SET_BOOT_TYPE_PATH,
                                      self.bios_v2.boot_set)
         self.rest.register_async_uri(constants.V2_GET_MAC_PATH,
@@ -167,12 +173,22 @@ class RestService(object):
                                      self.bios_v2.config_raid)
         self.rest.register_async_uri(constants.V2_SET_ALARM_CPU_PATH,
                                      self.bios_v2.set_alarm_and_cpu)
+        self.rest.register_sync_uri(constants.V2_VNC_CHECK_PATH,
+                                     self.bios_v2.vnc_check)
         self.rest.register_async_uri(constants.V2_HARDWARE_TEST_PATH,
                                      self.hardware_v2.hareware_test)
+        self.rest.register_async_uri(constants.V2_CRC_TEST_PATH,
+                                     self.hardware_v2.crc_test)
+        self.rest.register_sync_uri(constants.V2_HW_LOG_SCP_PATH,
+                                    self.hardware_v2.hw_log_copy)
         self.rest.register_async_uri(constants.V2_PING_HOST_PATH,
                                      self.hardware_v2.ping_host)
         self.rest.register_sync_uri(constants.V2_CHECK_IMAGE_PATH,
                                      self.img_v2.checkout_image)
+        self.rest.register_async_uri(constants.V2_BIOS_UPDATE_PATH,
+                                    self.bios_v2.bios_update)
+        self.rest.register_async_uri(constants.V2_IDRAC_UPDATE_PATH,
+                                    self.bios_v2.idrac_update)
 
     def __init__(self, config):
         opts.register_all_options()

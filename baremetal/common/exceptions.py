@@ -20,7 +20,8 @@ class BmsCodeMsg(object):
 
     BIOS_ERROR = [
         {'code': '20021', 'msg': 'No such file or directory'},
-        {'code': '20022', 'msg': 'Error: Unable to establish IPMI v2 / RMCP+ session'}
+        {'code': '20022', 'msg': 'Error: Unable to establish IPMI v2 / RMCP+ session'},
+        {'code': '20023', 'msg': 'The record of sn is false'}
      ]
 
     HARDWARE_ERROR = [
@@ -160,7 +161,7 @@ class IPMIV2Error(BaremetalV2Error):
 
 
 class SetBiosV2Error(BaremetalV2Error):
-    message = "host %(ip)s set %(func)s failed. error msg:%(error)s"
+    message = "host %(ip)s execute %(func)s failed. error msg:%(error)s"
 
 
 class PowerStatusV2Error(BaremetalV2Error):

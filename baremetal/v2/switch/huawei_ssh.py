@@ -7,7 +7,7 @@ import re
 import time
 from netmiko.huawei import HuaweiSSH
 
-from baremetal.common import locking as sw_lock, utils, jsonobject, http
+from baremetal.common import locking as sw_lock, utils, jsonobject, http, switch_utils
 
 from baremetal.common import exceptions
 from baremetal.common.exceptions import BmsCodeMsg
@@ -45,15 +45,19 @@ class HuaweiSwitch_v2(huawei_ssh.HuaweiSwitch):
 
     def send_command(self, net_connect, command):
         try:
-            if command.startswith('dis'):
+            if command[0].startswith('dis'):
                 net_connect.session_preparation()
             else:
                 net_connect.config_mode()
 
-            output = net_connect.send_command(command)
-            self._check_output(output, command)
-            logger.debug("\nresult:\n%s" % output)
-            return output
+            result = ""
+            for dis_cmd in command:
+                output = net_connect.send_command(dis_cmd)
+                output += "\n"
+                result += output
+            self._check_output(result, command)
+            logger.debug("\nresult:\n%s" % result)
+            return result
         except:
             logger.error(traceback.format_exc())
             raise
@@ -142,29 +146,15 @@ class HuaweiSwitch_v2(huawei_ssh.HuaweiSwitch):
         return vlan_string
 
     def set_vlan(self, ports):
-
-        unset_vlan_cmd = self._unset_vlan(ports)
-
-        set_vlan_cmd = []
-        for port in ports:
-            vlan_string = self.gen_vlan_string(port.vlan_id)
-            if port.set_link_type == "trunk":
-                set_vlan_cmd += ["interface " + port.port_name,
-                                 "port link-type trunk",
-                                 "port trunk allow-pass vlan %s" % vlan_string,
-                                 "commit", "q"]
-            else:
-                set_vlan_cmd += ["interface " + port.port_name,
-                                 "port link-type access",
-                                 "port default vlan  %s" % vlan_string,
-                                 "commit", "q"]
+        unset_vlan_cmd = switch_utils.unset_vlan(ports)
+        set_vlan_cmd = switch_utils.set_vlan(ports)
         commands = unset_vlan_cmd + set_vlan_cmd + ["q"]
 
         logger.debug("set vlan command:%s" % commands)
         return self.my_send_config_set(commands)
 
     def unset_vlan(self, ports):
-        cmds = self._unset_vlan(ports)
+        cmds = switch_utils.unset_vlan(ports)
         commands = cmds + ['q']
         logger.debug("unset vlan command:%s" % commands)
         return self.my_send_config_set(commands)
@@ -183,68 +173,32 @@ class HuaweiSwitch_v2(huawei_ssh.HuaweiSwitch):
         logger.debug("unset vlan command:%s" % commands)
         return commands
 
-    def set_limit(self, limit_infos):
-        inbound_cmd = []
-        outbound_cmd = []
-        for info in limit_infos:
-            template_name = info.template_name
-            inbound_cmd += ["interface " + info.inbound_port,
-                            "qos car inbound %s" % template_name, "commit", "q"]
-            for port in info.outbound_ports:
-                cir = int(info.bandwidth) * 1024
-                cbs = min(524288, cir * 2)
-                cmd1 = "qos lr cir %s kbps cbs %s kbytes outbound" % (cir, cbs)
-                outbound_cmd += ["interface " + port, cmd1, "commit", "q"]
+    def alter_vlan(self, port):
+        commands = switch_utils.alter_vlan(port)
+        return self.my_send_config_set(commands)
 
-        commands = inbound_cmd + outbound_cmd + ['q']
-        logger.debug("set limit command:%s" % commands)
+    def set_limit(self, limit_infos):
+        commands = switch_utils.set_limit(limit_infos)
         return self.my_send_config_set(commands)
 
     def unset_limit(self, inbound_ports, outbound_ports):
-        inbound_cmd = []
-        for port in inbound_ports:
-            inbound_cmd += ["interface " + port, "undo qos car inbound", "commit", "q"]
-        outbound_cmd = []
-        for port in outbound_ports:
-            outbound_cmd += ["interface " + port, "undo qos lr outbound", "commit", "q"]
-
-        commands = inbound_cmd + outbound_cmd + ["q"]
-        logger.debug("unset limit command:%s" % commands)
+        commands = switch_utils.unset_limit(inbound_ports, outbound_ports)
         return self.my_send_config_set(commands)
 
     def create_limit_template(self, templates):
-        create_command = []
-        for template in templates:
-            cir = int(template.bandwidth * 1.62 * 1024)
-            qos_cmd = "qos car %s cir %s kbps" % (template.name, cir)
-            create_command += [qos_cmd, 'commit']
-        commands = create_command + ['q']
-        logger.debug("create template command:%s" % commands)
+        commands = switch_utils.create_limit_template(templates)
         return self.my_send_config_set(commands)
 
     def delete_limit_template(self, templates):
-        delete_command = []
-        for template in templates:
-            undo_cmd = 'undo qos car ' + template
-            delete_command += [undo_cmd, 'commit']
-        commands = delete_command + ['q']
-        logger.debug("delete template command:%s" % commands)
+        commands = switch_utils.delete_limit_template(templates)
         return self.my_send_config_set(commands)
 
     def open_port(self, ports):
-        open_cmd = []
-        for port in ports:
-            open_cmd += ["interface " + port, "undo shutdown", "commit", "q"]
-        commands = open_cmd + ["q"]
-        logger.debug("open ports command:%s" % commands)
+        commands = switch_utils.open_port(ports)
         return self.my_send_config_set(commands)
 
     def shutdown_port(self, ports):
-        shutdown_cmd = []
-        for port in ports:
-            shutdown_cmd += ["interface " + port, "shutdown", "commit", "q"]
-        commands = shutdown_cmd + ["q"]
-        logger.debug("close ports command:%s" % commands)
+        commands = switch_utils.shutdown_port(ports)
         return self.my_send_config_set(commands)
 
     def init_dhclient_config(self, switch, clean_cmd_set=[]):
@@ -335,21 +289,19 @@ class HuaweiSwitch_v2(huawei_ssh.HuaweiSwitch):
         return self.my_send_config_set(clean_cmd_set)
 
     def get_relations_port(self, port=None):
-        pattern = re.compile(r'\w{4}-\w{4}-\w{4}')
-
         if port:
             command = "display mac-address interface %s" % port
-            datas = self.my_send_command("display mac-address interface %s" % port)
-            mac = ""
-            for line in datas.split("\n"):
-                data = pattern.findall(line)
-                if data:
-                    mac = ":".join(i[0:2] + ":" + i[2:4] for i in data[0].split("-")).upper()
-                    break
+            datas = self.my_send_command(["display mac-address interface %s" % port])
+            mac = switch_utils.get_relations_port(datas)
             if mac == "":
                 raise exceptions.ConfigSwitchV2Error(BmsCodeMsg.SWITCH_ERROR, command=command,
                                                      error="port-mac does not exist")
             return {"mac": mac, "port": port}
+
+    def get_port_config(self, ports):
+        commands = switch_utils.get_port_config(ports)
+        datas = self.my_send_command(commands)
+        return switch_utils.screen_port_config(self.config["ip"], datas)
 
 
 class SwitchPlugin(object):
@@ -646,4 +598,50 @@ class SwitchPlugin(object):
             else:
                 logger.error("switch %s save config config result: %s." %
                              (body.host, result))
+        return jsonobject.dumps(rsp)
+
+    @utils.replyerror_v2
+    def alter_vlan(self, req):
+        body = jsonobject.loads(req[http.REQUEST_BODY])
+        header = req[http.REQUEST_HEADER]
+
+        rsp = models.AgentResponse()
+        rsp.requestId = header[V2_REQUEST_ID]
+
+        device_cfg = {
+            "device_type": "huawei",
+            "ip": body.host,
+            "username": body.username,
+            "password": body.password
+        }
+
+        with HuaweiSwitch_v2(device_cfg) as client:
+            try:
+                result = client.alter_vlan(body.port)
+            except Exception as ex:
+                raise exceptions.SwitchTaskV2Error(BmsCodeMsg.SWITCH_ERROR, error=str(ex))
+
+        return jsonobject.dumps(rsp)
+
+    @utils.replyerror_v2
+    def get_port_config(self, req):
+        body = jsonobject.loads(req[http.REQUEST_BODY])
+        header = req[http.REQUEST_HEADER]
+
+        rsp = models.GetSwitchRelationsResp()
+        rsp.requestId = header[V2_REQUEST_ID]
+
+        device_cfg = {
+            "device_type": "huawei",
+            "ip": body.host,
+            "username": body.username,
+            "password": body.password
+        }
+
+        with HuaweiSwitch_v2(device_cfg) as client:
+            try:
+                result = client.get_port_config(body.ports)
+            except Exception as ex:
+                raise exceptions.SwitchTaskV2Error(BmsCodeMsg.SWITCH_ERROR, error=str(ex))
+        rsp.data = result
         return jsonobject.dumps(rsp)

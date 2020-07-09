@@ -4,14 +4,20 @@
 # Copyright(C): zhaoercheng, capitalonline
 
 dir=`dirname $0`
+if [[ $3 == --* ]]; then
+    log_dir="$dir"
+else
+    log_dir="$3"
+fi
 host_ips_file="$dir/host_ips"
-log_file="$dir/auto_network_test_log"
-switch_log_file="$dir/auto_switch_crc_log"
-mem_log_file="$dir/auto_mem_log"
-disk_test_log="$dir/auto_disk_test_log"
-cpu_log_file="$dir/auto_cpu_log"
-power_off_log_file="$dir/auto_device_status_log"
-power_status_log_file="$dir/auto_power_status_log"
+log_file="$log_dir/network.log"
+switch_log_file="$log_dir/auto_switch_crc_log"
+mem_log_file="$log_dir/mem.log"
+disk_test_log="$log_dir/disk.log"
+cpu_log_file="$log_dir/cpu.log"
+power_off_log_file="$log_dir/auto_device_status_log"
+power_status_log_file="$log_dir/power_status.log"
+hardware_all_log="$log_dir/hardware.log"
 auto_time=600
 wait_time=300
 
@@ -20,7 +26,7 @@ password="cds-china"
 
 function usage()
 {
-    echo "USAGE: $0 [OPTIONS] < rpm-install|crc|fio|nic-down|nic-up|system-device|data-device|final-op|kernel-update|disk_test|switch_crc|mem|cpu_test|power_status|power_off|check_ssh|hardware_test > <password>"
+    echo "USAGE: $0 [OPTIONS] < rpm-install|crc|fio|nic-down|nic-up|system-device|data-device|final-op|kernel-update|disk_test|switch_crc|mem|scp_hw_test_log|cpu_test|power_status|power_off|check_ssh|hardware_test > <password>"
     echo ""
     echo "Available OPTIONS:"
     echo ""
@@ -29,6 +35,7 @@ function usage()
     echo "  --ip-range  <ip_range>  Ip range. Such as: 10.10.10.10~10.10.10.20. "
     echo "  --nic-name  <nic_name>  Nic name. "
     echo "  --ip_file   <ip_file>   ip list. "
+    echo "  --test-type <test_type> test type"
     echo "  -h, --help              Show the help message."
     echo ""
     exit 0
@@ -37,7 +44,7 @@ function usage()
 
 function parse_options()
 {
-    args=$(getopt -o h -l ipaddr:,fix-ip:,ip-range:,nic-name:,ip_file:,mem_size:,help -- "$@")
+    args=$(getopt -o h -l ipaddr:,fix-ip:,ip-range:,nic-name:,test-type:,ip_file:,mem_size:,help -- "$@")
 
     if [[ $? -ne 0 ]];then
         usage >&2
@@ -64,6 +71,10 @@ function parse_options()
                 nicname=$2
                 shift 2
                 ;;
+            --test-type)
+                testtype=$2
+                shift 2
+                ;;
             --ip_file)
                 ip_file=$2
                 shift 2
@@ -85,7 +96,7 @@ function parse_options()
         esac
     done
 
-    if [[ $# -ne 2 ]]; then
+    if [ $# -ne 3 ] && [ $# -ne 2 ]; then
         usage
     fi
     action=$1
@@ -95,7 +106,7 @@ function parse_options()
 function is_valid_action()
 {
     action=$1
-    valid_action=("rpm-install" "crc" "fio" "nic-down" "nic-up" "system-device" "data-device" "final-op" "kernel-update" "disk_test" "switch_crc" "mem" "cpu_test" "power_status" "power_off" "check_ssh" "hardware_test")
+    valid_action=("rpm-install" "crc" "fio" "nic-down" "nic-up" "system-device" "data-device" "final-op" "kernel-update" "disk_test" "switch_crc" "mem" "scp_hw_test_log ""cpu_test" "power_status" "power_off" "check_ssh" "hardware_test")
     for val in ${valid_action[@]}; do
         if [[ "${val}" == "${action}" ]]; then
             return 0
@@ -130,13 +141,15 @@ case "${action}" in
     final-op)
         cds_final_operation=1 ;;
     rpm-install)
-	cds_rpm_install=1 ;;
+	      cds_rpm_install=1 ;;
     kernel-update)
-	cds_kernel_update=1 ;;
+	      cds_kernel_update=1 ;;
     disk_test)
-	cds_disk_test=1 ;;
+	      cds_disk_test=1 ;;
     switch_crc)
-	cds_switch_crc=1;;
+	      cds_switch_crc=1;;
+	  scp_hw_test_log)
+	      scp_hw_test_log=1;;
     mem)
         cds_mem=1;;
     power_status)
@@ -144,11 +157,11 @@ case "${action}" in
     power_off)
         cds_power_off=1;;
     cpu_test)
-	cds_cpu_test=1;;
+	      cds_cpu_test=1;;
     check_ssh)
         cds_check_ssh=1;;
     hardware_test)
-	cds_hardware_test=1;;
+	      cds_hardware_test=1;;
     *)
         echo "Unknown Action:${action}!"
         usage
@@ -405,7 +418,7 @@ function kill_iperf3()
 
 	for((n=1;n<=$host_number;n++))
 	do
-		host_ip=`cat $host_ips_file |sed -n "$n"p |awk '{print $1}'`
+		host_ip=`cat $host_ips_file |sed -n "$n"p |awk '{print $2}'`
 		$sshpass_prefix -f $host_ip  "killall iperf3" &
 	done
 }
@@ -416,14 +429,16 @@ function iperf3_client()
 	n=$1
 	number=$2
 	rw=$3
-	ssh_ip=`cat  $host_ips_file |sed -n "$n"p |awk '{print $1}'`
+	ipmi_ip=`cat  $host_ips_file |sed -n "$n"p |awk '{print $1}'`
+	ssh_ip=`cat  $host_ips_file |sed -n "$n"p |awk '{print $2}'`
 	client_ip=`cat  $host_ips_file |sed -n "$n"p |awk "{print $"$rw"}"`
 	service_ip=`cat  $host_ips_file |sed -n "$number"p |awk "{print $"$rw"}"`
 	
 	ping_test $ssh_ip
 	ret=`echo $?`
 	if [[ $ret == 1 ]];then
-		echo "host_ip:$client_ip service_ip:$service_ip  ssh:$ssh_ip No route to host   ERROR" >> $log_file
+
+		echo "ipmi_ip:$ipmi_ip  host_ip:$client_ip service_ip:$service_ip  ssh:$ssh_ip No route to host   ERROR" >> $log_file
 		return 1
 	fi
 	
@@ -431,10 +446,10 @@ function iperf3_client()
 	eth_info=`$sshpass_prefix  $ssh_ip "ip route" | grep $client_ip |awk -F '[ \t*]' '{print \$3}'`
 	crc=`$sshpass_prefix  $ssh_ip "ethtool  -S $eth_info" |grep rx_crc_errors |sed -n 1p|awk '{print $2}'`	
 	if [[ $Bandwidth != "" ]]  && [[ "$crc" == "0" ]]; then
-		echo "host_ip:$client_ip service_ip: $service_ip  Bandwidth:$Bandwidth Gbits/sec CRC:$crc  SUCCESS" >> $log_file
+		echo "ipmi_ip:$ipmi_ip  host_ip:$client_ip service_ip: $service_ip  Bandwidth:$Bandwidth Gbits/sec CRC:$crc  SUCCESS" >> $log_file
 		return 0
 	else
-		echo "host_ip:$client_ip service_ip: $service_ip  Bandwidth:$Bandwidth Gbits/sec CRC:$crc ERROR  " >> $log_file
+		echo "ipmi_ip:$ipmi_ip  host_ip:$client_ip service_ip: $service_ip  Bandwidth:$Bandwidth Gbits/sec CRC:$crc ERROR  " >> $log_file
 		return 1
 	fi
 }
@@ -443,17 +458,66 @@ function iperf3_service()
 {
 	host_number=`cat  $host_ips_file |wc -l`
 	row=`cat  $host_ips_file |sed -n 1p |awk '{print NF}'`
-	for((j=1;j<=$row;j++))
+	for((j=2;j<=$row;j++))
 	do
 		for((n=1;n<=$host_number;n++))
         	do
-                	host_ip=`cat  $host_ips_file |sed -n "$n"p |awk '{print $1}'`
-			service=`cat  $host_ips_file |sed -n "$n"p |awk "{print $"$j"}"`
+                	host_ip=`cat  $host_ips_file |sed -n "$n"p |awk '{print $2}'`
+                	check_ssh $host_ip
+			            service=`cat  $host_ips_file |sed -n "$n"p |awk "{print $"$j"}"`
                 	$sshpass_prefix -f $host_ip  "iperf3 -s -B $service |grep sender"
                 	sleep 1
         	done
 	done
 
+}
+
+function crc_test_return() {
+    host_number=`cat  $host_ips_file |wc -l`
+    row=`cat  $host_ips_file |sed -n 1p |awk '{print NF}'`
+    nic_count=`expr $row - 1`
+    log_number=`expr $host_number \* $nic_count + 1`
+    for ((t=1;t<=100;t++))
+    do
+      current_log_number=`cat $log_file | wc -l`
+      if [[ $current_log_number == $log_number ]];then
+        break
+      else
+        sleep 60
+      fi
+    done
+	  str=""
+	  for((i=1;i<=$host_number;i++))
+	  do
+	    ipmi_ip=`cat  $host_ips_file |sed -n "$i"p |awk '{print $1}'`
+	    state=`cat $log_file | grep $ipmi_ip | grep "ERROR"`
+      if [[ $state == "" ]];then
+        str=$str"{\"ipmi_ip\":""\"$ipmi_ip\""",\"state\":""\"SUCCESS\"}"
+      else
+        str=$str"{\"ipmi_ip\":""\"$ipmi_ip\""",\"state\":""\"ERROR\"}"
+      fi
+      if [[  $i != $host_number ]];then
+          str=$str","
+      fi
+    done
+    addr=`cat /etc/baremetal-api/baremetal-api.ini | grep -w "scheduler_callback" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+"`
+    res=`curl -X POST $addr/bms/v1/task/callback_crc -H 'accept: */*' -H 'Content-Type: application/json' -d '[ '$str' ]'`
+}
+
+function scp_hw_test_log() {
+  nginx_ip=`cat /etc/baremetal-api/baremetal-api.ini | grep -w "nginx_ip" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+"`
+  if [[ $1 != "crc" ]];then
+    echo -e "================ CPU TEST LOG ==============" > $hardware_all_log
+    cat $cpu_log_file >> $hardware_all_log
+    echo -e "\n\n================ MEM TEST LOG ==============" >> $hardware_all_log
+    cat $mem_log_file >> $hardware_all_log
+    echo -e "\n\n================ DISK TEST LOG ==============" >> $hardware_all_log
+    cat $disk_test_log >> $hardware_all_log
+    echo -e "\n\n================ POWER STATUS TEST LOG ==============" >> $hardware_all_log
+    cat $power_status_log_file >> $hardware_all_log
+    rm -rf $cpu_log_file $mem_log_file $disk_test_log $power_status_log_file
+  fi
+  sshpass scp -r -o StrictHostKeyChecking=no $log_dir root@${nginx_ip}:/var/www/log/bms/hardware_log
 }
 
 function client_to_service_even()
@@ -468,7 +532,7 @@ function client_to_service_even()
 	iperf3_service 
 	sleep 10 
 	
-	for((j=1;j<=$row;j++))
+	for((j=2;j<=$row;j++))
 	do
 		for((n=1;n<=$ip_number;n++))
 		do
@@ -494,8 +558,7 @@ function client_to_service_odd_one()
  	host_number=`cat  $host_ips_file |wc -l`
         row=`cat  $host_ips_file |sed -n 1p |awk '{print NF}'`
 
-
-        for((j=1;j<=$row;j++))
+        for((j=2;j<=$row;j++))
         do
                 n=1
 		number=$host_number
@@ -522,7 +585,7 @@ function client_to_service_odd()
         iperf3_service
         sleep 10
 
-        for((j=1;j<=$row;j++))
+        for((j=2;j<=$row;j++))
         do
                 for((n=1;n<=$ip_number;n++))
                 do
@@ -626,7 +689,7 @@ function ssh_disk_test()
 	$scppass_prefix $dir/auto_disk_test.sh $1:/home/
 	sleep 2
 	$sshpass_prefix $1  "/home/auto_disk_test.sh $1"
-	echo "HOST_IP: $1" >> $disk_test_log
+	echo "HOST_IP: $2" >> $disk_test_log
 	$sshpass_prefix $1  " cat /home/smartctl_log" >> $disk_test_log
 	return 0
 }
@@ -703,10 +766,10 @@ function mem_test()
         local mem_used=`$sshpass_prefix $1  "free -g" |grep Mem | awk '{print $3}'`
         local mem=$(echo "$mem_used*100/$mem_total"|bc)
         if [ $(echo "$mem > 60"|bc) = 1 ]; then
-		echo "host_ip:$host_ip mem_size:$mem_total mem_used:$mem SUCCESS" >> $mem_log_file
+		echo "host_ip:$2 mem_size:$mem_total mem_used:$mem SUCCESS" >> $mem_log_file
 		return 0
 	else
-		echo "host_ip:$host_ip mem_size:$mem_total mem_used:$mem ERROR " >> $mem_log_file
+		echo "host_ip:$2 mem_size:$mem_total mem_used:$mem ERROR " >> $mem_log_file
 		return 1
         fi
 
@@ -718,8 +781,9 @@ function auto_mem_test()
         echo > $mem_log_file
         for((n=1;n<=$host_number;n++))
         do
-                host_ip=`cat  $host_ips_file |sed -n "$n"p |awk '{print $1}'`
-		mem_test $host_ip  &      
+                host_ip=`cat  $host_ips_file |sed -n "$n"p |awk '{print $2}'`
+                ipmi_ip=`cat  $host_ips_file |sed -n "$n"p |awk '{print $1}'`
+		mem_test $host_ip $ipmi_ip &
 	done
 }
 
@@ -763,10 +827,10 @@ function test_cpu()
         local sy=`echo "$cpu_info" | awk '{print $4}'`
         local cpu_use=$(echo "$us+$sy"|bc)
         if [ $(echo "$cpu_use > 50"|bc) == 1 ]; then   
-                echo "Hostip:$1 $cpu_info  SUCCESS" >> $cpu_log_file
+                echo "Hostip:$2 $cpu_info  SUCCESS" >> $cpu_log_file
 		return 0
         else
-                echo "Hostip:$1 $cpu_info  ERROR" >> $cpu_log_file
+                echo "Hostip:$2 $cpu_info  ERROR" >> $cpu_log_file
 		return 1
         fi      	 
 }
@@ -776,8 +840,9 @@ function auto_cpu_test()
         echo > $cpu_log_file
         for((n=1;n<=$host_number;n++))
         do
-                host_ip=`cat  $host_ips_file |sed -n "$n"p |awk '{print $1}'`
-                test_cpu $host_ip &
+                host_ip=`cat  $host_ips_file |sed -n "$n"p |awk '{print $2}'`
+                ipmi_ip=`cat  $host_ips_file |sed -n "$n"p |awk '{print $1}'`
+                test_cpu $host_ip $ipmi_ip &
 	done   
 }
 
@@ -786,8 +851,9 @@ function auto_hardware_test()
 	host_number=`cat  $host_ips_file |wc -l`
         for((n=1;n<=$host_number;n++))
         do
-                host_ip=`cat  $host_ips_file |sed -n "$n"p |awk '{print $1}'`
-                hardware_test $host_ip &
+                host_ip=`cat  $host_ips_file |sed -n "$n"p |awk '{print $2}'`
+                ipmi_ip=`cat  $host_ips_file |sed -n "$n"p |awk '{print $1}'`
+                hardware_test $host_ip $ipmi_ip &
         done
 }
 function scp_ipmitool()
@@ -800,22 +866,24 @@ function power_status()
         local ps_1=`$sshpass_prefix $1 "ipmitool sdr list" |grep "Current 1" | awk '{print $4}'`
         local ps_2=`$sshpass_prefix $1 "ipmitool sdr list" |grep "Current 2" | awk '{print $4}'`
         if [[ "$ps_1" = "no" ]] || [[ "$ps_2" == "no" ]]; then   
-                echo "Hostip:$1 mode:A  PS1:$ps_1 PS2:$ps_2  ERROR" >> $power_status_log_file
+                echo "Hostip:$2 mode:A  PS1:$ps_1 PS2:$ps_2  ERROR" >> $power_status_log_file
         else
-                echo "Hostip:$1 mode:AB  PS1:$ps_1 PS2:$ps_2  SUCCESS" >> $power_status_log_file
+                echo "Hostip:$2 mode:AB  PS1:$ps_1 PS2:$ps_2  SUCCESS" >> $power_status_log_file
         fi 
 }
 
 function hardware_test()
 {
-	ssh_disk_test $1
+    power_status $1 $2
+    d=`echo $?`
+	ssh_disk_test $1 $2
 	a=`echo $?`
-	test_cpu $1
+	test_cpu $1 $2
 	b=`echo $?`
-	mem_test $1
+	mem_test $1 $2
 	c=`echo $?`
 	add=`cat /etc/baremetal-api/baremetal-api.ini | grep -w "scheduler_callback" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+"`
-	if [ $a == 0 ] && [ $b == 0 ] && [ $c == 0 ]; then
+	if [ $a == 0 ] && [ $b == 0 ] && [ $c == 0 ] && [ $d == 0 ]; then
 		g="\"$1\""
 		d=`curl -X POST $add/bms/v1/task/callback_hard -H 'accept: */*' -H 'Content-Type: application/json' -d '{ "port_ip": '$g', "state": "true"}'`
 	else
@@ -870,6 +938,8 @@ if [[ ${cdscrc} -eq 1 ]]; then
 	else
 		client_to_service_odd
 	fi
+  crc_test_return
+  scp_hw_test_log "crc"
 fi
 
 if [[ ${cdsfio} -eq 1 ]]; then
@@ -934,7 +1004,7 @@ if [[ $cds_disk_test -eq 1 ]]; then
 		get_host_ip
 		auto_disk_test
 	else
-		ssh_disk_test $ipaddr &
+		ssh_disk_test $ipaddr $fix_ip &
 	fi
 fi
 
@@ -943,13 +1013,17 @@ if [[ $cds_switch_crc -eq 1 ]]; then
 	auto_telnet_switch_test
 fi
 
+if [[ $scp_hw_test_log -eq 1 ]]; then
+    scp_hw_test_log $testtype
+fi
+
 
 if [[ $cds_mem -eq 1 ]]; then
         if [[ $ipaddr == "" ]]; then
 		get_host_ip
 		auto_mem_test
 	else
-		mem_test $ipaddr &
+		mem_test $ipaddr $fix_ip &
 	fi
 fi
 
@@ -958,7 +1032,7 @@ if [[ $cds_cpu_test -eq 1 ]];then
 		get_host_ip
 		auto_cpu_test
 	else 
-		test_cpu $ipaddr &
+		test_cpu $ipaddr $fix_ip &
 		
 	fi
 fi
@@ -986,6 +1060,6 @@ if [[ $cds_hardware_test -eq 1 ]]; then
 		get_host_ip
 		auto_hardware_test
 	else	
-		hardware_test $ipaddr &
+		hardware_test $ipaddr $fix_ip &
 	fi
 fi

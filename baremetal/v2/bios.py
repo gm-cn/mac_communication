@@ -226,13 +226,93 @@ class BiosSetPlugin_v2(object):
     def set_alarm_and_cpu(self, req):
         body = jsonobject.loads(req[http.REQUEST_BODY])
         header = req[http.REQUEST_HEADER]
-        logger.debug("set alarm and cpu perforance/numa config taskuuid:%s body:%s" %
+        logger.debug("set snmp ,cpu perforance/numa and timezone config taskuuid:%s body:%s" %
                     (header[V2_REQUEST_ID], req[http.REQUEST_BODY]))
 
         rsp = models.BiosconfigSet()
         rsp.requestId = header[V2_REQUEST_ID]
-        funcs = ['mail_alarm', 'snmp_alarm', 'performance_config', 'numa_config']
+        funcs = ['snmp_alarm', 'performance_config', 'numa_config', 'change_timezone']
         for func in funcs:
             self.execute_cmd(func, body)
+
+        return jsonobject.dumps(rsp)
+
+    @utils.replyerror_v2
+    def vnc_check(self, req):
+        body = jsonobject.loads(req[http.REQUEST_BODY])
+        header = req[http.REQUEST_HEADER]
+        logger.debug("vnc console check taskuuid:%s body:%s" % (header[V2_REQUEST_ID], req[http.REQUEST_BODY]))
+
+        rsp = models.BiosconfigSet()
+        rsp.requestId = header[V2_REQUEST_ID]
+
+        func = 'vnc_control'
+        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={}"
+        executor = shell.call(cmd.format(body.username, body.password, body.ip))
+        if executor.return_code != 0:
+            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
+
+        return jsonobject.dumps(rsp)
+
+    @utils.replyerror_v2
+    def sn_check(self, req):
+        body = jsonobject.loads(req[http.REQUEST_BODY])
+        header = req[http.REQUEST_HEADER]
+        logger.debug("sn check taskuuid:%s body:%s" % (header[V2_REQUEST_ID], req[http.REQUEST_BODY]))
+
+        rsp = models.BiosconfigSet()
+        rsp.requestId = header[V2_REQUEST_ID]
+
+        func = 'single_sn'
+        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={}"
+        executor = shell.call(cmd.format(body.username, body.password, body.ip))
+        if executor.return_code != 0:
+            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
+        output = executor.stdout.replace("\n", "")
+        logger.debug(output)
+        if body.sn in executor.stdout:
+            logger.debug("%s the record of sn is true" % body.ip)
+        else:
+            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func,
+                                            error="The record of sn is false, actual result is %s" % output)
+
+        return jsonobject.dumps(rsp)
+
+    @utils.replyerror_v2
+    def bios_update(self, req):
+        body = jsonobject.loads(req[http.REQUEST_BODY])
+        header = req[http.REQUEST_HEADER]
+        logger.debug("bios update taskuuid:%s body:%s" % (header[V2_REQUEST_ID], req[http.REQUEST_BODY]))
+
+        rsp = models.BiosconfigSet()
+        rsp.requestId = header[V2_REQUEST_ID]
+
+        func = 'bios_update'
+        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={} --update_file={} --is_restart={}"
+        executor = shell.call(cmd.format(body.username, body.password, body.ip,body.file,body.restart_now))
+        if executor.return_code != 0:
+            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
+        output = executor.stdout.replace("\n", "")
+        logger.debug(output)
+
+        return jsonobject.dumps(rsp)
+
+    @utils.replyerror_v2
+    def idrac_update(self, req):
+        body = jsonobject.loads(req[http.REQUEST_BODY])
+        header = req[http.REQUEST_HEADER]
+        logger.debug("idrac update taskuuid:%s body:%s" % (header[V2_REQUEST_ID], req[http.REQUEST_BODY]))
+
+        rsp = models.BiosconfigSet()
+        rsp.requestId = header[V2_REQUEST_ID]
+
+        func = 'idrac_update'
+        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={} --update_file"
+        executor = shell.call(cmd.format(body.username, body.password, body.ip, body.file))
+        if executor.return_code != 0:
+            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
+        output = executor.stdout.replace("\n", "")
+        logger.debug(output)
+
 
         return jsonobject.dumps(rsp)

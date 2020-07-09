@@ -308,7 +308,7 @@ function function_cds_boot_config()
 
 function function_cds_get_sn()
 {
-        ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
+    ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
 	sn=`$ipmitool_commd fru | grep -w "Product Serial" | awk '{print $4}'`
 	res=`$ipmitool_commd raw 0x3c 0x03 0x01 0x00`
 	local bios=""
@@ -338,7 +338,7 @@ function function_cds_get_sn()
 function function_cds_get_mac()
 {
 	ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
-        mac=`$ipmitool_commd lan print | grep -w "MAC Address" | awk '{print $4}'`
+    mac=`$ipmitool_commd lan print | grep -w "MAC Address" | awk '{print $4}'`
 	echo "mac address is $mac"
 	return 0
 }
@@ -434,15 +434,43 @@ function function_cds_power_on()
 
 function function_cds_hardreset()
 {
-        ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
-        $ipmitool_commd  power reset
+    ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
+    $ipmitool_commd  power reset
 
 	ret=`echo $?`
 	if [[ $ret != 0 ]];then
 		echo "hostip:$1 $date_info power reset   error" >> $log_file
 		return 0
-	fi
+	else
         echo "hostip:$1 $date_info power reset   success" >> $log_file
+    fi
+}
+
+function function_cds_change_timezone()
+{
+    echo "inspur does not support change timezone"
+    return 0
+}
+
+function function_cds_bios_update()
+{
+	echo "inspur does not currently support bios update"
 }
 
 
+function function_cds_idrac_update()
+{
+	echo "inspur does not currently support idrac update"
+}
+
+function function_cds_single_sn()
+{
+    ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
+	sn=`$ipmitool_commd fru | grep -w "Product Serial" | awk '{print $4}'`
+	echo $sn
+}
+
+function function_cds_vnc_control()
+{
+	echo "inspur does not support vnc"
+}
