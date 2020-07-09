@@ -277,3 +277,42 @@ class BiosSetPlugin_v2(object):
                                             error="The record of sn is false, actual result is %s" % output)
 
         return jsonobject.dumps(rsp)
+
+    @utils.replyerror_v2
+    def bios_update(self, req):
+        body = jsonobject.loads(req[http.REQUEST_BODY])
+        header = req[http.REQUEST_HEADER]
+        logger.debug("bios update taskuuid:%s body:%s" % (header[V2_REQUEST_ID], req[http.REQUEST_BODY]))
+
+        rsp = models.BiosconfigSet()
+        rsp.requestId = header[V2_REQUEST_ID]
+
+        func = 'bios_update'
+        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={} --update_file={} --is_restart={}"
+        executor = shell.call(cmd.format(body.username, body.password, body.ip,body.file,body.restart_now))
+        if executor.return_code != 0:
+            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
+        output = executor.stdout.replace("\n", "")
+        logger.debug(output)
+
+        return jsonobject.dumps(rsp)
+
+    @utils.replyerror_v2
+    def idrac_update(self, req):
+        body = jsonobject.loads(req[http.REQUEST_BODY])
+        header = req[http.REQUEST_HEADER]
+        logger.debug("idrac update taskuuid:%s body:%s" % (header[V2_REQUEST_ID], req[http.REQUEST_BODY]))
+
+        rsp = models.BiosconfigSet()
+        rsp.requestId = header[V2_REQUEST_ID]
+
+        func = 'idrac_update'
+        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={} --update_file"
+        executor = shell.call(cmd.format(body.username, body.password, body.ip, body.file))
+        if executor.return_code != 0:
+            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
+        output = executor.stdout.replace("\n", "")
+        logger.debug(output)
+
+
+        return jsonobject.dumps(rsp)

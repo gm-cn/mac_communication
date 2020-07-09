@@ -185,6 +185,10 @@ class RestService(object):
                                      self.hardware_v2.ping_host)
         self.rest.register_sync_uri(constants.V2_CHECK_IMAGE_PATH,
                                      self.img_v2.checkout_image)
+        self.rest.register_sync_uri(constants.V2_BIOS_UPDATE_PATHH,
+                                    self.bios_v2.bios_update)
+        self.rest.register_sync_uri(constants.V2_IDRAC_UPDATE_PATH,
+                                    self.bios_v2.idrac_update)
 
     def __init__(self, config):
         opts.register_all_options()
