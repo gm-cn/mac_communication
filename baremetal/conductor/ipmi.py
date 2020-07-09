@@ -64,7 +64,6 @@ class IPMIPlugin(object):
         logger.debug("%s server type is %s" % (host.ip, server_type.strip()))
         return server_type.strip()
 
-    @tenacity.retry(**retry_kwargs)
     def check_status(self, rsp, host):
         power_status_cmd = self.power_status_cmd.format(host.ip, host.username, host.password)
         executor = shell.call(power_status_cmd, logcmd=False)
