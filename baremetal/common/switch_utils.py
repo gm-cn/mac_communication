@@ -6,6 +6,9 @@ CONF = cfg.CONF
 logger = logging.getLogger(__name__)
 
 pattern = re.compile(r'\w{4}-\w{4}-\w{4}')
+DIS_SN = "display license esn"
+DIS_MAC_ADDRESS = "display mac-address interface"
+DIS_PORT_VLAN = "display port vlan"
 
 def first_command():
     conn_type = CONF.sw_conn.conn_type
@@ -229,4 +232,18 @@ def screen_port_config(host, datas):
         res.append(port_config)
     return res
 
-
+def screen_sn(datas):
+    sn_info = []
+    sns = datas.split("\n")
+    for line in sns:
+        if "MainBoard" in line:
+            ind = sns.index(line)
+            sn = sns[ind + 1].split(":")[1].strip()
+            sn_info.append({"sn": sn, "type": "master"})
+        if "SlaveBoard" in line:
+            ind = sns.index(line)
+            sn = sns[ind + 1].split(":")[1].strip()
+            sn_info.append({"sn": sn, "type": "slave"})
+    if len(sn_info) == 1:
+        sn_info[0]["type"] = ""
+    return {"sn_list": sn_info}
