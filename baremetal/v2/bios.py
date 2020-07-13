@@ -332,7 +332,7 @@ class BiosSetPlugin_v2(object):
         file_name = "".join([body.ip, "_", body.url.split('/')[-1]])
         file_path = os.path.join(self.update_file, file_name)
         utils.prepare_pid_dir(file_path)
-        file = requests.get(url, stream=True)
+        file = requests.get(body.url, stream=True)
         with open(file_path, 'wb') as fp:
             for i in file.iter_content(chunk_size=10240):
                 fp.write(i)
