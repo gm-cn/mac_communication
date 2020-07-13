@@ -770,19 +770,19 @@ function function_cds_bios_update()
 		jobID=`$racadm_comm jobqueue view | tail -n 20 | grep JID | tr "=]" " " | awk '{print $3}'`
 		check $1 $2 $3 $jobID
 		if [[ $? == 0 ]]; then
-            echo "hostip:$1 $date_info idrac update success" >> $log_file
+            echo "hostip:$1 $date_info idrac bios success" >> $log_file
             return 0
         else
-            echo "hostip:$1 $date_info idrac update error" >> $log_file
+            echo "hostip:$1 $date_info idrac bios error" >> $log_file
             return 1
         fi
 	else
 		$racadm_comm update -f $update_file_path$4
 		if [[ $? == 0 ]]; then
-			echo "hostip:$1 $date_info idrac update success and will take effect on next boot" >> $log_file
+			echo "hostip:$1 $date_info idrac bios success and will take effect on next boot" >> $log_file
 			return 0
 		else
-			echo "hostip:$1 $date_info idrac update error" >> $log_file
+			echo "hostip:$1 $date_info idrac bios error" >> $log_file
 			return 1
 		fi
 	fi
