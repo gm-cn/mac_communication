@@ -1,5 +1,6 @@
 import logging
 import os
+import requests
 from oslo_config import cfg
 
 from baremetal.v2 import models
@@ -16,6 +17,7 @@ class BiosSetPlugin_v2(object):
 
     def __init__(self):
         self.bios_script = CONF.auto_test.bios_set
+        self.update_file = os.path.join(CONF.pxe.tftpboot_dir, "update_file")
         self.bios_set = os.path.join(self.bios_script, "ipmi/ipmi_function.sh ")
 
     def execute_cmd(self, func, body):
@@ -288,8 +290,9 @@ class BiosSetPlugin_v2(object):
         rsp.requestId = header[V2_REQUEST_ID]
 
         func = 'bios_update'
+        file_name = "".join([body.ip, "_", body.file.split('/')[-1]])
         cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={} --update_file={} --is_restart={}"
-        executor = shell.call(cmd.format(body.username, body.password, body.ip,body.file,body.restart_now))
+        executor = shell.call(cmd.format(body.username, body.password, body.ip, file_name, body.restart_now))
         if executor.return_code != 0:
             raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
         output = executor.stdout.replace("\n", "")
@@ -307,12 +310,34 @@ class BiosSetPlugin_v2(object):
         rsp.requestId = header[V2_REQUEST_ID]
 
         func = 'idrac_update'
-        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={} --update_file"
-        executor = shell.call(cmd.format(body.username, body.password, body.ip, body.file))
+        file_name = "".join([body.ip, "_", body.file.split('/')[-1]])
+        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={} --update_file={}"
+        executor = shell.call(cmd.format(body.username, body.password, body.ip, file_name))
         if executor.return_code != 0:
             raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
         output = executor.stdout.replace("\n", "")
         logger.debug(output)
 
-
         return jsonobject.dumps(rsp)
+
+    @utils.replyerror_v2
+    def download_file(self, req):
+        body = jsonobject.loads(req[http.REQUEST_BODY])
+        header = req[http.REQUEST_HEADER]
+        logger.debug("download update file taskuuid:%s, body: %s" % (header[V2_REQUEST_ID], req[http.REQUEST_BODY]))
+
+        rsp = models.BiosconfigSet()
+        rsp.requestId = header[V2_REQUEST_ID]
+
+        file_name = "".join([body.ip, "_", body.url.split('/')[-1]])
+        file_path = os.path.join(self.update_file, file_name)
+        utils.prepare_pid_dir(file_path)
+        file = requests.get(url, stream=True)
+        with open(file_path, 'wb') as fp:
+            for i in file.iter_content(chunk_size=10240):
+                fp.write(i)
+        logger.debug("download file %s finish" % file_name)
+        return jsonobject.dumps(rsp)
+
+
+

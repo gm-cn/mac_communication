@@ -95,5 +95,6 @@ V2_PING_HOST_PATH = "/v2/baremetal/ping"
 V2_CHECK_IMAGE_PATH = "/v2/baremetal/image/check"
 V2_VNC_CHECK_PATH = "/v2/baremetal/ipmi/vnc_check"
 
-V2_BIOS_UPDATE_PATH="/v2/baremetal/ipmi/bios_update"
-V2_IDRAC_UPDATE_PATH="/v2/baremetal/ipmi/idrac_update"
+V2_BIOS_UPDATE_PATH = "/v2/baremetal/ipmi/bios_update"
+V2_IDRAC_UPDATE_PATH = "/v2/baremetal/ipmi/idrac_update"
+V2_DOWNLOAD_FILE_PATH = "/v2/baremetal/ipmi/download"

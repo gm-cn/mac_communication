@@ -191,6 +191,8 @@ class RestService(object):
                                     self.bios_v2.bios_update)
         self.rest.register_async_uri(constants.V2_IDRAC_UPDATE_PATH,
                                     self.bios_v2.idrac_update)
+        self.rest.register_async_uri(constants.V2_DOWNLOAD_FILE_PATH,
+                                     self.bios_v2.download_file)
 
     def __init__(self, config):
         opts.register_all_options()

@@ -2,7 +2,7 @@
 log_file="dell_log"
 date_info=`date`
 cmd_dir="/opt/dell/srvadmin/sbin/racadm"
-update_file_path="/root/baremetal_server/bms_core/ipmi/update_file/"
+update_file_path="/tftpboot/update_file/"
 function_cds_add_bmc_user()
 {
 	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
