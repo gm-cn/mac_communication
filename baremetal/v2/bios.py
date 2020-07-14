@@ -342,7 +342,7 @@ class BiosSetPlugin_v2(object):
         utils.prepare_pid_dir(file_path)
         file = requests.get(body.url, stream=True)
 
-        if req.status_code != 200:
+        if file.status_code != 200:
             raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func,
                                             error="the status of Download address is 404, Not Found")
         with open(file_path, 'wb') as fp:
