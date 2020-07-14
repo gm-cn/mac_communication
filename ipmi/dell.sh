@@ -765,24 +765,24 @@ function function_cds_change_timezone()
 function function_cds_bios_update()
 {
 	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
-	if [[ $5 == 0 ]]; then
+	if [[ $5 == True ]]; then
 		$racadm_comm update -f $update_file_path$4 --reboot
 		jobID=`$racadm_comm jobqueue view | tail -n 20 | grep JID | tr "=]" " " | awk '{print $3}'`
 		check $1 $2 $3 $jobID
 		if [[ $? == 0 ]]; then
-            echo "hostip:$1 $date_info idrac bios success" >> $log_file
+            echo "hostip:$1 $date_info bios update success" >> $log_file
             return 0
         else
-            echo "hostip:$1 $date_info idrac bios error" >> $log_file
+            echo "hostip:$1 $date_info bios update error" >> $log_file
             return 1
         fi
 	else
 		$racadm_comm update -f $update_file_path$4
 		if [[ $? == 0 ]]; then
-			echo "hostip:$1 $date_info idrac bios success and will take effect on next boot" >> $log_file
+			echo "hostip:$1 $date_info bios update success and will take effect on next boot" >> $log_file
 			return 0
 		else
-			echo "hostip:$1 $date_info idrac bios error" >> $log_file
+			echo "hostip:$1 $date_info bios update error" >> $log_file
 			return 1
 		fi
 	fi
