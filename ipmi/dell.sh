@@ -1,5 +1,5 @@
 #!/bin/sh
-log_file="dell_log"
+log_file="/var/log/cdsstack/dell_log"
 date_info=`date`
 cmd_dir="/opt/dell/srvadmin/sbin/racadm"
 update_file_path="/tftpboot/update_file/"

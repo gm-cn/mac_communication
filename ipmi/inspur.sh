@@ -1,6 +1,6 @@
 #!/bin/sh
 
-log_file="inspur_log"
+log_file="/var/log/cdsstack/inspur_log"
 date_info=`date`
 
 function str_to_ascii()
