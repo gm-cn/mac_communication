@@ -28,7 +28,7 @@ function usage()
 
 function parse_options()
 {
-    args=$(getopt -o h -l ip_file:,raid_type:,pxe_device:,disk_list:,ipaddr:,username:,userpassword:,boot_type:,update_file:,flag_type:,vnc_password:,is_restart:,help -- "$@")
+    args=$(getopt -o h -l ip_file:,raid_type:,pxe_device:,disk_list:,ipaddr:,username:,userpassword:,boot_type:,file_path:,update_file:,flag_type:,vnc_password:,is_restart:,help -- "$@")
 
     if [[ $? -ne 0 ]];then
         usage >&2
@@ -75,6 +75,10 @@ function parse_options()
 	        	update_file=$2
 	        	shift 2
 	        	;;
+			--file_path)
+				file_path=$2
+				shift 2
+				;;
 	    	--raid_type)
 				raid_type=$2
 				shift 2
@@ -163,10 +167,10 @@ case "${action}" in
         function_cds_vnc_config $ipaddr $name $password $vnc_password $flag_type
         ;;
     bios_update)
-        function_cds_bios_update $ipaddr $name $password $update_file $is_restart
+        function_cds_bios_update $ipaddr $name $password $update_file $is_restart $file_path
     	;;
 	idrac_update)
-		function_cds_idrac_update $ipaddr $name $password $update_file
+		function_cds_idrac_update $ipaddr $name $password $update_file $file_path
 		;;
 	mail_alarm)
         function_cds_mail_alarm $ipaddr $name $password $flag_type

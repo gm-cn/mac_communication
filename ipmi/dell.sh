@@ -765,8 +765,17 @@ function function_cds_change_timezone()
 function function_cds_bios_update()
 {
 	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+	if [[ $6 != "" ]]; then
+		file_path="$6"
+	else
+		file_path="$update_file_path"
+	fi
 	if [[ $5 == True ]]; then
-		$racadm_comm update -f $update_file_path$4 --reboot
+		$racadm_comm update -f $file_path$4 --reboot
+		if [[ $? != 0 ]]; then
+			echo "hostip:$1 $date_info bios update error" >> $log_file
+            return 1
+		fi
 		jobID=`$racadm_comm jobqueue view | tail -n 20 | grep JID | tr "=]" " " | awk '{print $3}'`
 		check $1 $2 $3 $jobID
 		if [[ $? == 0 ]]; then
@@ -777,7 +786,7 @@ function function_cds_bios_update()
             return 1
         fi
 	else
-		$racadm_comm update -f $update_file_path$4
+		$racadm_comm update -f $file_path$4
 		if [[ $? == 0 ]]; then
 			echo "hostip:$1 $date_info bios update success and will take effect on next boot" >> $log_file
 			return 0
@@ -794,6 +803,10 @@ function function_cds_idrac_update()
 {
 	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
 	$racadm_comm update -f $update_file_path$4
+	if [[ $? != 0 ]]; then
+        echo "hostip:$1 $date_info idrac update error" >> $log_file
+    	return 1
+    fi
 	sleep 20
 	jobID=`$racadm_comm jobqueue view | tail | grep JID | tr "=]" " " | awk '{print $3}'`
 	check $1 $2 $3 $jobID
