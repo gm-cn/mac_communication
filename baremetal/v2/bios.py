@@ -291,8 +291,11 @@ class BiosSetPlugin_v2(object):
 
         func = 'bios_update'
         file_name = "".join([body.ip, "_", body.file.split('/')[-1]])
-        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={} --update_file={} --is_restart={}"
-        executor = shell.call(cmd.format(body.username, body.password, body.ip, file_name, body.restart_now))
+        file_path = ""
+        if "http" not in body.file:
+            file_path = os.path.dirname(body.file) + '/'
+        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={} --update_file={} --is_restart={} --file_path={}"
+        executor = shell.call(cmd.format(body.username, body.password, body.ip, file_name, body.restart_now, file_path))
         if executor.return_code != 0:
             raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
         output = executor.stdout.replace("\n", "")
@@ -311,8 +314,11 @@ class BiosSetPlugin_v2(object):
 
         func = 'idrac_update'
         file_name = "".join([body.ip, "_", body.file.split('/')[-1]])
-        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={} --update_file={}"
-        executor = shell.call(cmd.format(body.username, body.password, body.ip, file_name))
+        file_path = ""
+        if "http" not in body.file:
+            file_path = os.path.dirname(body.file) + '/'
+        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={} --update_file={} --file_path={}"
+        executor = shell.call(cmd.format(body.username, body.password, body.ip, file_name, file_path))
         if executor.return_code != 0:
             raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
         output = executor.stdout.replace("\n", "")
@@ -329,10 +335,16 @@ class BiosSetPlugin_v2(object):
         rsp = models.BiosconfigSet()
         rsp.requestId = header[V2_REQUEST_ID]
 
+        if body.is_sure == "False":
+            return jsonobject.dumps(rsp)
         file_name = "".join([body.ip, "_", body.url.split('/')[-1]])
         file_path = os.path.join(self.update_file, file_name)
         utils.prepare_pid_dir(file_path)
         file = requests.get(body.url, stream=True)
+
+        if req.status_code != 200:
+            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func,
+                                            error="the status of Download address is 404, Not Found")
         with open(file_path, 'wb') as fp:
             for i in file.iter_content(chunk_size=10240):
                 fp.write(i)
