@@ -226,7 +226,7 @@ function function_cds_pxe_config()
 		local str=$4
 		if [[ $str == "" ]]; then
 		    str="1"
-			nic_count=`$racadm_comm get nic.nicconfig | tr -s '\n' | wc -l`
+			local nic_count=`$racadm_comm get nic.nicconfig | tr -s '\n' | wc -l`
 			let order=2
 			while [ $order -le $nic_count ]
 			do
@@ -237,14 +237,14 @@ function function_cds_pxe_config()
 		let device_number=1
 		for((a=0;a<${#str};a++));
 		do
-            i=${str:$a:1}
+            local i=${str:$a:1}
             if [[ $i != "," ]]; then
-        	    NIC_info=`$racadm_comm get NIC.nicconfig.$i | sed -n '1,1'p | tr -s "=#" : | cut -d ":" -f 2`
-				NIC_info1=`$racadm_comm hwinventory NIC | grep "$NIC_info" | cut -d  ":" -f 1 | sed -n "2p"`
+        	    local NIC_info=`$racadm_comm get NIC.nicconfig.$i | sed -n '1,1'p | tr -s "=#" | cut -d ":" -f 2`
+				local NIC_info1=`$racadm_comm hwinventory NIC | grep "$NIC_info" | cut -d  ":" -f 1 | sed -n "2p"`
 				$racadm_comm hwinventory $NIC_info | grep "Link Speed" | grep "Not Applicable"
-				nic_result=$?
+				local nic_result=$?
 				$racadm_comm hwinventory $NIC_info1 | grep "Link Speed" | grep "Not Applicable"
-                nic1_result=$?
+                local nic1_result=$?
 
 				if [[ $NIC_info1 == "" ]]; then
 					nic1_result=0
@@ -258,14 +258,14 @@ function function_cds_pxe_config()
 					$racadm_comm get nic.nicconfig.${device_number} | grep LegacyBootProto
 					if [[ $? == 0 ]]; then
 						$racadm_comm  set  nic.nicconfig.${device_number}.LegacyBootProto PXE
-                        LegacyBootProto=`$racadm_comm  get  nic.nicconfig.${device_number}.LegacyBootProto | grep PXE | wc -l`
+                        local LegacyBootProto=`$racadm_comm  get  nic.nicconfig.${device_number}.LegacyBootProto | grep PXE | wc -l`
 					else
 						LegacyBootProto=1
 					fi
 		
-                    PxeDevInterface=`$racadm_comm get  BIOS.PxeDev${device_number}Settings.PxeDev${device_number}Interface | grep $NIC_info | wc -l`
-                    WakeOnLan=`$racadm_comm get  nic.nicconfig.${device_number}.WakeOnLan | grep Disabled | wc -l`
-                    PxeDevEnDis=`$racadm_comm get BIOS.NetworkSettings.PxeDev${device_number}EnDis | grep Enabled | wc -l`
+                    local PxeDevInterface=`$racadm_comm get  BIOS.PxeDev${device_number}Settings.PxeDev${device_number}Interface | grep $NIC_info | wc -l`
+                    local WakeOnLan=`$racadm_comm get  nic.nicconfig.${device_number}.WakeOnLan | grep Disabled | wc -l`
+                    local PxeDevEnDis=`$racadm_comm get BIOS.NetworkSettings.PxeDev${device_number}EnDis | grep Enabled | wc -l`
 
                     if [[ $PxeDevInterface == 1  && $LegacyBootProto == 1 && $WakeOnLan == 1 && $PxeDevEnDis == 1 ]];then
                         echo "hostip:$1 $date_info device $device_number NIC  $NIC_info pxe config   success" >> $log_file
@@ -277,7 +277,7 @@ function function_cds_pxe_config()
 				fi
 			fi
 		done
-		jobID=`$racadm_comm jobqueue create BIOS.Setup.1-1 -s TIME_NOW -r Forced | grep -w "Commit JID =" | tr -d "\n\r" | awk '{print $4}'`
+		local jobID=`$racadm_comm jobqueue create BIOS.Setup.1-1 -s TIME_NOW -r Forced | grep -w "Commit JID =" | tr -d "\n\r" | awk '{print $4}'`
                 if [[ $jobID != "" ]]; then                       
 			        #function_cds_power_off $1 $2 $3
                     #function_cds_power_on $1 $2 $3
@@ -290,7 +290,7 @@ function function_cds_pxe_config()
 		local str=$4
                 if [[ $str == "" ]]; then
                     str="1"
-                    nic_count=`$racadm_comm get nic.nicconfig | tr -s '\n' | wc -l`
+                    local nic_count=`$racadm_comm get nic.nicconfig | tr -s '\n' | wc -l`
                     let order=2
                     while [ $order -le $nic_count ]
                     do
@@ -301,9 +301,9 @@ function function_cds_pxe_config()
                 let device_number=1
                 for((a=0;a<${#str};a++));
                 do
-                        i=${str:$a:1}
+                        local i=${str:$a:1}
                         if [[ $i != "," ]]; then
-                                NIC_info=`$racadm_comm get NIC.nicconfig.$i | sed -n '1,1'p | tr -s "=#" : | cut -d ":" -f 2`
+                                local NIC_info=`$racadm_comm get NIC.nicconfig.$i | sed -n '1,1'p | tr -s "=#" : | cut -d ":" -f 2`
                                 $racadm_comm hwinventory $NIC_info | grep "Link Speed" | grep "Not Applicable"
                                 if [[ $? == 0 ]]; then
                                         echo "NIC $NIC_info is not avaiable" >> $log_file
@@ -321,7 +321,7 @@ function function_cds_pxe_config()
                         fi
                 done
 		$racadm_comm set BIOS.BiosBootSettings.BootSeq $boot_seq
-		jobID=`$racadm_comm jobqueue create BIOS.Setup.1-1 -s TIME_NOW -r Forced| grep -w "Commit JID =" | tr -d "\n\r" | awk '{print $4}'`
+		local jobID=`$racadm_comm jobqueue create BIOS.Setup.1-1 -s TIME_NOW -r Forced| grep -w "Commit JID =" | tr -d "\n\r" | awk '{print $4}'`
 	        if [[ $jobID != "" ]]; then
         	        #function_cds_power_off $1 $2 $3
                 	#function_cds_power_on $1 $2 $3
