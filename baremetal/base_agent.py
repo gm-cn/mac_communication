@@ -10,7 +10,7 @@ from baremetal.conductor.ipmi import IPMIPlugin
 from baremetal.conductor.pxe import PxePlugin
 from baremetal.conductor.switch.switches import switch_plugin as SwitchPlugin
 from baremetal.conductor.image import ImagePlugin
-from baremetal.conductor.kubernetes import KubePlugin
+from baremetal.conductor.kube import KubePlugin
 from baremetal.v2.image import ImagePlugin_v2
 from baremetal.v2.switch.switches import switch_plugin_v2 as SwitchPlugin_v2
 from baremetal.conductor.serialconsole import SerialConsolePlugin
