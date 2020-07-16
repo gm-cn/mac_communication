@@ -47,6 +47,12 @@ DELETE_IMAGE_PATH = "/baremetal/image/delete"
 TEST = "/pxe/notify/metadata"
 DEBUG_PATH = '/debug/result'
 
+CREATE_MULTUS = "/baremetal/multus/create"
+DELETE_MULTUS = "/baremetal/multus/delete"
+CREATE_MON = "/baremetal/mon/create"
+DELETE_MON = "/baremetal/mon/delete"
+
+
 # bms_api v2 url
 V2_REQUEST_ID = "Taskuuid"
 V2_IPMI_STATUS_PATH = "/v2/baremetal/ipmi/status"

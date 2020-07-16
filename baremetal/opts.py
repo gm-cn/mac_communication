@@ -80,6 +80,13 @@ bios_opts = [
                help='bios set script file path'),
 ]
 
+k8s_opts = [
+    cfg.StrOpt('token',
+               help='kubernetes admin-user token'),
+    cfg.StrOpt('host',
+               help='kubernetes apiserver host')
+]
+
 def list_opts():
     return [
         (None, default_opts),
@@ -89,7 +96,8 @@ def list_opts():
         ('sw_coordination', coordination_opts),
         ('shellinabox_console', serial_opts),
         ('sw_conn', switch_opts),
-        ('auto_test', bios_opts)
+        ('auto_test', bios_opts),
+        ('k8sInfo', k8s_opts)
     ]
 
 CONF = cfg.CONF
