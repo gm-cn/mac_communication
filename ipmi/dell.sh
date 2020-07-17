@@ -779,9 +779,7 @@ function function_cds_bios_update()
 		jobID=`$racadm_comm jobqueue view | tail -n 20 | grep JID | tr "=]" " " | awk '{print $3}'`
 		check $1 $2 $3 $jobID
 		if [[ $? == 0 ]]; then
-		  BIOS_Version=`$racadm_comm getsysinfo | grep "System BIOS Version" | awk '{print $5}' | tr "\n" "\t"`
       echo "hostip:$1 $date_info bios update success" >> $log_file
-      echo $BIOS_Version
       return 0
     else
       echo "hostip:$1 $date_info bios update error" >> $log_file
@@ -790,8 +788,6 @@ function function_cds_bios_update()
 	else
 		$racadm_comm update -f $file_path$4
 		if [[ $? == 0 ]]; then
-		  BIOS_Version=`$racadm_comm getsysinfo | grep "System BIOS Version" | awk '{print $5}' | tr "\n" "\t"`
-      echo $BIOS_Version
 			echo "hostip:$1 $date_info bios update success and will take effect on next boot" >> $log_file
 			return 0
 		else
@@ -819,8 +815,6 @@ function function_cds_idrac_update()
 	fi
 	ping_test $1
 	if [[ $? == 0 ]]; then
-	  Firmware_Version=`$racadm_comm getsysinfo | grep "Firmware Version" | awk '{print $4}' | tr "\n" "\t"`
-	  echo $Firmware_Version
 		echo "hostip:$1 $date_info idrac update success" >> $log_file
 	else
 		echo "hostip:$1 $date_info idrac update error" >> $log_file

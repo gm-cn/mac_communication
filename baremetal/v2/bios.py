@@ -20,13 +20,23 @@ class BiosSetPlugin_v2(object):
         self.update_file = os.path.join(CONF.pxe.tftpboot_dir, "update_file")
         self.bios_set = os.path.join(self.bios_script, "ipmi/ipmi_function.sh ")
 
-    def execute_cmd(self, func, body):
-        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={}"
-        logger.debug("execute cmd:  %s" % cmd.format(body.username, body.password, body.ip))
-        executor = shell.call(cmd.format(body.username, body.password, body.ip))
+    def execute_cmd(self, func, body, *args):
+        cmd = ["sh", self.bios_set, func, body.username, '{}'.format(body.password), "".join(["--ipaddr=", body.ip])]
+        for arg in args:
+            cmd.append(arg)
 
+        executor = shell.call(' '.join(cmd))
         if executor.return_code != 0:
             raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
+        return executor
+
+    @staticmethod
+    def file_param(ip, file):
+        file_name = "".join([ip, "_", file.split('/')[-1]])
+        file_path = ""
+        if "http" not in file:
+            file_path = os.path.dirname(body.file) + '/'
+        return file_name, file_path
 
     @utils.replyerror_v2
     def add_bmc_user(self, req):
@@ -37,11 +47,8 @@ class BiosSetPlugin_v2(object):
         rsp = models.BiosconfigSet()
         rsp.requestId = header[V2_REQUEST_ID]
 
-        func = 'add_bmc_user'
-        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={} --username={} --userpassword='{}'"
-        executor = shell.call(cmd.format(body.adminname, body.adminpassword, body.ip, body.username, body.userpassword))
-        if executor.return_code != 0:
-            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
+        self.execute_cmd('add_bmc_user', body, "--username={}".format(body.username),
+                         "--userpassword='{}'".format(body.userpassword))
         return jsonobject.dumps(rsp)
 
     @utils.replyerror_v2
@@ -53,11 +60,7 @@ class BiosSetPlugin_v2(object):
         rsp = models.BiosconfigSet()
         rsp.requestId = header[V2_REQUEST_ID]
 
-        func = 'vnc_config'
-        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={} --vnc_password='{}'"
-        executor = shell.call(cmd.format(body.username, body.password, body.ip, body.vnc_password))
-        if executor.return_code != 0:
-            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
+        self.execute_cmd('vnc_config', body, "--vnc_password='{}'".format(body.vnc_password))
         return jsonobject.dumps(rsp)
 
     @utils.replyerror_v2
@@ -69,8 +72,7 @@ class BiosSetPlugin_v2(object):
         rsp = models.BiosconfigSet()
         rsp.requestId = header[V2_REQUEST_ID]
 
-        func = 'mail_alarm'
-        self.execute_cmd(func, body)
+        self.execute_cmd('mail_alarm', body)
         return jsonobject.dumps(rsp)
 
     @utils.replyerror_v2
@@ -82,8 +84,7 @@ class BiosSetPlugin_v2(object):
         rsp = models.BiosconfigSet()
         rsp.requestId = header[V2_REQUEST_ID]
 
-        func = 'snmp_alarm'
-        self.execute_cmd(func, body)
+        self.execute_cmd('snmp_alarm', body)
         return jsonobject.dumps(rsp)
 
     @utils.replyerror_v2
@@ -95,8 +96,7 @@ class BiosSetPlugin_v2(object):
         rsp = models.BiosconfigSet()
         rsp.requestId = header[V2_REQUEST_ID]
 
-        func = 'performance_config'
-        self.execute_cmd(func, body)
+        self.execute_cmd('performance_config', body)
         return jsonobject.dumps(rsp)
 
     @utils.replyerror_v2
@@ -108,8 +108,7 @@ class BiosSetPlugin_v2(object):
         rsp = models.BiosconfigSet()
         rsp.requestId = header[V2_REQUEST_ID]
 
-        func = 'numa_config'
-        self.execute_cmd(func, body)
+        self.execute_cmd('numa_config', body)
         return jsonobject.dumps(rsp)
 
     @utils.replyerror_v2
@@ -121,15 +120,11 @@ class BiosSetPlugin_v2(object):
         rsp = models.BiosInfo()
         rsp.requestId = header[V2_REQUEST_ID]
 
-        func = 'get_sn'
-        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={}"
-        executor = shell.call(cmd.format(body.username, body.password, body.ip))
-        if executor.return_code != 0:
-            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
+        executor = self.execute_cmd('get_sn', body)
         output = executor.stdout.replace("\n", "")
         sysinfo = output.split(',')
         if len(sysinfo) != 3:
-            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func,
+            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func='get_sn',
                                             error="get sn/bios/bmc information failure")
         logger.debug("sn/bmc/bios result: %s" % output)
         rsp.data.update({"bios_version": sysinfo[0].replace(" ", "")})
@@ -146,13 +141,7 @@ class BiosSetPlugin_v2(object):
         rsp = models.BiosconfigSet()
         rsp.requestId = header[V2_REQUEST_ID]
 
-        func = 'boot_set'
-        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={} --boot_type={}"
-        boot_type = body.boot_type
-        executor = shell.call(cmd.format(body.username, body.password, body.ip, boot_type.title()))
-        if executor.return_code != 0:
-            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
-
+        self.execute_cmd('boot_set', body, "--boot_type={}".format(body.boot_type.title()))
         return jsonobject.dumps(rsp)
 
     @utils.replyerror_v2
@@ -164,11 +153,7 @@ class BiosSetPlugin_v2(object):
         rsp = models.BiosInfo()
         rsp.requestId = header[V2_REQUEST_ID]
 
-        func = 'get_mac'
-        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={}"
-        executor = shell.call(cmd.format(body.username, body.password, body.ip))
-        if executor.return_code != 0:
-            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
+        executor = self.execute_cmd('get_mac', body)
         output = executor.stdout.replace("\n", "")
         sysinfo = output.split(',')
         logger.debug("macs result: %s" % output)
@@ -184,12 +169,7 @@ class BiosSetPlugin_v2(object):
         rsp = models.BiosconfigSet()
         rsp.requestId = header[V2_REQUEST_ID]
 
-        func = 'pxe_config'
-        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={} --pxe_device={}"
-        executor = shell.call(cmd.format(body.username, body.password, body.ip, body.pxe_device))
-        if executor.return_code != 0:
-            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
-
+        self.execute_cmd('pxe_config', body, "--pxe_device={}".format(body.pxe_device))
         return jsonobject.dumps(rsp)
 
     @utils.replyerror_v2
@@ -201,9 +181,7 @@ class BiosSetPlugin_v2(object):
         rsp = models.BiosconfigSet()
         rsp.requestId = header[V2_REQUEST_ID]
 
-        func = 'boot_config'
-        self.execute_cmd(func, body)
-
+        self.execute_cmd('boot_config', body)
         return jsonobject.dumps(rsp)
 
     @utils.replyerror_v2
@@ -215,13 +193,8 @@ class BiosSetPlugin_v2(object):
         rsp = models.BiosconfigSet()
         rsp.requestId = header[V2_REQUEST_ID]
 
-        func = 'config_raid'
-        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={} --raid_type={} --disk_list={}"
-        disk_list = ','.join(body.disk_list)
-        executor = shell.call(cmd.format(body.username, body.password, body.ip, body.raid_type, disk_list))
-        if executor.return_code != 0:
-            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
-
+        self.execute_cmd('config_raid', body, "--raid_type={}".format(body.raid_type),
+                         "--disk_list={}".format(','.join(body.disk_list)))
         return jsonobject.dumps(rsp)
 
     @utils.replyerror_v2
@@ -236,7 +209,6 @@ class BiosSetPlugin_v2(object):
         funcs = ['snmp_alarm', 'performance_config', 'numa_config', 'change_timezone']
         for func in funcs:
             self.execute_cmd(func, body)
-
         return jsonobject.dumps(rsp)
 
     @utils.replyerror_v2
@@ -248,12 +220,7 @@ class BiosSetPlugin_v2(object):
         rsp = models.BiosconfigSet()
         rsp.requestId = header[V2_REQUEST_ID]
 
-        func = 'vnc_control'
-        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={}"
-        executor = shell.call(cmd.format(body.username, body.password, body.ip))
-        if executor.return_code != 0:
-            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
-
+        self.execute_cmd('vnc_control', body)
         return jsonobject.dumps(rsp)
 
     @utils.replyerror_v2
@@ -265,19 +232,14 @@ class BiosSetPlugin_v2(object):
         rsp = models.BiosconfigSet()
         rsp.requestId = header[V2_REQUEST_ID]
 
-        func = 'single_sn'
-        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={}"
-        executor = shell.call(cmd.format(body.username, body.password, body.ip))
-        if executor.return_code != 0:
-            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
+        executor = self.execute_cmd('single_sn', body)
         output = executor.stdout.replace("\n", "")
         logger.debug(output)
         if body.sn in executor.stdout:
             logger.debug("%s the record of sn is true" % body.ip)
         else:
-            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func,
+            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func='single_sn',
                                             error="The record of sn is false, actual result is %s" % output)
-
         return jsonobject.dumps(rsp)
 
     @utils.replyerror_v2
@@ -289,19 +251,14 @@ class BiosSetPlugin_v2(object):
         rsp = models.BiosconfigSet()
         rsp.requestId = header[V2_REQUEST_ID]
 
-        func = 'bios_update'
-        file_name = "".join([body.ip, "_", body.file.split('/')[-1]])
-        file_path = ""
-        if "http" not in body.file:
-            file_path = os.path.dirname(body.file) + '/'
-        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={} --update_file={} --is_restart={} --file_path={}"
-        executor = shell.call(cmd.format(body.username, body.password, body.ip, file_name, body.restart_now, file_path))
-        if executor.return_code != 0:
-            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
-        output = executor.stdout.replace("\n", "")
-        rsp.data = output.replace(" ", "")
-        logger.debug(output)
+        file_name, file_path = self.file_param(body.ip, body.file)
+        self.execute_cmd('bios_update', body, "--update_file={}".format(file_name),
+                         "--is_restart={}".format(body.restart_now), "--file_path={}".format(file_path))
 
+        logger.debug("get the version of bios")
+        executor = self.execute_cmd('get_sn', body)
+        output = executor.stdout.replace("\n", "").split(',')
+        rsp.data = output[0].replace(" ", "")
         return jsonobject.dumps(rsp)
 
     @utils.replyerror_v2
@@ -313,19 +270,14 @@ class BiosSetPlugin_v2(object):
         rsp = models.BiosconfigSet()
         rsp.requestId = header[V2_REQUEST_ID]
 
-        func = 'idrac_update'
-        file_name = "".join([body.ip, "_", body.file.split('/')[-1]])
-        file_path = ""
-        if "http" not in body.file:
-            file_path = os.path.dirname(body.file) + '/'
-        cmd = "sh " + self.bios_set + func + " {} '{}' --ipaddr={} --update_file={} --file_path={}"
-        executor = shell.call(cmd.format(body.username, body.password, body.ip, file_name, file_path))
-        if executor.return_code != 0:
-            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
-        output = executor.stdout.replace("\n", "")
-        rsp.data = output.replace(" ", "")
-        logger.debug(output)
+        file_name, file_path = self.file_param(body.ip, body.file)
+        self.execute_cmd('idrac_update', body, "--update_file={}".format(file_name),
+                         "--file_path={}".format(file_path))
 
+        logger.debug("get the version of idrac")
+        executor = self.execute_cmd('get_sn', body)
+        output = executor.stdout.replace("\n", "").split(',')
+        rsp.data = output[1].replace(" ", "")
         return jsonobject.dumps(rsp)
 
     @utils.replyerror_v2
@@ -352,6 +304,3 @@ class BiosSetPlugin_v2(object):
                 fp.write(i)
         logger.debug("download file %s finish" % file_name)
         return jsonobject.dumps(rsp)
-
-
-
