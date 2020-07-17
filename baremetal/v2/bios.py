@@ -1,6 +1,7 @@
 import logging
 import os
 import requests
+import simplejson
 from oslo_config import cfg
 
 from baremetal.v2 import models
@@ -46,8 +47,9 @@ class BiosSetPlugin_v2(object):
 
         rsp = models.BiosconfigSet()
         rsp.requestId = header[V2_REQUEST_ID]
-
-        self.execute_cmd('add_bmc_user', body, "--username={}".format(body.username),
+        ip_info = jsonobject.loads(simplejson.dumps(
+            {"username": body.adminname, "password": body.adminpassword, "ip": body.ip}))
+        self.execute_cmd('add_bmc_user', ip_info, "--username={}".format(body.username),
                          "--userpassword='{}'".format(body.userpassword))
         return jsonobject.dumps(rsp)
 
