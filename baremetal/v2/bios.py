@@ -299,6 +299,7 @@ class BiosSetPlugin_v2(object):
         if executor.return_code != 0:
             raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
         output = executor.stdout.replace("\n", "")
+        rsp.data = output.replace(" ", "")
         logger.debug(output)
 
         return jsonobject.dumps(rsp)
@@ -322,6 +323,7 @@ class BiosSetPlugin_v2(object):
         if executor.return_code != 0:
             raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func, error=str(executor.stderr))
         output = executor.stdout.replace("\n", "")
+        rsp.data = output.replace(" ", "")
         logger.debug(output)
 
         return jsonobject.dumps(rsp)
@@ -344,7 +346,7 @@ class BiosSetPlugin_v2(object):
 
         if file.status_code != 200:
             raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func,
-                                            error="the status of Download address is 404, Not Found")
+                                            error="the status of Download address is not found")
         with open(file_path, 'wb') as fp:
             for i in file.iter_content(chunk_size=10240):
                 fp.write(i)
