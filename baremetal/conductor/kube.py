@@ -116,13 +116,13 @@ class KubePlugin(object):
                 "replicas": 1,
                 "selector": {
                     "matchLabels": {
-                        "app": _deployment_name
+                        "bmsnode": _node
                     }
                 },
                 "template": {
                     "metadata": {
                         "labels": {
-                            "app": _deployment_name
+                            "bmsnode": _node
                         },
                         "annotations": {
                             "k8s.v1.cni.cncf.io/networks": _multus_name

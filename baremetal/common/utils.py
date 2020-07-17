@@ -360,6 +360,6 @@ def exchange_mask(mask):
     return sum(mask_count)
 
 def exchange_cidr(ip, prefix):
-    ip_net = ip + "/" + prefix
+    ip_net = str(ip) + "/" + str(prefix)
     net_cidr = IPNetwork(ip_net)
     return str(net_cidr.cidr)
