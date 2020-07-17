@@ -22,7 +22,7 @@ class BiosSetPlugin_v2(object):
         self.bios_set = os.path.join(self.bios_script, "ipmi/ipmi_function.sh ")
 
     def execute_cmd(self, func, body, *args):
-        cmd = ["sh", self.bios_set, func, body.username, '{}'.format(body.password), "".join(["--ipaddr=", body.ip])]
+        cmd = ["sh", self.bios_set, func, body.username, "'{}'".format(body.password), "".join(["--ipaddr=", body.ip])]
         for arg in args:
             cmd.append(arg)
 
