@@ -254,7 +254,13 @@ function function_cds_pxe_config()
                 else
                     $racadm_comm  set  BIOS.NetworkSettings.PxeDev${device_number}EnDis Enabled
                     $racadm_comm  set  BIOS.PxeDev${device_number}Settings.PxeDev${device_number}Interface $NIC_info
-                    $racadm_comm  set  nic.nicconfig.${device_number}.WakeOnLan Disabled
+                    $racadm_comm  get  nic.nicconfig.${device_number} | grep WakeOnLan
+                    if [[ $? == 0 ]]; then
+                        $racadm_comm  set  nic.nicconfig.${device_number}.WakeOnLan Disabled
+                        local WakeOnLan=`$racadm_comm get  nic.nicconfig.${device_number}.WakeOnLan | grep Disabled | wc -l`
+                     else
+                        local WakeOnLan=1
+                     fi
 					$racadm_comm get nic.nicconfig.${device_number} | grep LegacyBootProto
 					if [[ $? == 0 ]]; then
 						$racadm_comm  set  nic.nicconfig.${device_number}.LegacyBootProto PXE
@@ -264,7 +270,7 @@ function function_cds_pxe_config()
 					fi
 		
                     local PxeDevInterface=`$racadm_comm get  BIOS.PxeDev${device_number}Settings.PxeDev${device_number}Interface | grep $NIC_info | wc -l`
-                    local WakeOnLan=`$racadm_comm get  nic.nicconfig.${device_number}.WakeOnLan | grep Disabled | wc -l`
+
                     local PxeDevEnDis=`$racadm_comm get BIOS.NetworkSettings.PxeDev${device_number}EnDis | grep Enabled | wc -l`
 
                     if [[ $PxeDevInterface == 1  && $LegacyBootProto == 1 && $WakeOnLan == 1 && $PxeDevEnDis == 1 ]];then
