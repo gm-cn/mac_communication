@@ -239,7 +239,7 @@ function function_cds_pxe_config()
 		do
             local i=${str:$a:1}
             if [[ $i != "," ]]; then
-        	    local NIC_info=`$racadm_comm get NIC.nicconfig.$i | sed -n '1,1'p | tr -s "=#" | cut -d ":" -f 2`
+        	    local NIC_info=`$racadm_comm get NIC.nicconfig.$i | sed -n '1,1'p | tr -s "=#" : | cut -d ":" -f 2`
 				local NIC_info1=`$racadm_comm hwinventory NIC | grep "$NIC_info" | cut -d  ":" -f 1 | sed -n "2p"`
 				$racadm_comm hwinventory $NIC_info | grep "Link Speed" | grep "Not Applicable"
 				local nic_result=$?
