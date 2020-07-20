@@ -20,6 +20,7 @@ power_status_log_file="$log_dir/power_status.log"
 hardware_all_log="$log_dir/hardware.log"
 auto_time=600
 wait_time=300
+bw=8M
 
 data_path="/data"
 password="cds-china"
@@ -443,6 +444,7 @@ function iperf3_client()
 	fi
 	
 	Bandwidth=`$sshpass_prefix  $ssh_ip "iperf3 -c $service_ip -t $auto_time -R" |grep sender |awk '{print $7}'`
+	Bandwidth=`$sshpass_prefix  $ssh_ip "iperf3 -c $service_ip -b $bw -t $auto_time -R" |grep sender |awk '{print $7}'`
 	eth_info=`$sshpass_prefix  $ssh_ip "ip route" | grep $client_ip |awk -F '[ \t*]' '{print \$3}'`
 	crc=`$sshpass_prefix  $ssh_ip "ethtool  -S $eth_info" |grep rx_crc_errors |sed -n 1p|awk '{print $2}'`	
 	if [[ $Bandwidth != "" ]]  && [[ "$crc" == "0" ]]; then
