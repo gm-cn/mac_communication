@@ -165,6 +165,11 @@ function check()
 			return 0
 			break
 		fi
+		$racadm_comm jobqueue view -i $jobID | grep Status | grep Failed
+		if [[ $? == 0 ]]; then
+		    echo "job failed" >> $log_file
+		    return 1
+		fi
 		if [[ $limit -ge 30 ]]; then
 			echo "Job timeout  error" >> $log_file
 			return 1
@@ -818,12 +823,15 @@ function function_cds_idrac_update()
 	check $1 $2 $3 $jobID
 	if [[ $? != 0 ]]; then
 		echo "hostip:$1 $date_info idrac update error" >> $log_file
+		return 1
 	fi
 	ping_test $1
 	if [[ $? == 0 ]]; then
 		echo "hostip:$1 $date_info idrac update success" >> $log_file
+		return 0
 	else
 		echo "hostip:$1 $date_info idrac update error" >> $log_file
+		return 1
 	fi
 }
 
