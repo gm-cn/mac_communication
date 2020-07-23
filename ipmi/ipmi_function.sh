@@ -22,7 +22,7 @@ function usage()
     echo " compatible bios version including 2.2.11 | 2.5.4"
     echo " compatible idrac version including 3.34.34.34 | 4.10.10.10"
     echo " compatible nics type including 4 nics | 4 nics + 2 sub-nics"
-    exit 0
+    exit 1
 }
 
 
