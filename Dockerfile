@@ -5,5 +5,4 @@ RUN apt-get update && apt-get install -y gcc nfs-common ipmitool iputils-ping rs
 COPY requirements.txt /requirements.txt
 RUN  pip install setuptools -U && pip install -r /requirements.txt --no-cache-dir
 COPY . /app
-RUN tar -zxvf /app/DellEMC-iDRACTools-Web-LX-9.3.0-3379_A00.tar.gz -C /opt
 WORKDIR /app
