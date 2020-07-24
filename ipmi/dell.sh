@@ -179,7 +179,7 @@ function boot_bios()
 	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
 	$racadm_comm set BIOS.BiosBootSettings.BootMode $4
 	if [[ $? == 215 ]]; then
-        exit 5
+        function_cds_error_message boot_set 215
     fi
 	jobID=`$racadm_comm jobqueue create BIOS.Setup.1-1 -s TIME_NOW -r Forced | grep -w "Commit JID =" | tr -d "\n\r" | awk '{print $4}' `
         if [[ $jobID != "" ]];	then
@@ -256,8 +256,8 @@ function function_cds_pxe_config()
                     echo "NIC $NIC_info is not avaiable" >> $log_file
                 else
                     $racadm_comm  set  BIOS.NetworkSettings.PxeDev${device_number}EnDis Enabled
-					if [[ $? == 215 ]]; then
-						exit 7
+                    if [[ $? == 215 ]]; then
+						function_cds_error_message pxe_config 215
 					fi
                     $racadm_comm  set  BIOS.PxeDev${device_number}Settings.PxeDev${device_number}Interface $NIC_info
                     $racadm_comm  get  nic.nicconfig.${device_number} | grep WakeOnLan
@@ -442,7 +442,7 @@ function uefi_bootseq()
 
     $racadm_comm set BIOS.BiosBootSettings.UefiBootSeq $boot_seq_info
 	if [[ $? == 201 ]]; then
-		exit 8
+		function_cds_error_message boot_seq 201
 	fi
 
 	jobID=`$racadm_comm jobqueue create BIOS.Setup.1-1 -s TIME_NOW -r Forced | grep -w "Commit JID =" | tr -d "\n\r" | awk '{print $4}'`
@@ -790,22 +790,19 @@ function function_cds_bios_update()
 		result=`$racadm_comm update -f $file_path$4 --reboot`
         result_code=$?
 		if [[ $result_code != 0 && $result_code == 217 ]]; then
-			echo "hostip:$1 $date_info bios update error , invalid file type" >> $log_file
-			return 6
+			function_cds_error_message bios_update 217
 		fi
 		if [[ $result_code != 0 ]]; then
 			echo $result | grep "The file used for the operation is invalid"
 			if [[ $? == 0 ]]; then
-				echo "hostip:$1 $date_info bios update error this bios version is not support on this system" >> $log_file
-				return 3
+				function_cds_error_message bios_update 3 
 			fi
 			echo $result | grep "The syntax of the specified command is not correct."	
 			if [[ $? == 0 ]]; then
-				echo "hostip:$1 $date_info bios update error invalid file name" >> $log_file
-				return 2
+				function_cds_error_message bios_update 2
 			fi
 			echo "hostip:$1 $date_info bios update error" >> $log_file
-			return 4
+			function_cds_error_message bios_update 4
 		fi
 		
 		jobID=`$racadm_comm jobqueue view | tail -n 20 | grep JID | tr "=]" " " | awk '{print $3}'`
@@ -822,22 +819,19 @@ function function_cds_bios_update()
 		result=`$racadm_comm update -f $file_path$4`
 		result_code=$?
 		if [[ $result_code != 0 && $result_code == 217 ]]; then
-            echo "hostip:$1 $date_info bios update error invalid file type" >> $log_file
-            return 6
-        fi
+        	function_cds_error_message bios_update 217
+		fi
         if [[ $result_code != 0 ]]; then
             echo $result | grep "The file used for the operation is invalid"
             if [[ $? == 0 ]]; then
-                echo "hostip:$1 $date_info bios update error ,this bios version is not support on this system"
-   				return 3
-            fi
+            	function_cds_error_message bios_update 3
+			fi
             echo $result | grep "The syntax of the specified command is not correct."
             if [[ $? == 0 ]]; then
-                echo "hostip:$1 $date_info bios update error invalid file name" >> $log_file
-                return 2
-            fi
+            	function_cds_error_message bios_update 2
+			fi
             echo "hostip:$1 $date_info bios update error" >> $log_file
-            return 4
+            function_cds_error_message bios_update 4
         fi
 		echo "hostip:$1 $date_info bios update success and will take effect on next boot" >> $log_file
 		return 0
@@ -850,11 +844,23 @@ function function_cds_idrac_update()
 {
 	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
 	$racadm_comm jobqueue delete --all
-	$racadm_comm update -f $update_file_path$4
-	if [[ $? != 0 ]]; then
-        echo "hostip:$1 $date_info idrac update error" >> $log_file
-    	return 1
-    fi
+	result=`$racadm_comm update -f $update_file_path$4`
+	result_code=$?
+        if [[ $result_code != 0 && $result_code == 217 ]]; then
+        	function_cds_error_message idrac_update 217
+		fi
+        if [[ $result_code != 0 ]]; then
+            echo $result | grep "The file used for the operation is invalid"
+            if [[ $? == 0 ]]; then
+            	function_cds_error_message idrac_update 3
+			fi
+            echo $result | grep "The syntax of the specified command is not correct."
+            if [[ $? == 0 ]]; then
+            	function_cds_error_message idrac_update 2
+			fi
+            echo "hostip:$1 $date_info idrac update error" >> $log_file
+			function_cds_error_message idrac_update 4
+		fi
 	sleep 20
 	jobID=`$racadm_comm jobqueue view | tail | grep JID | tr "=]" " " | awk '{print $3}'`
 	check $1 $2 $3 $jobID
@@ -893,4 +899,80 @@ function ping_test()
 			break
 		fi
 	done
+}
+
+function function_cds_error_message()
+{
+	echo $1
+	case $1 in
+		pxe_config)
+			case $2 in
+				215)
+					exit 5
+					;;
+				*)
+					exit 4
+					;;
+			esac
+			;;
+		boot_set)
+			case $2 in
+                215)
+                    exit 5
+                    ;;
+                *)
+                    exit 4
+                    ;;
+            esac
+            ;;
+		bios_update)
+			case $2 in
+                217)
+                    exit 217
+                    ;;
+                2)
+					exit 2
+					;;
+				3)
+					exit 3
+					;;
+				4)
+					exit 4
+					;;
+				*)
+                    exit 4
+                    ;;
+            esac
+            ;;
+		idrac_update)
+			case $2 in
+            	217)
+                    exit 217
+                    ;;
+                2)
+                    exit 2
+                    ;;
+                3)
+                    exit 3
+                    ;;
+                4)
+                    exit 4
+                    ;;
+                *)
+                    exit 4
+                    ;;
+			esac
+            ;;
+		boot_seq)
+			case $2 in
+                201)
+                    exit 5
+                    ;;
+                *)
+                    exit 4
+                    ;;
+            esac
+            ;;
+	esac	
+	
 }
