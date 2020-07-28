@@ -54,8 +54,12 @@ class HarewarePlugin_v2(object):
         log_path = os.path.join(self.hard_log, log_id)
         if os.path.exists(log_path):
             return log_path
-        else:
+
+        try:
             os.makedirs(log_path)
+        except Exception as e:
+            logger.error(str(e))
+        logger.debug("hardware test log path: %s" % log_path)
         return log_path
 
     def _disk_test(self, password, ip_file):
