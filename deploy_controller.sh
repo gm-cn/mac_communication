@@ -53,7 +53,7 @@ function install_package()
 {
     echo "====================================================================="
     yum install vim epel-release python2-pip python2 python-devel.x86_64 -y
-
+    yum install bc stress -y
     mkdir -p ~/.pip
     cat > ~/.pip/pip.conf << EOF
 [global]
@@ -63,6 +63,20 @@ EOF
     echo "====================================================================="
     pip install --upgrade pip
     yum -y install syslinux xinetd tftp-server grub2-efi shim dhcp rpcbind nfs-utils ipmitool gcc
+}
+
+function change_handle()
+{
+  local a=`sed -n "/soft[ ]\+nofile/"p /etc/security/limits.conf`
+  if [[ $a != "" ]];then
+    sed -i '/soft[ ]\+nofile/d' /etc/security/limits.conf
+  fi
+  local b=`sed -n "/hard[ ]\+nofile/"p /etc/security/limits.conf`
+  if [[ $b != "" ]];then
+    sed -i '/hard[ ]\+nofile/d' /etc/security/limits.conf
+  fi
+  echo "* soft nofile 65536" >> /etc/security/limits.conf
+  echo "* hard nofile 65536" >> /etc/security/limits.conf
 }
 
 function config_tftpboot()
@@ -211,6 +225,7 @@ function main()
     done
     install_dhcp
     config_nfs
+    change_handle
 }
 
 main
