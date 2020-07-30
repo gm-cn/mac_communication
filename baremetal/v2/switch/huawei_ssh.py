@@ -303,6 +303,11 @@ class HuaweiSwitch_v2(huawei_ssh.HuaweiSwitch):
         datas = self.my_send_command(commands)
         return switch_utils.screen_port_config(self.config["ip"], datas)
 
+    def get_switch_sn(self):
+        command = switch_utils.DIS_SN
+        datas = self.my_send_command([command])
+        return switch_utils.screen_sn(datas)
+
 
 class SwitchPlugin(object):
 
@@ -641,6 +646,29 @@ class SwitchPlugin(object):
         with HuaweiSwitch_v2(device_cfg) as client:
             try:
                 result = client.get_port_config(body.ports)
+            except Exception as ex:
+                raise exceptions.SwitchTaskV2Error(BmsCodeMsg.SWITCH_ERROR, error=str(ex))
+        rsp.data = result
+        return jsonobject.dumps(rsp)
+
+    @utils.replyerror_v2
+    def get_switch_sn(self, req):
+        body = jsonobject.loads(req[http.REQUEST_BODY])
+        header = req[http.REQUEST_HEADER]
+
+        rsp = models.GetSwitchSn()
+        rsp.requestId = header[V2_REQUEST_ID]
+
+        device_cfg = {
+            "device_type": "huawei",
+            "ip": body.host,
+            "username": body.username,
+            "password": body.password
+        }
+
+        with HuaweiSwitch_v2(device_cfg) as client:
+            try:
+                result = client.get_switch_sn()
             except Exception as ex:
                 raise exceptions.SwitchTaskV2Error(BmsCodeMsg.SWITCH_ERROR, error=str(ex))
         rsp.data = result

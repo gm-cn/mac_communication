@@ -1,6 +1,6 @@
 #!/bin/sh
 
-log_file="lenovo_log"
+log_file="/var/log/cdsstack/lenovo_log"
 date_info=`date`
 path=`dirname $0`
 onecli_dir="$path/onecli/onecli"

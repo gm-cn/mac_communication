@@ -144,6 +144,8 @@ class RestService(object):
                                      self.switches_v2.save)
         self.rest.register_async_uri(constants.V2_GET_PORT_CFG_PATH,
                                      self.switches_v2.get_port_config)
+        self.rest.register_sync_uri(constants.V2_SWITCH_SN_PATH,
+                                     self.switches_v2.get_switch_sn)
         # bios set
         self.rest.register_async_uri(constants.V2_BIOS_ADD_USER_PATH,
                                      self.bios_v2.add_bmc_user)
@@ -189,6 +191,8 @@ class RestService(object):
                                     self.bios_v2.bios_update)
         self.rest.register_async_uri(constants.V2_IDRAC_UPDATE_PATH,
                                     self.bios_v2.idrac_update)
+        self.rest.register_async_uri(constants.V2_DOWNLOAD_FILE_PATH,
+                                     self.bios_v2.download_file)
 
     def __init__(self, config):
         opts.register_all_options()

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-log_file="supermicro_log"
+log_file="/var/log/cdsstack/supermicro_log"
 date_info=`date`
 path=`dirname $0`
 smc_dir="$path/smc/sum_2.4.0_Linux_x86_64/sum"

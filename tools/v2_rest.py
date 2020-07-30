@@ -492,6 +492,27 @@ def alter_vlan(req):
     (status, result) = req.post(path, data, None)
     print " alter vlan config result: %s" % result
 
+def get_se_sn(req):
+    path = "/v2/baremetal/switch/sn"
+    body = {
+                "username": sw_username,
+                "password": sw_password,
+                "host": sw_ip,
+    }
+    data = simplejson.dumps(body)
+    (status, result) = req.post(path, data, None)
+    print " get sn config result: %s" % result
+
+def download_file(req):
+    path = "/v2/baremetal/ipmi/download"
+    body = {
+        "url": "http://xxx/xxx/xxx",
+        "ip": "34.34.34.43"
+    }
+    data = simplejson.dumps(body)
+    (status, result) = req.post(path, data, None)
+    print "download file result: %s" % result
+
 if __name__ == "__main__":
     ip = "10.128.125.23"
     username = "admin"
@@ -540,3 +561,5 @@ if __name__ == "__main__":
     # scp_hw_log(rest)
     # get_port_config(rest)
     # alter_vlan(rest)
+    # get_se_sn(rest)
+    # download_file(rest)

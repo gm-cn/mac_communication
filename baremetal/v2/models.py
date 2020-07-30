@@ -74,3 +74,8 @@ class HardwareTest(AgentResponse):
     def __init__(self):
         super(HardwareTest, self).__init__()
         self.data = {}
+
+class GetSwitchSn(AgentResponse):
+    def __init__(self):
+        super(GetSwitchSn, self).__init__()
+        self.data = {}
