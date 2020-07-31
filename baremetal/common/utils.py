@@ -9,6 +9,7 @@ import tempfile
 import traceback
 
 import time
+from netaddr import IPNetwork
 
 import jinja2
 from oslo_concurrency import processutils
@@ -352,3 +353,13 @@ def patch_task_status(extra, pid):
         extra["status"] = '-'
     extra["status"] = "doing"
 
+def exchange_mask(mask):
+    count_bit = lambda bin_str: len([i for i in bin_str if i=='1'])
+    mask_splited = mask.split('.')
+    mask_count = [count_bit(bin(int(i))) for i in mask_splited]
+    return sum(mask_count)
+
+def exchange_cidr(ip, prefix):
+    ip_net = str(ip) + "/" + str(prefix)
+    net_cidr = IPNetwork(ip_net)
+    return str(net_cidr.cidr)

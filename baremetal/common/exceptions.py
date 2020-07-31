@@ -153,6 +153,21 @@ class TransferImageError(BaremetalError):
     message = "cmd %(command)s transfer image failed.Error msg:%(error)s"
 
 
+class CreateMultusError(BaremetalError):
+    message = "create multus %(name)s failed. Error msg:%(error)s"
+
+
+class DeleteMultusError(BaremetalError):
+    message = "delete multus %(name)s failed. Error msg:%(error)s"
+
+
+class Createdeployment(BaremetalError):
+    message = "create deployment %(name)s failed. Error msg:%(error)s"
+
+
+class Deletedeployment(BaremetalError):
+    message = "delete deployment %(name)s failed. Error msg:%(error)s"
+
 # add bms_api v2 function
 #
 # bms_api v2 api

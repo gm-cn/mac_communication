@@ -229,6 +229,7 @@ class IPMIPlugin(object):
                     raise e
 
             if len(count_num) > 0:
+                time.sleep(10)
                 _check_out(set_boot_cmd)
 
         return jsonobject.dumps(rsp)

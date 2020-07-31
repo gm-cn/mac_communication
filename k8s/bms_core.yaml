@@ -1,0 +1,99 @@
+# bms_core DaemonSet
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: bms-core
+  namespace: default
+  labels:
+    app: bms-core
+    name: bms-core
+    version: v1
+  annotations:
+    service: bms-core
+spec:
+  minReadySeconds: 20
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      name: bms-core
+  template:
+    metadata:
+      name: bms-core
+      namespace: default
+      labels:
+        name: bms-core
+    spec:
+      containers:
+      - name: bms-core
+        image: harbor.capitalonline.net/bms-test/bms_core:lze-0714-2
+        command: ["sh","-c","bash /app/start.sh"]
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 7081
+          hostPort: 7081
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: baremetal-api
+          mountPath: /etc/baremetal-api
+        - name: env-config
+          mountPath: /config
+        - name: logs
+          mountPath: /var/log/cdsstack
+      initContainers:
+      - name: config
+        image: harbor.capitalonline.net/base/curl-jq
+        command:
+          - bash
+          - -c
+          - "
+podName=`echo $NODE_NAME | cut -d '-' -f2`;
+siteName=`echo $NODE_NAME | cut -d '-' -f3`;
+
+configmap=`curl -k -H \"Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)\" -k  -H 'Accept: application/json' -H 'Content-Type: application/json' https://10.96.0.1/api/v1/namespaces/default/configmaps/${podName}-${siteName}-bmscore`;
+
+configStr=`echo $configmap | jq '.data.config'`;
+configStrLen=${#configStr};
+config=${configStr:1:(( $configStrLen - 2 ))};
+
+echo -e $config;
+
+echo -e $config >> /etc/baremetal-api/baremetal-api.ini;
+
+vip1800Str=`echo $configmap | jq '.data.vip1800'`;
+vip1800StrLen=${#vip1800Str};
+vip1800=${vip1800Str:1:(( $vip1800StrLen - 2 ))};
+echo $vip1800;
+echo \"vip1800=$vip1800\" >> /config/env;
+          "
+        imagePullPolicy: Always
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /config
+          name: env-config
+        - mountPath: /etc/baremetal-api
+          name: baremetal-api
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+      imagePullSecrets:
+      - name: login-registry
+      volumes:
+      - name: env-config
+        emptyDir: {}
+      - name: baremetal-api
+        emptyDir: {}
+      - name: logs
+        hostPath:
+          path: /logs/bmscore
+      hostNetwork: true
+      restartPolicy: Always
+      nodeSelector:
+        node: ok
+      serviceAccountName: bms-admin
+      serviceAccount: bms-admin
