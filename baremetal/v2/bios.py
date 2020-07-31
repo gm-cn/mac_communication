@@ -299,7 +299,7 @@ class BiosSetPlugin_v2(object):
         file = requests.get(body.url, stream=True)
 
         if file.status_code != 200:
-            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func=func,
+            raise exceptions.SetBiosV2Error(BmsCodeMsg.BIOS_ERROR, ip=body.ip, func="download file",
                                             error="the status of Download address is not found")
         with open(file_path, 'wb') as fp:
             for i in file.iter_content(chunk_size=10240):
