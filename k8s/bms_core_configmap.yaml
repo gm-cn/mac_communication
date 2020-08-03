@@ -1,0 +1,561 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod45-wuxi2-bmscore
+data:
+  vip401: 10.128.192.21
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.177.178.184
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /root/bms_api
+    nginx_ip = 10.128.121.40
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod34-beijing6-bmscontrol
+data:
+  vip401: 10.128.192.21
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.177.178.184
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /root/bms_api
+    nginx_ip = 10.128.121.40
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod33-dalasi4-bmscontrol
+data:
+  vip401: 10.128.192.21
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.177.178.184
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /root/bms_api
+    nginx_ip = 10.128.121.40
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod35-dalasi5-bmscontrol
+data:
+  vip401: 10.128.192.21
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.177.178.184
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /root/bms_api
+    nginx_ip = 10.128.121.40
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod31-dalasi6-bmscontrol
+data:
+  vip401: 10.128.192.21
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.177.178.184
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /root/bms_api
+    nginx_ip = 10.128.121.40
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod42-mengmai-bmscontrol
+data:
+  vip401: 10.128.192.21
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.177.178.184
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /root/bms_api
+    nginx_ip = 10.128.121.40
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod46-beijing10-bmscontrol
+data:
+  vip401: 10.128.192.21
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.177.178.184
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /root/bms_api
+    nginx_ip = 10.128.121.40
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod44-beijing9-bmscontrol
+data:
+  vip401: 10.128.192.21
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.177.178.184
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /root/bms_api
+    nginx_ip = 10.128.121.40
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod47-dalasi8-bmscontrol
+data:
+  vip401: 10.128.192.21
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.177.178.184
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /root/bms_api
+    nginx_ip = 10.128.121.40
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod53-xinjiapo5-bmscontrol
+data:
+  vip401: 10.128.192.21
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.177.178.184
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /root/bms_api
+    nginx_ip = 10.128.121.40
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod55-deguo3-bmscontrol
+data:
+  vip401: 10.128.192.21
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.177.178.184
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /root/bms_api
+    nginx_ip = 10.128.121.40
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod25-shanghai4-bmscontrol
+data:
+  vip401: 10.128.192.21
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.177.178.184
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /root/bms_api
+    nginx_ip = 10.128.121.40
