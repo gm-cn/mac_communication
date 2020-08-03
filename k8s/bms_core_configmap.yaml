@@ -471,7 +471,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pod55-deguo3-bmscontrol
+  name: pod55-germany3-bmscontrol
 data:
   vip401: 10.128.192.21
   vip1800: 192.168.50.20
