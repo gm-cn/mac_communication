@@ -48,7 +48,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pod34-beijing6-bmscontrol
+  name: pod34-beijin6-bmscontrol
 data:
   vip401: 10.128.192.21
   vip1800: 192.168.50.20
@@ -95,7 +95,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pod33-dalasi4-bmscontrol
+  name: pod33-dallas4-bmscontrol
 data:
   vip401: 10.128.192.21
   vip1800: 192.168.50.20
@@ -142,7 +142,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pod35-dalasi5-bmscontrol
+  name: pod35-dallas5-bmscontrol
 data:
   vip401: 10.128.192.21
   vip1800: 192.168.50.20
@@ -189,7 +189,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pod31-dalasi6-bmscontrol
+  name: pod31-dallas6-bmscontrol
 data:
   vip401: 10.128.192.21
   vip1800: 192.168.50.20
@@ -236,7 +236,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pod42-mengmai-bmscontrol
+  name: pod42-mumbai-bmscontrol
 data:
   vip401: 10.128.192.21
   vip1800: 192.168.50.20
@@ -283,7 +283,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pod46-beijing10-bmscontrol
+  name: pod46-beijin10-bmscontrol
 data:
   vip401: 10.128.192.21
   vip1800: 192.168.50.20
@@ -330,7 +330,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pod44-beijing9-bmscontrol
+  name: pod44-beijin9-bmscontrol
 data:
   vip401: 10.128.192.21
   vip1800: 192.168.50.20
@@ -377,7 +377,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pod47-dalasi8-bmscontrol
+  name: pod47-dallas8-bmscontrol
 data:
   vip401: 10.128.192.21
   vip1800: 192.168.50.20
@@ -424,7 +424,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pod53-xinjiapo5-bmscontrol
+  name: pod53-singapore5-bmscontrol
 data:
   vip401: 10.128.192.21
   vip1800: 192.168.50.20
