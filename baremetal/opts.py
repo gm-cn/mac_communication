@@ -86,7 +86,9 @@ k8s_opts = [
     cfg.StrOpt('host',
                help='kubernetes apiserver host'),
     cfg.StrOpt('image_registry',
-               help='kubernetes image registry')
+               help='kubernetes image registry'),
+    cfg.StrOpt('image_secret',
+               help='kubernetes image registry secret')
 ]
 
 def list_opts():
