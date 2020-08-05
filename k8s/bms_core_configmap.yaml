@@ -318,7 +318,7 @@ kind: ConfigMap
 metadata:
   name: pod46-beijin10-bmscore
 data:
-  vip401: 10.128.192.21
+  vip401: 10.128.200.30
   vip1800: 192.168.50.20
   config: |+
     [DEFAULT]
@@ -583,7 +583,7 @@ kind: ConfigMap
 metadata:
   name: pod25-shanghai4-bmscore
 data:
-  vip401: 10.128.192.21
+  vip401: 10.128.130.30
   vip1800: 192.168.50.20
   config: |+
     [DEFAULT]
