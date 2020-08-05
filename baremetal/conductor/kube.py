@@ -17,6 +17,7 @@ class KubePlugin(object):
         self.api_host = CONF.k8sInfo.host
         self.image_registry = CONF.k8sInfo.image_registry
         self.api_token = CONF.k8sInfo.token
+        self.image_secret = CONF.k8sInfo.image_secret
         self.aConfiguration = client.Configuration()
         self.aConfiguration.host = self.api_host
         self.aConfiguration.verify_ssl = False
@@ -129,6 +130,11 @@ class KubePlugin(object):
                         }
                     },
                     "spec": {
+                        "imagePullSecrets": [
+                            {
+                                "name": self.image_secret
+                            }
+                        ],
                         "containers": [
                             {
                                 "name": _deployment_name,
