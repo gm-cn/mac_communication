@@ -42,3 +42,5 @@ spec:
         emptyDir: {}
       imagePullSecrets:
         - name: login-registry
+      nodeSelector:
+        node: ok
