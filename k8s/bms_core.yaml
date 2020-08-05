@@ -91,6 +91,7 @@ echo \"vip1800=$vip1800\" >> /config/env;
       - name: logs
         hostPath:
           path: /logs/bmscore
+          type: DirectoryOrCreate
       hostNetwork: true
       restartPolicy: Always
       nodeSelector:
