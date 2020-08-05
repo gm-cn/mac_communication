@@ -1,81 +1,18 @@
 #!/bin/sh
 log_file="/var/log/cdsstack/dell_log"
 date_info=`date`
-cmd_dir="/opt/dell/srvadmin/sbin/racadm"
+cmd_dir=""
 update_file_path="/tftpboot/update_file/"
 function_cds_add_bmc_user()
 {
-	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
-	flag=0
-	m=3
-	for((i=3;i<17;i++));
-	do
-		$racadm_comm get iDRAC.Users.$i.UserName | grep $4
-		if [[ $? == 0 ]]; then
-			$racadm_comm set iDRAC.Users.$i.Password "$5"
-			echo "hostip:$1 $date_info change password username:$4  password:$5 success" >> $log_file
-			flag=1
-			return 0
-		fi
-		
-		$racadm_comm get iDRAC.Users.$i.Enable | grep Disabled
-		if [[ $? == 0 ]]; then
-			break
-		fi
-	done
-	
-	if [[ $flag == 0 ]]; then			
-		for((j=3;j<17;j++));
-		do
-			$racadm_comm get iDRAC.Users.$j.Enable | grep Disabled
-			if [[ $? == 0 ]]; then
-				m=$j
-				break
-			fi
-		done
-	fi
+	ipmcget -d userlist
+	ipmcset -d adduser -v userb
 
-    $racadm_comm set iDRAC.Users.$m.UserName "$4"
-	$racadm_comm set iDRAC.Users.$m.Password "$5"
-	$racadm_comm set iDRAC.Users.$m.IpmiLanPrivilege 4
-	$racadm_comm set iDRAC.Users.$m.IpmiSerialPrivilege 4
-	$racadm_comm set iDRAC.Users.$m.ProtocolEnable 1
-	$racadm_comm set iDRAC.Users.$m.Privilege 1
-	$racadm_comm set iDRAC.Users.$m.SolEnable 1
-	$racadm_comm set iDRAC.Users.$m.Enable 1
-	$racadm_comm set iDRAC.Users.$m.Privilege 511
-	$racadm_comm get iDRAC.Users.$m.UserName | grep $4 
-	if [[ $? == 0 ]]; then
-        echo "hostip:$1 $date_info add bmc username:$4  password:$5 success" >> $log_file
-        return 0
-    else
-        echo "hostip:$1 $data_info add bmc username:$4  password:$5 error" >> $log_file
-        return 1
-    fi
 }
 
 function function_cds_delete_bmc_user()
 {
-	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
-	for((i=3;i<17;i++));
-	do 
-		$racadm_comm get iDRAC.Users.$i.UserName | grep $4
-		if [[ $? == 0 ]]; then
-			$racadm_comm set iDRAC.Users.$i.IpmiLanPrivilege 15
-			$racadm_comm set iDRAC.Users.$i.IpmiSerialPrivilege 15
-			$racadm_comm set iDRAC.Users.$i.ProtocolEnable 0
-			$racadm_comm set iDRAC.Users.$i.Privilege ""
-			$racadm_comm set iDRAC.Users.$i.SolEnable 0
-			$racadm_comm set iDRAC.Users.$i.Enable 0
-			$racadm_comm set iDRAC.Users.$i.UserName ""
-			
-			echo "hostip:$1 $date_info delete username:$4  success" >> $log_file
-			echo "$i"
-			return 0
-		fi
-	done
-	echo "hostip:$1 $date_info delete username:$4 error user name does not exist" >> $log_file
-	return 1
+	return 0
 }
 
 function function_cds_vnc_config()
@@ -91,8 +28,8 @@ function function_cds_vnc_config()
         echo "hostip:$1 $data_info vnc config error" >> $log_file
         return 1
     fi
-        
-        
+
+
 }
 
 function function_cds_mail_alarm()
@@ -104,7 +41,7 @@ function function_cds_mail_alarm()
 	$racadm_comm set iDRAC.EmailAlert.1.Address baremetal.alarm@capitalonline.net
 	$racadm_comm set idrac.remotehosts.SMTPServerIPAddress 117.79.130.234
 	$racadm_comm get iDRAC.EmailAlert.1.Enable | grep Enabled
-	sleep 1 
+	sleep 1
 	if [[ $? == 0 ]]; then
         echo "hostip:$1 $date_info mail:baremetal.alarm@capitalonline.net alarm  success" >> $log_file
         return 0
@@ -112,24 +49,13 @@ function function_cds_mail_alarm()
         echo "hostip:$1 $data_info mail:baremetal.alarm@capitalonline.net alarm error" >> $log_file
         return 1
     fi
-	
+
 }
 
 function function_cds_snmp_alarm()
 {
-	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
-	$racadm_comm set iDRAC.SNMP.TrapFormat SNMPv2
-	$racadm_comm set iDRAC.SNMP.Alert.1.DestAddr 10.128.101.54
-	$racadm_comm set iDRAC.SNMP.Alert.1.Enable 1
-    $racadm_comm get iDRAC.SNMP.Alert.1.DestAddr | grep "10.128.101.54"
- 	
-	if [[ $? == 0 ]]; then
-        echo "hostip:$1 $date_info snmp addr 10.128.101.54 success" >> $log_file
-        return 0
-    else
-		echo "hostip:$1 $data_info snmp snmp addr 10.128.101.54 error" >> $log_file
-        return 1
-    fi
+	ipmcset -t trap -d version -v V2C
+	ipmcset -t trap -d address -v 1 10.128.101.54
 }
 
 function function_cds_performance_config()
@@ -154,7 +80,7 @@ function check()
 	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
 	start=`date`
 	let limit=0
-	while [ 1 ] 
+	while [ 1 ]
 	do
 		sleep 20
 		let limit++
@@ -363,44 +289,7 @@ function function_cds_alarm_config()
 
 function bios_bootseq()
 {
-        racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
-
-        local boot_seq_info=""
-        nic_count=`$racadm_comm get NIC.nicconfig | tr -i '\n' |wc -l`
-        let a=1
-        while [ $a -le $nic_count ]
-        do
-            let a++
-            NIC_info=`$racadm_comm get NIC.nicconfig.$a | sed -n '1,1'p | tr -s "=#" : | cut -d ":" -f 2`
-            $racadm_comm get BIOS.BiosBootSettings.BootSeq | grep $NIC_info
-            ret=`echo $?`
-            if [[ $ret == 0 ]]; then
-                $racadm_comm hwinventory $NIC_info | grep "Link Speed" | grep "Not Applicable"
-                if [[ $? == 1 ]]; then
-                    if [[ $boot_seq_info == "" ]]; then
-                        boot_seq_info="$NIC_info"
-                    else
-                        boot_seq_info="$boot_seq_info,$NIC_info"
-				    fi
-			    fi
-			fi
-	    done
-        $racadm_comm set BIOS.BiosBootSettings.BootSeq $boot_seq_info
-        if [[ $jobID != "" ]]; then
-		jobID=`$racadm_comm jobqueue create BIOS.Setup.1-1 -s TIME_NOW -r Forced | grep -w "Commit JID =" | tr -d "\n\r" | awk '{print $4}' `
-	        #function_cds_power_off $1 $2 $3
-        	#function_cds_power_on $1 $2 $3
-	        check $1 $2 $3 $jobID
-	fi
-	$racadm_comm get BIOS.BiosBootSettings.BootSeq | grep "$boot_seq_info"
-	if [[ $? == 0 ]];then
-	        echo "hostip:$1 $date_info BootSeq $boot_seq_info success" >> $log_file
-	        return 0
-        else
-                echo "hostip:$1 $date_info BootSeq $boot_seq_info error" >> $log_file
-                return 1
-        fi
-
+        ipmcset -d bootdevice -v 1 permanent
 }
 
 function uefi_bootseq()
@@ -499,25 +388,10 @@ function function_cds_boot_config()
 
 function function_cds_get_sn()
 {
-    racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
-	sleep 3
-	for ((i=0;i<30;i++))
-	do 
-		local Firmware_Version=`$racadm_comm getsysinfo | grep "Firmware Version" | awk '{print $4}' | tr "\n" "\t" | sed s/[[:space:]]//g`
-		if [[ $Firmware_Version != "" ]]; then
-			break
-		fi
-		sleep 5
-	done
-	if [[ $$Firmware_Version == "" ]]; then
-		return 1
-	fi
-	sleep 5
-	Service_Tag=`$racadm_comm getsysinfo | grep "Service Tag" | awk '{print $4}' | tr -s "\n" "\t"`
+
+	Firmware_Version=`$racadm_comm getsysinfo | grep "Firmware Version" | awk '{print $4}' | tr "\n" "\t"`
 	BIOS_Version=`$racadm_comm getsysinfo | grep "System BIOS Version" | awk '{print $5}' | tr "\n" "\t"`
-	#power_reden=`$racadm_comm get system.power.redundancypolicy | head -1 | tr -d "\\r"`
-	string="$BIOS_Version,$Firmware_Version,$Service_Tag"
-	echo $string
+	ipmcget -d serialnumber
 }
 
 function function_cds_single_sn()
@@ -777,16 +651,8 @@ function function_cds_vnc_control_new()
 
 function function_cds_change_timezone()
 {
-    racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
-    $racadm_comm get idrac.time | grep Shanghai
-    if [[ $? == 0 ]]; then
-        echo "Time zone already China"
-    else
-        echo "changing time zone to Asia/Shanghai"
-        $racadm_comm set idrac.time.timezone Asia/Shanghai
-        $racadm_comm set idrac.time.timezoneoffset 480
-        echo "changing success now is $date_info"
-    fi
+    ipmcset -d timezone -v Asia/Shanghai
+    ipmcget -d time
 }
 
 function function_cds_bios_update()
@@ -807,16 +673,16 @@ function function_cds_bios_update()
 		if [[ $result_code != 0 ]]; then
 			echo $result | grep "The file used for the operation is invalid"
 			if [[ $? == 0 ]]; then
-				function_cds_error_message bios_update 3 
+				function_cds_error_message bios_update 3
 			fi
-			echo $result | grep "The syntax of the specified command is not correct."	
+			echo $result | grep "The syntax of the specified command is not correct."
 			if [[ $? == 0 ]]; then
 				function_cds_error_message bios_update 2
 			fi
 			echo "hostip:$1 $date_info bios update error" >> $log_file
 			function_cds_error_message bios_update 4
 		fi
-		
+
 		jobID=`$racadm_comm jobqueue view | tail -n 20 | grep JID | tr "=]" " " | awk '{print $3}'`
 		check $1 $2 $3 $jobID
 		if [[ $? == 0 ]]; then
@@ -889,9 +755,7 @@ function function_cds_idrac_update()
 
 function function_cds_single_sn()
 {
-    racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
-	Service_Tag=`$racadm_comm getsysinfo | grep "Service Tag" | awk '{print $4}' | tr "\n" "\t"`
-	echo $Service_Tag
+    ipmcget -d serialnumber
 }
 
 function ping_test()
@@ -985,6 +849,6 @@ function function_cds_error_message()
                     ;;
             esac
             ;;
-	esac	
-	
+	esac
+
 }
