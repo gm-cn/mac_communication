@@ -228,8 +228,8 @@ function function_cds_hardreset()
 
 function function_cds_change_timezone()
 {
-    echo "huawei does not support change timezone"
-    return 0
+    sshpass_prefix="sshpass -p $3 ssh $2@$1"
+    $sshpass_prefix "ipmcset -d timezone -v Asia/Shanghai"
 }
 
 function function_cds_bios_update()

@@ -320,9 +320,9 @@ function function_cds_pxe_config()
                                 if [[ $? == 0 ]]; then
                                         echo "NIC $NIC_info is not avaiable" >> $log_file
                                 else
-					                $racadm_comm get bios.biosbootsettings.bootseq | grep $NIC_info
-                                    if [[ $? == 0 ]]; then
-                                    #$racadm_comm set NIC.nicconfig.$i.Legacybootproto PXE
+					                #$racadm_comm get bios.biosbootsettings.bootseq | grep $NIC_info
+                                    #if [[ $? == 0 ]]; then
+                                    $racadm_comm set NIC.nicconfig.$i.Legacybootproto PXE
                                     if [[ $boot_seq == "" ]]; then
                                         boot_seq="$NIC_info"
                                     else
