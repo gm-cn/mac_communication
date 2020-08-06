@@ -212,7 +212,7 @@ kind: ConfigMap
 metadata:
   name: pod31-dallas6-bmscore
 data:
-  vip401: 10.128.192.21
+  vip401: 10.200.192.30
   vip1800: 192.168.50.20
   config: |+
     [DEFAULT]
@@ -530,7 +530,7 @@ kind: ConfigMap
 metadata:
   name: pod55-germany3-bmscore
 data:
-  vip401: 10.128.192.21
+  vip401: 10.197.192.30
   vip1800: 192.168.50.20
   config: |+
     [DEFAULT]
