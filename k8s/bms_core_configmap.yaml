@@ -108,7 +108,7 @@ kind: ConfigMap
 metadata:
   name: pod33-dallas4-bmscore
 data:
-  vip401: 10.128.192.21
+  vip401: 10.200.200.30
   vip1800: 192.168.50.20
   config: |+
     [DEFAULT]

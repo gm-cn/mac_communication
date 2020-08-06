@@ -46,6 +46,7 @@ DELETE_IMAGE_PATH = "/baremetal/image/delete"
 
 TEST = "/pxe/notify/metadata"
 DEBUG_PATH = '/debug/result'
+HEALTH = "/health"
 
 CREATE_MULTUS = "/baremetal/multus/create"
 DELETE_MULTUS = "/baremetal/multus/delete"

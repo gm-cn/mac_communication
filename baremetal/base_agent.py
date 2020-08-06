@@ -33,6 +33,8 @@ def new_rest_service(config={}):
 
 class RestService(object):
     def register_path(self):
+        self.rest.register_async_uri(constants.HEALTH,
+                                     self.baremetal.health)
         self.rest.register_async_uri(constants.INIT_IMAGE_PATH,
                                      self.baremetal.init_image)
         self.rest.register_async_uri(constants.SET_VLAN_PATH,

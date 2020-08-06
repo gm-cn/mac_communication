@@ -237,6 +237,10 @@ class BaremetalPlugin(object):
                 return base64.b64encode(compressed.read())
 
     @utils.replyerror
+    def health(self, req):
+        return jsonobject.dumps("ok")
+
+    @utils.replyerror
     def init_image(self, req):
         body = jsonobject.loads(req[http.REQUEST_BODY])
         logger.debug("init_image body:%s" % req[http.REQUEST_BODY])
