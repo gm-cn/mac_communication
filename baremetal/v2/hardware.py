@@ -27,7 +27,7 @@ class HarewarePlugin_v2(object):
         self.bios_script = CONF.auto_test.bios_set
         self.nginx_ip = CONF.auto_test.nginx_ip
         self.nginx_log = "/var/www/log/bms/hardware_log"
-        self.hard_log = "/var/log/cdsstack/hardware_log"
+        self.hard_log = "/tftpboot/hardware_log"
         self.hw_path = os.path.join(self.bios_script, "auto_test")
         self.hw_script = os.path.join(self.hw_path, 'extension.sh ')
 
