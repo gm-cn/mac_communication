@@ -330,7 +330,6 @@ function function_cds_pxe_config()
                                         boot_seq="$boot_seq,$NIC_info"
                                     fi
                                 fi
-                            fi
                         fi
                 done
 		$racadm_comm set BIOS.BiosBootSettings.BootSeq $boot_seq
