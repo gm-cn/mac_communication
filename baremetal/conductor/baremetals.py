@@ -238,7 +238,8 @@ class BaremetalPlugin(object):
 
     @utils.replyerror
     def health(self, req):
-        return jsonobject.dumps("ok")
+        rsp = models.AgentResponse("success")
+        return jsonobject.dumps(rsp)
 
     @utils.replyerror
     def init_image(self, req):
