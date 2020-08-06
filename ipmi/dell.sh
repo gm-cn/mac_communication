@@ -118,6 +118,7 @@ function function_cds_mail_alarm()
 function function_cds_snmp_alarm()
 {
 	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+    $racadm_comm set iDRAC.IPMILan.AlertEnable enabled
 	$racadm_comm set iDRAC.SNMP.TrapFormat SNMPv2
 	$racadm_comm set iDRAC.SNMP.Alert.1.DestAddr 10.128.101.54
 	$racadm_comm set iDRAC.SNMP.Alert.1.Enable 1
@@ -320,16 +321,15 @@ function function_cds_pxe_config()
                                 if [[ $? == 0 ]]; then
                                         echo "NIC $NIC_info is not avaiable" >> $log_file
                                 else
-					                $racadm_comm get bios.biosbootsettings.bootseq | grep $NIC_info
-                                    if [[ $? == 0 ]]; then
-                                    #$racadm_comm set NIC.nicconfig.$i.Legacybootproto PXE
+					                #$racadm_comm get bios.biosbootsettings.bootseq | grep $NIC_info
+                                    #if [[ $? == 0 ]]; then
+                                    $racadm_comm set NIC.nicconfig.$i.Legacybootproto PXE
                                     if [[ $boot_seq == "" ]]; then
                                         boot_seq="$NIC_info"
                                     else
                                         boot_seq="$boot_seq,$NIC_info"
                                     fi
                                 fi
-                            fi
                         fi
                 done
 		$racadm_comm set BIOS.BiosBootSettings.BootSeq $boot_seq
