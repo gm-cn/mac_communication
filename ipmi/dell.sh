@@ -118,6 +118,7 @@ function function_cds_mail_alarm()
 function function_cds_snmp_alarm()
 {
 	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+    $racadm_comm set iDRAC.IPMILan.AlertEnable enabled
 	$racadm_comm set iDRAC.SNMP.TrapFormat SNMPv2
 	$racadm_comm set iDRAC.SNMP.Alert.1.DestAddr 10.128.101.54
 	$racadm_comm set iDRAC.SNMP.Alert.1.Enable 1

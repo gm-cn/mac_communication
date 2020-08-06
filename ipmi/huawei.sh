@@ -134,15 +134,15 @@ function function_cds_config_raid()
 
 function function_cds_power_status()
 {
-        ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
-        status=`$ipmitool_commd  power status |awk '{print $4}'`
-        echo "hostip:$1 $date_info power status:   $status" >> $log_file
+    ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
+    status=`$ipmitool_commd  power status |awk '{print $4}'`
+    echo "hostip:$1 $date_info power status:   $status" >> $log_file
 }
 
 function function_cds_power_off()
 {
-        ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
-        $ipmitool_commd  power off
+    ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
+    $ipmitool_commd  power off
 
 	ret=`echo $?`
 	if [[ $ret != 0 ]];then
@@ -157,8 +157,8 @@ function function_cds_power_off()
 		status=`$ipmitool_commd  power status |awk '{print $4}'`
 		sleep 1
 		if [[ "$status" ==  "off" ]];then
-		        echo "hostip:$1 $date_info power off success" >> $log_file
-	        	break;
+            echo "hostip:$1 $date_info power off success" >> $log_file
+            break;
 		fi
 
 		if [[ $retry == 10 ]];then
@@ -169,7 +169,7 @@ function function_cds_power_off()
 		let retry++
 		let totle_number++
 		if [[ $totle_number == 200 ]];then
-		        echo "hostip:$1 $date_info power off error" >> $log_file
+            echo "hostip:$1 $date_info power off error" >> $log_file
 			break
 		fi
 
@@ -177,8 +177,8 @@ function function_cds_power_off()
 }
 function function_cds_power_on()
 {
-        ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
-        $ipmitool_commd  power on
+    ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
+    $ipmitool_commd  power on
 
 	ret=`echo $?`
 	if [[ $ret != 0 ]];then
@@ -193,8 +193,8 @@ function function_cds_power_on()
 		status=`$ipmitool_commd  power status |awk '{print $4}'`
 		sleep 1
 		if [[ "$status" ==  "on" ]];then
-		        echo "hostip:$1 $date_info power on   success" >> $log_file
-	        	break;
+            echo "hostip:$1 $date_info power on   success" >> $log_file
+            break;
 		fi
 
 		if [[ $retry == 10 ]];then
@@ -205,7 +205,7 @@ function function_cds_power_on()
 		let retry++
 		let totle_number++
 		if [[ $totle_number == 200 ]];then
-		        echo "hostip:$1 $date_info power on   error" >> $log_file
+            echo "hostip:$1 $date_info power on   error" >> $log_file
 			break
 		fi
 
