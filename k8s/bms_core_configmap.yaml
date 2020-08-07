@@ -160,7 +160,7 @@ kind: ConfigMap
 metadata:
   name: pod35-dallas5-bmscore
 data:
-  vip401: 10.128.192.21
+  vip401: 10.200.208.30
   vip1800: 192.168.50.20
   config: |+
     [DEFAULT]
