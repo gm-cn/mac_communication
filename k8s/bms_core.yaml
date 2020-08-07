@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
       - name: bms-core
-        image: harbor.capitalonline.net/bms-test/bms_core:lze-0714-2
+        image: harbor.capitalonline.net/bms-test/bms_core:pro
         command: ["sh","-c","bash /app/start.sh"]
         imagePullPolicy: Always
         ports:
