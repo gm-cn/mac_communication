@@ -36,7 +36,7 @@ data:
 
     [shellinabox_console]
     pid_dir = /var/run/console
-    host_ip = 10.177.178.184
+    host_ip = 10.128.192.21
     subprocess_timeout = 1
 
     [auto_test]
@@ -89,7 +89,7 @@ data:
 
     [shellinabox_console]
     pid_dir = /var/run/console
-    host_ip = 10.177.178.184
+    host_ip = 10.128.192.21
     subprocess_timeout = 1
 
     [auto_test]
@@ -141,7 +141,7 @@ data:
 
     [shellinabox_console]
     pid_dir = /var/run/console
-    host_ip = 10.177.178.184
+    host_ip = 10.200.200.30
     subprocess_timeout = 1
 
     [auto_test]
@@ -193,7 +193,7 @@ data:
 
     [shellinabox_console]
     pid_dir = /var/run/console
-    host_ip = 10.177.178.184
+    host_ip = 10.200.208.30
     subprocess_timeout = 1
 
     [auto_test]
@@ -245,7 +245,7 @@ data:
 
     [shellinabox_console]
     pid_dir = /var/run/console
-    host_ip = 10.177.178.184
+    host_ip = 10.200.192.30
     subprocess_timeout = 1
 
     [auto_test]
@@ -263,7 +263,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pod42-mumbai-bmscore
+  name: pod42-mumbai2-bmscore
 data:
   vip401: 10.194.192.30
   vip1800: 192.168.50.20
@@ -293,12 +293,12 @@ data:
     acquire_lock_timeout = 300
 
     [sw_conn]
-    conn_type = telnet
+    conn_type = ssh
     device_type = huawei
 
     [shellinabox_console]
     pid_dir = /var/run/console
-    host_ip = 10.177.178.184
+    host_ip = 10.194.192.30
     subprocess_timeout = 1
 
     [auto_test]
@@ -351,7 +351,7 @@ data:
 
     [shellinabox_console]
     pid_dir = /var/run/console
-    host_ip = 10.177.178.184
+    host_ip = 10.128.200.30
     subprocess_timeout = 1
 
     [auto_test]
@@ -404,7 +404,7 @@ data:
 
     [shellinabox_console]
     pid_dir = /var/run/console
-    host_ip = 10.177.178.184
+    host_ip = 10.128.240.30
     subprocess_timeout = 1
 
     [auto_test]
@@ -457,7 +457,7 @@ data:
 
     [shellinabox_console]
     pid_dir = /var/run/console
-    host_ip = 10.177.178.184
+    host_ip = 10.200.216.30
     subprocess_timeout = 1
 
     [auto_test]
@@ -505,12 +505,12 @@ data:
     acquire_lock_timeout = 300
 
     [sw_conn]
-    conn_type = telnet
+    conn_type = ssh
     device_type = huawei
 
     [shellinabox_console]
     pid_dir = /var/run/console
-    host_ip = 10.177.178.184
+    host_ip = 10.198.192.30
     subprocess_timeout = 1
 
     [auto_test]
@@ -558,12 +558,12 @@ data:
     acquire_lock_timeout = 300
 
     [sw_conn]
-    conn_type = telnet
+    conn_type = ssh
     device_type = huawei
 
     [shellinabox_console]
     pid_dir = /var/run/console
-    host_ip = 10.177.178.184
+    host_ip = 10.197.192.30
     subprocess_timeout = 1
 
     [auto_test]
@@ -616,7 +616,7 @@ data:
 
     [shellinabox_console]
     pid_dir = /var/run/console
-    host_ip = 10.177.178.184
+    host_ip = 10.128.130.30
     subprocess_timeout = 1
 
     [auto_test]
