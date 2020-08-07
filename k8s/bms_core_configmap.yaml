@@ -265,7 +265,7 @@ kind: ConfigMap
 metadata:
   name: pod42-mumbai-bmscore
 data:
-  vip401: 10.128.192.21
+  vip401: 10.194.192.30
   vip1800: 192.168.50.20
   config: |+
     [DEFAULT]
