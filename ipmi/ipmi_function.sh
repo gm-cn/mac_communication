@@ -130,7 +130,8 @@ parse_options $@
 is_valid_action ${action} || echo "invalid action"
 path=`dirname $0`
 
-Product_Name=`ipmitool -U $name -P $password -H $ipaddr -I lanplus  fru  |grep "Product Manufacturer" |awk '{print  $4}' `
+Product_Name=`ipmitool -U $name -P $password -H $ipaddr -I lanplus  fru  |grep "Product Manufacturer" |awk '{print  $4}' | sed -n '1p'`
+
 ipmitool -U $name -P $password -H $ipaddr -I lanplus  fru  |grep "Product Manufacturer" |awk '{print  $4}' |grep Lenovo
 if [[ $? == 0 ]]; then
     Product_Name="Lenovo"
@@ -153,6 +154,10 @@ case "${Product_Name}" in
 
     Supermicro)
         source $path/supermicro.sh ;;
+
+    Huawei)
+        source $path/huawei.sh ;;
+
     *)
         echo "Unknown Action:${action}!"
 	usage

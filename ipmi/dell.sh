@@ -50,7 +50,7 @@ function_cds_add_bmc_user()
         return 0
     else
         echo "hostip:$1 $data_info add bmc username:$4  password:$5 error" >> $log_file
-        return 1
+        function_cds_error_message add_bmc_user 4
     fi
 }
 
@@ -89,7 +89,7 @@ function function_cds_vnc_config()
         return 0
     else
         echo "hostip:$1 $data_info vnc config error" >> $log_file
-        return 1
+        function_cds_error_message vnc_config 4
     fi
         
         
@@ -110,14 +110,15 @@ function function_cds_mail_alarm()
         return 0
     else
         echo "hostip:$1 $data_info mail:baremetal.alarm@capitalonline.net alarm error" >> $log_file
-        return 1
-    fi
+    	function_cds_error_message mail_alarm 4
+	fi
 	
 }
 
 function function_cds_snmp_alarm()
 {
 	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+    $racadm_comm set iDRAC.IPMILan.AlertEnable enabled
 	$racadm_comm set iDRAC.SNMP.TrapFormat SNMPv2
 	$racadm_comm set iDRAC.SNMP.Alert.1.DestAddr 10.128.101.54
 	$racadm_comm set iDRAC.SNMP.Alert.1.Enable 1
@@ -128,8 +129,8 @@ function function_cds_snmp_alarm()
         return 0
     else
 		echo "hostip:$1 $data_info snmp snmp addr 10.128.101.54 error" >> $log_file
-        return 1
-    fi
+    	function_cds_error_message snmp_alarm 4
+	fi
 }
 
 function function_cds_performance_config()
@@ -144,8 +145,8 @@ function function_cds_performance_config()
         return 0
     else
         echo "hostip:$1 $date_info performance_config PerfOptimized error" >> $log_file
-        return 1
-    fi
+    	function_cds_error_message performance_config 4
+	fi
 }
 
 function check()
@@ -167,7 +168,7 @@ function check()
 		fi
 		if [[ $limit -ge 30 ]]; then
 			echo "Job timeout  error" >> $log_file
-			return 1
+			function_cds_error_message check 8
 			break
 		fi
 	done
@@ -320,16 +321,16 @@ function function_cds_pxe_config()
                                 if [[ $? == 0 ]]; then
                                         echo "NIC $NIC_info is not avaiable" >> $log_file
                                 else
-					                $racadm_comm get bios.biosbootsettings.bootseq | grep $NIC_info
-                                    if [[ $? == 0 ]]; then
-                                    #$racadm_comm set NIC.nicconfig.$i.Legacybootproto PXE
-                                    if [[ $boot_seq == "" ]]; then
-                                        boot_seq="$NIC_info"
-                                    else
-                                        boot_seq="$boot_seq,$NIC_info"
-                                    fi
-                                fi
-                            fi
+                                    $racadm_comm set NIC.nicconfig.$i.Legacybootproto PXE
+									$racadm_comm get bios.biosbootsettings.bootseq | grep $NIC_info
+									if [[ $? == 0 ]]; then
+										if [[ $boot_seq == "" ]]; then
+                                       		boot_seq="$NIC_info"
+                                    	else
+                                       		 boot_seq="$boot_seq,$NIC_info"
+                                    	fi
+                                	fi
+								fi
                         fi
                 done
 		$racadm_comm set BIOS.BiosBootSettings.BootSeq $boot_seq
@@ -366,11 +367,11 @@ function bios_bootseq()
         racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
 
         local boot_seq_info=""
-        nic_count=`$racadm_comm get NIC.nicconfig | tr -i '\n' |wc -l`
+        nic_count=`$racadm_comm get NIC.nicconfig | tr -s '\n' |wc -l`
         let a=1
         while [ $a -le $nic_count ]
         do
-            let a++
+            #let a++
             NIC_info=`$racadm_comm get NIC.nicconfig.$a | sed -n '1,1'p | tr -s "=#" : | cut -d ":" -f 2`
             $racadm_comm get BIOS.BiosBootSettings.BootSeq | grep $NIC_info
             ret=`echo $?`
@@ -384,10 +385,11 @@ function bios_bootseq()
 				    fi
 			    fi
 			fi
+			let a++
 	    done
         $racadm_comm set BIOS.BiosBootSettings.BootSeq $boot_seq_info
-        if [[ $jobID != "" ]]; then
 		jobID=`$racadm_comm jobqueue create BIOS.Setup.1-1 -s TIME_NOW -r Forced | grep -w "Commit JID =" | tr -d "\n\r" | awk '{print $4}' `
+        if [[ $jobID != "" ]]; then
 	        #function_cds_power_off $1 $2 $3
         	#function_cds_power_on $1 $2 $3
 	        check $1 $2 $3 $jobID
@@ -499,9 +501,21 @@ function function_cds_boot_config()
 
 function function_cds_get_sn()
 {
-    	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
-    	Service_Tag=`$racadm_comm getsysinfo | grep "Service Tag" | awk '{print $4}' | tr "\n" "\t"`
-	Firmware_Version=`$racadm_comm getsysinfo | grep "Firmware Version" | awk '{print $4}' | tr "\n" "\t"`
+    racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
+	sleep 3
+	for ((i=0;i<30;i++))
+	do 
+		local Firmware_Version=`$racadm_comm getsysinfo | grep "Firmware Version" | awk '{print $4}' | tr "\n" "\t" | sed s/[[:space:]]//g`
+		if [[ $Firmware_Version != "" ]]; then
+			break
+		fi
+		sleep 5
+	done
+	if [[ $$Firmware_Version == "" ]]; then
+		return 1
+	fi
+	sleep 5
+	Service_Tag=`$racadm_comm getsysinfo | grep "Service Tag" | awk '{print $4}' | tr -s "\n" "\t"`
 	BIOS_Version=`$racadm_comm getsysinfo | grep "System BIOS Version" | awk '{print $5}' | tr "\n" "\t"`
 	#power_reden=`$racadm_comm get system.power.redundancypolicy | head -1 | tr -d "\\r"`
 	string="$BIOS_Version,$Firmware_Version,$Service_Tag"
@@ -903,7 +917,6 @@ function ping_test()
 
 function function_cds_error_message()
 {
-	echo $1
 	case $1 in
 		pxe_config)
 			case $2 in
@@ -928,7 +941,7 @@ function function_cds_error_message()
 		bios_update)
 			case $2 in
                 217)
-                    exit 217
+                    exit 6
                     ;;
                 2)
 					exit 2
@@ -944,10 +957,17 @@ function function_cds_error_message()
                     ;;
             esac
             ;;
+		check)
+			case $2 in
+				8)
+					exit 8
+					;;
+			esac
+			;;
 		idrac_update)
 			case $2 in
             	217)
-                    exit 217
+                    exit 6
                     ;;
                 2)
                     exit 2
@@ -973,6 +993,55 @@ function function_cds_error_message()
                     ;;
             esac
             ;;
+		add_bmc_user)
+			case $2 in
+                4)
+                    exit 4
+                    ;;
+                *)
+                    exit 4
+                    ;;
+            esac
+            ;;
+		vnc_config)
+            case $2 in
+                4)
+                    exit 4
+                    ;;
+                *)
+                    exit 4
+                    ;;
+            esac
+            ;;
+		mail_alarm)
+            case $2 in
+                4)
+                    exit 4
+                    ;;
+                *)
+                    exit 4
+                    ;;
+            esac
+            ;;
+		snmp_alarm)
+            case $2 in
+                4)
+                    exit 4
+                    ;;
+                *)
+                    exit 4
+                    ;;
+            esac
+            ;;
+		performance_config)
+            case $2 in
+                4)
+                    exit 4
+                    ;;
+                *)
+                    exit 4
+                    ;;
+            esac
+            ;;
 	esac	
-	
 }

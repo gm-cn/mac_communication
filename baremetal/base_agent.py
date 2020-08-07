@@ -10,6 +10,7 @@ from baremetal.conductor.ipmi import IPMIPlugin
 from baremetal.conductor.pxe import PxePlugin
 from baremetal.conductor.switch.switches import switch_plugin as SwitchPlugin
 from baremetal.conductor.image import ImagePlugin
+from baremetal.conductor.kube import KubePlugin
 from baremetal.v2.image import ImagePlugin_v2
 from baremetal.v2.switch.switches import switch_plugin_v2 as SwitchPlugin_v2
 from baremetal.conductor.serialconsole import SerialConsolePlugin
@@ -32,6 +33,8 @@ def new_rest_service(config={}):
 
 class RestService(object):
     def register_path(self):
+        self.rest.register_sync_uri(constants.HEALTH,
+                                     self.baremetal.health)
         self.rest.register_async_uri(constants.INIT_IMAGE_PATH,
                                      self.baremetal.init_image)
         self.rest.register_async_uri(constants.SET_VLAN_PATH,
@@ -100,6 +103,14 @@ class RestService(object):
                                      self.img.transfer_image)
         self.rest.register_async_uri(constants.DELETE_IMAGE_PATH,
                                      self.img.delete_image)
+        self.rest.register_async_uri(constants.CREATE_MULTUS,
+                                     self.kube.create_multus)
+        self.rest.register_async_uri(constants.DELETE_MULTUS,
+                                     self.kube.delete_multus)
+        self.rest.register_async_uri(constants.CREATE_MON,
+                                     self.kube.create_deployment)
+        self.rest.register_async_uri(constants.DELETE_MON,
+                                     self.kube.delete_deployment)
 
     # bms_api v2 api
 
@@ -206,6 +217,7 @@ class RestService(object):
         self.img = ImagePlugin()
         self.debug = DebugPlugin()
         self.serial = SerialConsolePlugin()
+        self.kube = KubePlugin()
 
         self.img_v2 = ImagePlugin_v2()
         self.ipmi_v2 = IPMIPlugin_v2()

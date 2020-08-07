@@ -1,0 +1,630 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod45-wuxi2-bmscore
+data:
+  vip401: 10.128.192.21
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.128.192.21
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /app
+    nginx_ip = 10.128.121.40
+
+    [k8sInfo]
+    token = eyJhbGciOiJSUzI1NiIsImtpZCI6IlZhcEZfM3k5MUgxdTQ1LV9lLUlzN1pXaVV3SXNaOWZFMmpVMkhKZGk4aDAifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi11c2VyLXRva2VuLWhzbXB2Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFkbWluLXVzZXIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3OTBiZDI4YS1kOTE0LTQ5ZWYtYmVlZi1mZjU0MTk2Nzc2ZDciLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6a3ViZS1zeXN0ZW06YWRtaW4tdXNlciJ9.H-q3ua692Lt7VWA7VBgwioQv8Q3tmEHlFyZikKrLMdLXzg5-8bA7oWtDo7OgRR3bMlrxjDoRccE8G0JEB3wFXPJWxW2e7PUGTFrxZSzKpz8jTzF7wzP0elMbW3HJY-4eucMaokd5NBLpIBH1ARfesn7OLvgL3I5XhLd30xiQujMvC2tRzQVKrNfRMTRxhRVTnViUoJtBT81oqUsWYCgDA5AiQnFai_wM4LaRBELFKgWQW8tpBFIY2J_tXUYX-6J3JxEh5-dxv_JkdeZePL3SyQzcx--OBsZGOC4x_ps1YrAZAsgSeCsg6CAYIy_D3pU8S6TGP2WO38iwuOOd8SCblQ
+    host = https://10.13.135.111:6443
+    image_registry = harbor.capitalonline.net/bms/mon_client:latest
+    image_secret = login-registry
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod34-beijin6-bmscore
+data:
+  vip401: 10.128.192.21
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.128.192.21
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /app
+    nginx_ip = 10.128.121.40
+
+    [k8sInfo]
+    token = eyJhbGciOiJSUzI1NiIsImtpZCI6IlZhcEZfM3k5MUgxdTQ1LV9lLUlzN1pXaVV3SXNaOWZFMmpVMkhKZGk4aDAifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi11c2VyLXRva2VuLWhzbXB2Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFkbWluLXVzZXIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3OTBiZDI4YS1kOTE0LTQ5ZWYtYmVlZi1mZjU0MTk2Nzc2ZDciLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6a3ViZS1zeXN0ZW06YWRtaW4tdXNlciJ9.H-q3ua692Lt7VWA7VBgwioQv8Q3tmEHlFyZikKrLMdLXzg5-8bA7oWtDo7OgRR3bMlrxjDoRccE8G0JEB3wFXPJWxW2e7PUGTFrxZSzKpz8jTzF7wzP0elMbW3HJY-4eucMaokd5NBLpIBH1ARfesn7OLvgL3I5XhLd30xiQujMvC2tRzQVKrNfRMTRxhRVTnViUoJtBT81oqUsWYCgDA5AiQnFai_wM4LaRBELFKgWQW8tpBFIY2J_tXUYX-6J3JxEh5-dxv_JkdeZePL3SyQzcx--OBsZGOC4x_ps1YrAZAsgSeCsg6CAYIy_D3pU8S6TGP2WO38iwuOOd8SCblQ
+    host = https://10.13.135.111:6443
+    image_registry = harbor.capitalonline.net/bms/mon_client:latest
+    image_secret = login-registry
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod33-dallas4-bmscore
+data:
+  vip401: 10.200.200.30
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.200.200.30
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /app
+    nginx_ip = 10.128.121.40
+
+    [k8sInfo]
+    token = eyJhbGciOiJSUzI1NiIsImtpZCI6IlZhcEZfM3k5MUgxdTQ1LV9lLUlzN1pXaVV3SXNaOWZFMmpVMkhKZGk4aDAifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi11c2VyLXRva2VuLWhzbXB2Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFkbWluLXVzZXIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3OTBiZDI4YS1kOTE0LTQ5ZWYtYmVlZi1mZjU0MTk2Nzc2ZDciLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6a3ViZS1zeXN0ZW06YWRtaW4tdXNlciJ9.H-q3ua692Lt7VWA7VBgwioQv8Q3tmEHlFyZikKrLMdLXzg5-8bA7oWtDo7OgRR3bMlrxjDoRccE8G0JEB3wFXPJWxW2e7PUGTFrxZSzKpz8jTzF7wzP0elMbW3HJY-4eucMaokd5NBLpIBH1ARfesn7OLvgL3I5XhLd30xiQujMvC2tRzQVKrNfRMTRxhRVTnViUoJtBT81oqUsWYCgDA5AiQnFai_wM4LaRBELFKgWQW8tpBFIY2J_tXUYX-6J3JxEh5-dxv_JkdeZePL3SyQzcx--OBsZGOC4x_ps1YrAZAsgSeCsg6CAYIy_D3pU8S6TGP2WO38iwuOOd8SCblQ
+    host = https://10.13.135.111:6443
+    image_registry = harbor.capitalonline.net/bms/mon_client:latest
+    image_secret = login-registry
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod35-dallas5-bmscore
+data:
+  vip401: 10.200.208.30
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.200.208.30
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /app
+    nginx_ip = 10.128.121.40
+
+    [k8sInfo]
+    token = eyJhbGciOiJSUzI1NiIsImtpZCI6IlZhcEZfM3k5MUgxdTQ1LV9lLUlzN1pXaVV3SXNaOWZFMmpVMkhKZGk4aDAifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi11c2VyLXRva2VuLWhzbXB2Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFkbWluLXVzZXIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3OTBiZDI4YS1kOTE0LTQ5ZWYtYmVlZi1mZjU0MTk2Nzc2ZDciLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6a3ViZS1zeXN0ZW06YWRtaW4tdXNlciJ9.H-q3ua692Lt7VWA7VBgwioQv8Q3tmEHlFyZikKrLMdLXzg5-8bA7oWtDo7OgRR3bMlrxjDoRccE8G0JEB3wFXPJWxW2e7PUGTFrxZSzKpz8jTzF7wzP0elMbW3HJY-4eucMaokd5NBLpIBH1ARfesn7OLvgL3I5XhLd30xiQujMvC2tRzQVKrNfRMTRxhRVTnViUoJtBT81oqUsWYCgDA5AiQnFai_wM4LaRBELFKgWQW8tpBFIY2J_tXUYX-6J3JxEh5-dxv_JkdeZePL3SyQzcx--OBsZGOC4x_ps1YrAZAsgSeCsg6CAYIy_D3pU8S6TGP2WO38iwuOOd8SCblQ
+    host = https://10.13.135.111:6443
+    image_registry = harbor.capitalonline.net/bms/mon_client:latest
+    image_secret = login-registry
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod31-dallas6-bmscore
+data:
+  vip401: 10.200.192.30
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.200.192.30
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /app
+    nginx_ip = 10.128.121.40
+
+    [k8sInfo]
+    token = eyJhbGciOiJSUzI1NiIsImtpZCI6IlZhcEZfM3k5MUgxdTQ1LV9lLUlzN1pXaVV3SXNaOWZFMmpVMkhKZGk4aDAifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi11c2VyLXRva2VuLWhzbXB2Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFkbWluLXVzZXIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3OTBiZDI4YS1kOTE0LTQ5ZWYtYmVlZi1mZjU0MTk2Nzc2ZDciLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6a3ViZS1zeXN0ZW06YWRtaW4tdXNlciJ9.H-q3ua692Lt7VWA7VBgwioQv8Q3tmEHlFyZikKrLMdLXzg5-8bA7oWtDo7OgRR3bMlrxjDoRccE8G0JEB3wFXPJWxW2e7PUGTFrxZSzKpz8jTzF7wzP0elMbW3HJY-4eucMaokd5NBLpIBH1ARfesn7OLvgL3I5XhLd30xiQujMvC2tRzQVKrNfRMTRxhRVTnViUoJtBT81oqUsWYCgDA5AiQnFai_wM4LaRBELFKgWQW8tpBFIY2J_tXUYX-6J3JxEh5-dxv_JkdeZePL3SyQzcx--OBsZGOC4x_ps1YrAZAsgSeCsg6CAYIy_D3pU8S6TGP2WO38iwuOOd8SCblQ
+    host = https://10.13.135.111:6443
+    image_registry = harbor.capitalonline.net/bms/mon_client:latest
+    image_secret = login-registry
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod42-mumbai2-bmscore
+data:
+  vip401: 10.194.192.30
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = ssh
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.194.192.30
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /app
+    nginx_ip = 10.128.121.40
+
+    [k8sInfo]
+    token = eyJhbGciOiJSUzI1NiIsImtpZCI6IlZhcEZfM3k5MUgxdTQ1LV9lLUlzN1pXaVV3SXNaOWZFMmpVMkhKZGk4aDAifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi11c2VyLXRva2VuLWhzbXB2Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFkbWluLXVzZXIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3OTBiZDI4YS1kOTE0LTQ5ZWYtYmVlZi1mZjU0MTk2Nzc2ZDciLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6a3ViZS1zeXN0ZW06YWRtaW4tdXNlciJ9.H-q3ua692Lt7VWA7VBgwioQv8Q3tmEHlFyZikKrLMdLXzg5-8bA7oWtDo7OgRR3bMlrxjDoRccE8G0JEB3wFXPJWxW2e7PUGTFrxZSzKpz8jTzF7wzP0elMbW3HJY-4eucMaokd5NBLpIBH1ARfesn7OLvgL3I5XhLd30xiQujMvC2tRzQVKrNfRMTRxhRVTnViUoJtBT81oqUsWYCgDA5AiQnFai_wM4LaRBELFKgWQW8tpBFIY2J_tXUYX-6J3JxEh5-dxv_JkdeZePL3SyQzcx--OBsZGOC4x_ps1YrAZAsgSeCsg6CAYIy_D3pU8S6TGP2WO38iwuOOd8SCblQ
+    host = https://10.13.135.111:6443
+    image_registry = harbor.capitalonline.net/bms/mon_client:latest
+    image_secret = login-registry
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod46-beijin10-bmscore
+data:
+  vip401: 10.128.200.30
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.128.200.30
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /app
+    nginx_ip = 10.128.121.40
+
+    [k8sInfo]
+    token = eyJhbGciOiJSUzI1NiIsImtpZCI6IlZhcEZfM3k5MUgxdTQ1LV9lLUlzN1pXaVV3SXNaOWZFMmpVMkhKZGk4aDAifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi11c2VyLXRva2VuLWhzbXB2Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFkbWluLXVzZXIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3OTBiZDI4YS1kOTE0LTQ5ZWYtYmVlZi1mZjU0MTk2Nzc2ZDciLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6a3ViZS1zeXN0ZW06YWRtaW4tdXNlciJ9.H-q3ua692Lt7VWA7VBgwioQv8Q3tmEHlFyZikKrLMdLXzg5-8bA7oWtDo7OgRR3bMlrxjDoRccE8G0JEB3wFXPJWxW2e7PUGTFrxZSzKpz8jTzF7wzP0elMbW3HJY-4eucMaokd5NBLpIBH1ARfesn7OLvgL3I5XhLd30xiQujMvC2tRzQVKrNfRMTRxhRVTnViUoJtBT81oqUsWYCgDA5AiQnFai_wM4LaRBELFKgWQW8tpBFIY2J_tXUYX-6J3JxEh5-dxv_JkdeZePL3SyQzcx--OBsZGOC4x_ps1YrAZAsgSeCsg6CAYIy_D3pU8S6TGP2WO38iwuOOd8SCblQ
+    host = https://10.13.135.111:6443
+    image_registry = harbor.capitalonline.net/bms/mon_client:latest
+    image_secret = login-registry
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod44-beijin9-bmscore
+data:
+  vip401: 10.128.240.30
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.128.240.30
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /app
+    nginx_ip = 10.128.121.40
+
+    [k8sInfo]
+    token = eyJhbGciOiJSUzI1NiIsImtpZCI6IlZhcEZfM3k5MUgxdTQ1LV9lLUlzN1pXaVV3SXNaOWZFMmpVMkhKZGk4aDAifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi11c2VyLXRva2VuLWhzbXB2Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFkbWluLXVzZXIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3OTBiZDI4YS1kOTE0LTQ5ZWYtYmVlZi1mZjU0MTk2Nzc2ZDciLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6a3ViZS1zeXN0ZW06YWRtaW4tdXNlciJ9.H-q3ua692Lt7VWA7VBgwioQv8Q3tmEHlFyZikKrLMdLXzg5-8bA7oWtDo7OgRR3bMlrxjDoRccE8G0JEB3wFXPJWxW2e7PUGTFrxZSzKpz8jTzF7wzP0elMbW3HJY-4eucMaokd5NBLpIBH1ARfesn7OLvgL3I5XhLd30xiQujMvC2tRzQVKrNfRMTRxhRVTnViUoJtBT81oqUsWYCgDA5AiQnFai_wM4LaRBELFKgWQW8tpBFIY2J_tXUYX-6J3JxEh5-dxv_JkdeZePL3SyQzcx--OBsZGOC4x_ps1YrAZAsgSeCsg6CAYIy_D3pU8S6TGP2WO38iwuOOd8SCblQ
+    host = https://10.13.135.111:6443
+    image_registry = harbor.capitalonline.net/bms/mon_client:latest
+    image_secret = login-registry
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod47-dallas8-bmscore
+data:
+  vip401: 10.200.216.30
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.200.216.30
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /app
+    nginx_ip = 10.128.121.40
+
+    [k8sInfo]
+    token = eyJhbGciOiJSUzI1NiIsImtpZCI6IlZhcEZfM3k5MUgxdTQ1LV9lLUlzN1pXaVV3SXNaOWZFMmpVMkhKZGk4aDAifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi11c2VyLXRva2VuLWhzbXB2Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFkbWluLXVzZXIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3OTBiZDI4YS1kOTE0LTQ5ZWYtYmVlZi1mZjU0MTk2Nzc2ZDciLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6a3ViZS1zeXN0ZW06YWRtaW4tdXNlciJ9.H-q3ua692Lt7VWA7VBgwioQv8Q3tmEHlFyZikKrLMdLXzg5-8bA7oWtDo7OgRR3bMlrxjDoRccE8G0JEB3wFXPJWxW2e7PUGTFrxZSzKpz8jTzF7wzP0elMbW3HJY-4eucMaokd5NBLpIBH1ARfesn7OLvgL3I5XhLd30xiQujMvC2tRzQVKrNfRMTRxhRVTnViUoJtBT81oqUsWYCgDA5AiQnFai_wM4LaRBELFKgWQW8tpBFIY2J_tXUYX-6J3JxEh5-dxv_JkdeZePL3SyQzcx--OBsZGOC4x_ps1YrAZAsgSeCsg6CAYIy_D3pU8S6TGP2WO38iwuOOd8SCblQ
+    host = https://10.13.135.111:6443
+    image_registry = harbor.capitalonline.net/bms/mon_client:latest
+    image_secret = login-registry
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod53-singapore5-bmscore
+data:
+  vip401: 10.198.192.30
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = ssh
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.198.192.30
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /app
+    nginx_ip = 10.128.121.40
+
+    [k8sInfo]
+    token = eyJhbGciOiJSUzI1NiIsImtpZCI6IlZhcEZfM3k5MUgxdTQ1LV9lLUlzN1pXaVV3SXNaOWZFMmpVMkhKZGk4aDAifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi11c2VyLXRva2VuLWhzbXB2Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFkbWluLXVzZXIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3OTBiZDI4YS1kOTE0LTQ5ZWYtYmVlZi1mZjU0MTk2Nzc2ZDciLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6a3ViZS1zeXN0ZW06YWRtaW4tdXNlciJ9.H-q3ua692Lt7VWA7VBgwioQv8Q3tmEHlFyZikKrLMdLXzg5-8bA7oWtDo7OgRR3bMlrxjDoRccE8G0JEB3wFXPJWxW2e7PUGTFrxZSzKpz8jTzF7wzP0elMbW3HJY-4eucMaokd5NBLpIBH1ARfesn7OLvgL3I5XhLd30xiQujMvC2tRzQVKrNfRMTRxhRVTnViUoJtBT81oqUsWYCgDA5AiQnFai_wM4LaRBELFKgWQW8tpBFIY2J_tXUYX-6J3JxEh5-dxv_JkdeZePL3SyQzcx--OBsZGOC4x_ps1YrAZAsgSeCsg6CAYIy_D3pU8S6TGP2WO38iwuOOd8SCblQ
+    host = https://10.13.135.111:6443
+    image_registry = harbor.capitalonline.net/bms/mon_client:latest
+    image_secret = login-registry
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod55-germany3-bmscore
+data:
+  vip401: 10.197.192.30
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = ssh
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.197.192.30
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /app
+    nginx_ip = 10.128.121.40
+
+    [k8sInfo]
+    token = eyJhbGciOiJSUzI1NiIsImtpZCI6IlZhcEZfM3k5MUgxdTQ1LV9lLUlzN1pXaVV3SXNaOWZFMmpVMkhKZGk4aDAifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi11c2VyLXRva2VuLWhzbXB2Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFkbWluLXVzZXIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3OTBiZDI4YS1kOTE0LTQ5ZWYtYmVlZi1mZjU0MTk2Nzc2ZDciLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6a3ViZS1zeXN0ZW06YWRtaW4tdXNlciJ9.H-q3ua692Lt7VWA7VBgwioQv8Q3tmEHlFyZikKrLMdLXzg5-8bA7oWtDo7OgRR3bMlrxjDoRccE8G0JEB3wFXPJWxW2e7PUGTFrxZSzKpz8jTzF7wzP0elMbW3HJY-4eucMaokd5NBLpIBH1ARfesn7OLvgL3I5XhLd30xiQujMvC2tRzQVKrNfRMTRxhRVTnViUoJtBT81oqUsWYCgDA5AiQnFai_wM4LaRBELFKgWQW8tpBFIY2J_tXUYX-6J3JxEh5-dxv_JkdeZePL3SyQzcx--OBsZGOC4x_ps1YrAZAsgSeCsg6CAYIy_D3pU8S6TGP2WO38iwuOOd8SCblQ
+    host = https://10.13.135.111:6443
+    image_registry = harbor.capitalonline.net/bms/mon_client:latest
+    image_secret = login-registry
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod25-shanghai4-bmscore
+data:
+  vip401: 10.128.130.30
+  vip1800: 192.168.50.20
+  config: |+
+    [DEFAULT]
+    server_port = 7081
+    pidfile = /var/run/cdsstack/baremetal.pid
+    max_retries = 10
+    huawei_switch_max_connection = 20
+
+    [hitachi]
+    wwn_id = wwn-0x60060e801257cc00504057cc00000
+
+    [pxe]
+    nfs_server_ip = 192.168.50.20
+    tftpboot_dir = /tftpboot
+    pxelinux_dir = /tftpboot/pxelinux
+    deploy_image_dir = /tftpboot/deploy_image_template
+    user_image_dir = /tftpboot/user_images
+
+    [center]
+    scheduler_callback = http://192.168.50.20:17070/bms/v1/task/pxe/notify
+
+    [sw_coordination]
+    backend_url = kazoo://192.168.50.20:2181
+    max_connections = 4
+    acquire_lock_timeout = 300
+
+    [sw_conn]
+    conn_type = telnet
+    device_type = huawei
+
+    [shellinabox_console]
+    pid_dir = /var/run/console
+    host_ip = 10.128.130.30
+    subprocess_timeout = 1
+
+    [auto_test]
+    bios_set = /app
+    nginx_ip = 10.128.121.40
+
+    [k8sInfo]
+    token = eyJhbGciOiJSUzI1NiIsImtpZCI6IlZhcEZfM3k5MUgxdTQ1LV9lLUlzN1pXaVV3SXNaOWZFMmpVMkhKZGk4aDAifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi11c2VyLXRva2VuLWhzbXB2Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFkbWluLXVzZXIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI3OTBiZDI4YS1kOTE0LTQ5ZWYtYmVlZi1mZjU0MTk2Nzc2ZDciLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6a3ViZS1zeXN0ZW06YWRtaW4tdXNlciJ9.H-q3ua692Lt7VWA7VBgwioQv8Q3tmEHlFyZikKrLMdLXzg5-8bA7oWtDo7OgRR3bMlrxjDoRccE8G0JEB3wFXPJWxW2e7PUGTFrxZSzKpz8jTzF7wzP0elMbW3HJY-4eucMaokd5NBLpIBH1ARfesn7OLvgL3I5XhLd30xiQujMvC2tRzQVKrNfRMTRxhRVTnViUoJtBT81oqUsWYCgDA5AiQnFai_wM4LaRBELFKgWQW8tpBFIY2J_tXUYX-6J3JxEh5-dxv_JkdeZePL3SyQzcx--OBsZGOC4x_ps1YrAZAsgSeCsg6CAYIy_D3pU8S6TGP2WO38iwuOOd8SCblQ
+    host = https://10.13.135.111:6443
+    image_registry = harbor.capitalonline.net/bms/mon_client:latest
+    image_secret = login-registry

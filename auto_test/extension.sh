@@ -507,7 +507,7 @@ function crc_test_return() {
 }
 
 function scp_hw_test_log() {
-  nginx_ip=`cat /etc/baremetal-api/baremetal-api.ini | grep -w "nginx_ip" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+"`
+  # nginx_ip=`cat /etc/baremetal-api/baremetal-api.ini | grep -w "nginx_ip" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+"`
   if [[ $1 != "crc" ]];then
     echo -e "================ CPU TEST LOG ==============" > $hardware_all_log
     cat $cpu_log_file >> $hardware_all_log
@@ -519,7 +519,7 @@ function scp_hw_test_log() {
     cat $power_status_log_file >> $hardware_all_log
     rm -rf $cpu_log_file $mem_log_file $disk_test_log $power_status_log_file
   fi
-  sshpass scp -r -o StrictHostKeyChecking=no $log_dir root@${nginx_ip}:/var/www/log/bms/hardware_log
+  # sshpass scp -r -o StrictHostKeyChecking=no $log_dir root@${nginx_ip}:/var/www/log/bms/hardware_log
 }
 
 function client_to_service_even()
@@ -865,6 +865,7 @@ function scp_ipmitool()
 }
 function power_status()
 {
+        scp_ipmitool $1
         local ps_1=`$sshpass_prefix $1 "ipmitool sdr list" |grep "Current 1" | awk '{print $4}'`
         local ps_2=`$sshpass_prefix $1 "ipmitool sdr list" |grep "Current 2" | awk '{print $4}'`
         if [[ "$ps_1" = "no" ]] || [[ "$ps_2" == "no" ]]; then   
@@ -876,14 +877,14 @@ function power_status()
 
 function hardware_test()
 {
-    power_status $1 $2
-    d=`echo $?`
 	ssh_disk_test $1 $2
 	a=`echo $?`
 	test_cpu $1 $2
 	b=`echo $?`
 	mem_test $1 $2
 	c=`echo $?`
+	power_status $1 $2
+    d=`echo $?`
 	add=`cat /etc/baremetal-api/baremetal-api.ini | grep -w "scheduler_callback" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+"`
 	if [ $a == 0 ] && [ $b == 0 ] && [ $c == 0 ] && [ $d == 0 ]; then
 		g="\"$1\""

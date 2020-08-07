@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: zookeeper
+  namespace: default
+  labels:
+    app: zookeeper
+    name: zookeeper
+    version: v1
+  annotations:
+    service: zookeeper
+spec:
+  minReadySeconds: 20
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      name: zookeeper
+  template:
+    metadata:
+      name: zookeeper
+      namespace: default
+      labels:
+        name: zookeeper
+    spec:
+      containers:
+      - name: zookeeper
+        image: harbor.capitalonline.net/base/zookeeper:pro
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 2181
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: workdir
+          mountPath: "/work-dir"
+      hostNetwork: true
+      restartPolicy: Always
+      volumes:
+      - name: workdir
+        emptyDir: {}
+      imagePullSecrets:
+        - name: login-registry
+      nodeSelector:
+        node: ok
