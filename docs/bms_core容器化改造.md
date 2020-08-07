@@ -4,13 +4,17 @@
 bms_core构建镜像的Dockerfile存放于项目的根目录下，内容如下：
 bms_core/Dockerfile：
 ```dockerfile
-FROM harbor.capitalonline.net/base/python:2.7-slim
-RUN apt-get update && \
-		apt-get install -y gcc nfs-common ipmitool iputils-ping && \
+FROM harbor.capitalonline.net/base/centos:7.6.1810
+RUN yum install -y gcc nfs-utils ipmitool rsync xinetd wget perl dmidecode python-devel  openssl-devel
+RUN yum install -y bc  epel-release sshpass
+RUN yum install -y stress openssh openssh-clients openssh-server
+RUN wget -q -O - http://linux.dell.com/repo/hardware/latest/bootstrap.cgi | bash && \
+    yum -y install srvadmin-idrac && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/shanghai" >> /etc/timezone
 COPY requirements.txt /requirements.txt
-RUN  pip install -r /requirements.txt --no-cache-dir
+RUN wget -q -O - https://bootstrap.pypa.io/get-pip.py | python && \
+    pip install -r /requirements.txt --no-cache-dir
 COPY . /app
 WORKDIR /app
 ```
@@ -115,7 +119,7 @@ spec:
     spec:
       containers:
       - name: bms-core
-        image: harbor.capitalonline.net/bms-test/bms_core:lze-0714-2
+        image: harbor.capitalonline.net/bms-test/bms_core:pro
         command: ["sh","-c","bash /app/start.sh"]
         imagePullPolicy: Always
         ports:
