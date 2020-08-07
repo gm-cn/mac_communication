@@ -865,6 +865,7 @@ function scp_ipmitool()
 }
 function power_status()
 {
+        scp_ipmitool $1
         local ps_1=`$sshpass_prefix $1 "ipmitool sdr list" |grep "Current 1" | awk '{print $4}'`
         local ps_2=`$sshpass_prefix $1 "ipmitool sdr list" |grep "Current 2" | awk '{print $4}'`
         if [[ "$ps_1" = "no" ]] || [[ "$ps_2" == "no" ]]; then   
@@ -876,14 +877,14 @@ function power_status()
 
 function hardware_test()
 {
-    power_status $1 $2
-    d=`echo $?`
 	ssh_disk_test $1 $2
 	a=`echo $?`
 	test_cpu $1 $2
 	b=`echo $?`
 	mem_test $1 $2
 	c=`echo $?`
+	power_status $1 $2
+    d=`echo $?`
 	add=`cat /etc/baremetal-api/baremetal-api.ini | grep -w "scheduler_callback" | grep -E -o "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+"`
 	if [ $a == 0 ] && [ $b == 0 ] && [ $c == 0 ] && [ $d == 0 ]; then
 		g="\"$1\""

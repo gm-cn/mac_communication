@@ -47,18 +47,18 @@ function_cds_add_bmc_user()
 
 function function_cds_vnc_config()
 {
-	ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
+    ipmitool_commd="ipmitool -U $2 -P $3 -H $1 -I lanplus"
 	$ipmitool_commd sol payload enable 1 2
 	$ipmitool_commd sol payload enable 8 2
     $ipmitool_commd sol set volatile-bit-rate 115.2
     $ipmitool_commd sol set non-volatile-bit-rate 115.2
     $ipmitool_commd sol info |grep  115.2
 	if [[ $? == 0 ]]; then
-                echo "$date_info set sol bit rate 115.2  success" >> $log_file
-        else
-                echo "$data_info set sol bit rate 115.2  error" >> $log_file
-        fi
-        #$ipmitool_commd sol activate  <  ~?
+        echo "$date_info set sol bit rate 115.2  success" >> $log_file
+    else
+        echo "$data_info set sol bit rate 115.2  error" >> $log_file
+    fi
+    #$ipmitool_commd sol activate  <  ~?
 }
 
 function function_cds_mail_alarm()
