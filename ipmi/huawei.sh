@@ -63,7 +63,20 @@ function function_cds_vnc_config()
 
 function function_cds_mail_alarm()
 {
-    return function_cds_mail_alarm
+    ./urest -H 192.17.1.63 -U Administrator -P 123cpucpu@ request -I /redfish/v1/Managers/1/SmtpService -T PATCH -B smtp.json
+    #{
+    #    "ServiceEnabled": true,
+    #    "ServerAddress": "117.79.130.234",
+    #    "TLSEnabled": true,
+    #    "AnonymousLoginEnabled": false,
+    #    "AlarmSeverity": "Critical",
+    #    "RecipientAddresses":[{
+    #        "Enabled": true,
+    #        "EmailAddress": "baremetal.alarm@capitalonline.net"
+    #    }]
+    #
+    #}
+
 }
 
 function function_cds_snmp_alarm()
@@ -149,7 +162,8 @@ function function_cds_get_mac()
 
 function function_cds_config_raid()
 {
-    return function_cds_config_raid
+    urset_comm="$cmd_dir -H $1 -U $2 -P $3"
+    $urset_comm addvdisk -I 0 -DI 0 1 -VL RAID1
 }
 
 function function_cds_power_status()
