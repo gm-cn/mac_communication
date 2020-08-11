@@ -1,7 +1,7 @@
 #!/bin/sh
 log_file="huawei_log"
 date_info=`date`
-cmd_dir=""
+cmd_dir="/root/bin/urest"
 update_file_path="/tftpboot/update_file/"
 
 function_cds_add_bmc_user()
@@ -76,22 +76,42 @@ function function_cds_snmp_alarm()
 
 function function_cds_performance_config()
 {
-    return function_cds_performance_config
+    urset_comm="$cmd_dir -H $1 -U $2 -P $3"
+    $urset_comm setbios -A CustomPowerPolicy -V Performance
 }
 
 function function_cds_boot_set()
 {
-    rteurn function_cds_boot_set
+    urset_comm="$cmd_dir -H $1 -U $2 -P $3"
+    if [[ $4 == "Bios" ]]; then
+        $urset_comm setbios -A BootType -V LegacyBoot
+    else
+        $urset_comm setbios -A BootType -V UEFIBoot
+    fi
+    function_cds_power_off $1 $2 $3
+    function_cds_power_on $1 $2 $3
+    $urset_comm getbiosdetails -A BootType
 }
 
 function function_cds_numa_config()
 {
-    return function_cds_numa_config
+    urset_comm="$cmd_dir -H $1 -U $2 -P $3"
+    $urset_comm setbios -A NUMAEn -V Enabled
 }
 
 function function_cds_pxe_config()
 {
-    return function_cds_pxe_config
+    urset_comm="$cmd_dir -H $1 -U $2 -P $3"
+    $urset_comm setbios -A PXE1Setting -V Enabled
+    $urset_comm setbios -A PXE2Setting -V Enabled
+    $urset_comm setbios -A PXE3Setting -V Enabled
+    $urset_comm setbios -A PXE4Setting -V Enabled
+    function_cds_power_off $1 $2 $3
+    function_cds_power_on $1 $2 $3
+    $urset_comm getbiosdetails -A PXE1Setting
+    $urset_comm getbiosdetails -A PXE2Setting
+    $urset_comm getbiosdetails -A PXE3Setting
+    $urset_comm getbiosdetails -A PXE4Setting
 }
 
 function function_cds_alarm_config()
