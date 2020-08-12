@@ -8,7 +8,7 @@ function_cds_add_bmc_user()
 	racadm_comm="$cmd_dir -r $1 -u $2 -p $3 --nocertwarn"
 	flag=0
 	m=3
-	for((i=2;i<17;i++));
+	for((i=3;i<17;i++));
 	do
 		$racadm_comm get iDRAC.Users.$i.UserName | grep $4
 		if [[ $? == 0 ]]; then
