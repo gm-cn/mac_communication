@@ -473,7 +473,7 @@ function iperf3_service()
 	done
 
 }
-
+#TODO 奇数有问题
 function crc_test_return() {
     host_number=`cat  $host_ips_file |wc -l`
     row=`cat  $host_ips_file |sed -n 1p |awk '{print NF}'`
