@@ -473,13 +473,16 @@ function iperf3_service()
 	done
 
 }
-#TODO 奇数有问题
+#TODO odd exists problem
 function crc_test_return() {
     host_number=`cat  $host_ips_file |wc -l`
     row=`cat  $host_ips_file |sed -n 1p |awk '{print NF}'`
     nic_count=`expr $row - 1`
+    if test `expr $host_number % 2` != 0 ;then
+      host_number=`expr $host_number + 1`
+    fi
     log_number=`expr $host_number \* $nic_count + 1`
-    for ((t=1;t<=100;t++))
+    for ((t=1;t<=30;t++))
     do
       current_log_number=`cat $log_file | wc -l`
       if [[ $current_log_number == $log_number ]];then
