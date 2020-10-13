@@ -363,7 +363,7 @@ class BaremetalPlugin(object):
         racadmcmd_prefix = "/opt/dell/srvadmin/sbin/racadm -r {} -u {} -p '{}' --nocertwarn".format(body.serverIp,
                                                                                                    body.username,
                                                                                                     body.rootPassword)
-        @error_capture
+        @utils.error_capture
         def _get_mac_list():
             sysinfo_executor = shell.call("%s getsysinfo" % racadmcmd_prefix)
             nic_mac_list = []
