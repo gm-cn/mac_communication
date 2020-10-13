@@ -363,3 +363,18 @@ def exchange_cidr(ip, prefix):
     ip_net = str(ip) + "/" + str(prefix)
     net_cidr = IPNetwork(ip_net)
     return str(net_cidr.cidr)
+
+
+def error_capture(func):
+    @functools.wraps(func)
+    def wrap(*args, **kwargs):
+        global result
+        try:
+            result =  func(*args, **kwargs)
+            result['error'] = None
+        except Exception as exc:
+            result = {'error': exc.message}
+        finally:
+            return result
+
+    return wrap

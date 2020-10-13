@@ -15,6 +15,7 @@ from oslo_config import cfg
 from oslo_serialization import jsonutils
 
 from baremetal.common import jsonobject, utils, http, exceptions, shell
+from baremetal.common.utils import error_capture
 from baremetal.conductor import configdrive, models
 from baremetal.conductor.disks import DiskConfiguration
 
@@ -358,10 +359,11 @@ class BaremetalPlugin(object):
     """
     def get_host_mac_list(self, req):
         body = jsonobject.loads(req[http.REQUEST_BODY])
-        rsp = models.AgentResponse()
+        rsp = models.GetHostRealNicMacListResponse()
         racadmcmd_prefix = "/opt/dell/srvadmin/sbin/racadm -r {} -u {} -p '{}' --nocertwarn".format(body.serverIp,
                                                                                                    body.username,
                                                                                                     body.rootPassword)
+        @error_capture
         def _get_mac_list():
             sysinfo_executor = shell.call("%s getsysinfo" % racadmcmd_prefix)
             nic_mac_list = []
@@ -370,8 +372,13 @@ class BaremetalPlugin(object):
             for i in str(sysinfo_executor.stdout).split("Embedded NIC MAC Addresses:")[1].split("\n"):
                 if len(i.strip()) > 0:
                     nic_mac_list.append(i.strip().split("=")[1].strip())
-            return nic_mac_list
+            return {"nic_mac_list":nic_mac_list}
 
+        mac_result = _get_mac_list()
+        if mac_result.get("error"):
+            rsp.error = mac_result.get("error")
+        else:
+            rsp.data = mac_result.get("nic_mac_list")
         return jsonobject.dumps(rsp)
 
 
