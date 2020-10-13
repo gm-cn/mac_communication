@@ -376,8 +376,10 @@ class BaremetalPlugin(object):
 
         mac_result = _get_mac_list()
         if mac_result.get("error"):
+            rsp.success = "Failed"
             rsp.error = mac_result.get("error")
         else:
+            rsp.success = "Success"
             rsp.data = mac_result.get("nic_mac_list")
         return jsonobject.dumps(rsp)
 
