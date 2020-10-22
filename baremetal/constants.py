@@ -105,3 +105,5 @@ V2_VNC_CHECK_PATH = "/v2/baremetal/ipmi/vnc_check"
 V2_BIOS_UPDATE_PATH = "/v2/baremetal/ipmi/bios_update"
 V2_IDRAC_UPDATE_PATH = "/v2/baremetal/ipmi/idrac_update"
 V2_DOWNLOAD_FILE_PATH = "/v2/baremetal/ipmi/download"
+
+V2_GET_HOST_MAC_PATH = "/v2/baremetal/physical/maclist"

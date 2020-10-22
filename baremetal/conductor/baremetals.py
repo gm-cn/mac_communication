@@ -1,3 +1,4 @@
+# coding=utf-8
 import base64
 import gzip
 import json
@@ -13,7 +14,8 @@ import simplejson
 from oslo_config import cfg
 from oslo_serialization import jsonutils
 
-from baremetal.common import jsonobject, utils, http, exceptions
+from baremetal.common import jsonobject, utils, http, exceptions, shell
+from baremetal.common.utils import error_capture
 from baremetal.conductor import configdrive, models
 from baremetal.conductor.disks import DiskConfiguration
 
@@ -350,6 +352,35 @@ class BaremetalPlugin(object):
             utils.dd(src_device, dest_device, 'bs=1M', 'oflag=direct')
         except Exception as ex:
             raise exceptions.CloneImageError(src=src_volume, dest=dest_volume, error=str(ex))
+        return jsonobject.dumps(rsp)
+
+    """
+        获取网卡mac信息以及对应交换机端口信息
+    """
+    def get_host_mac_list(self, req):
+        body = jsonobject.loads(req[http.REQUEST_BODY])
+        rsp = models.GetHostRealNicMacListResponse()
+        racadmcmd_prefix = "/opt/dell/srvadmin/sbin/racadm -r {} -u {} -p '{}' --nocertwarn".format(body.serverIp,
+                                                                                                   body.username,
+                                                                                                    body.rootPassword)
+        @utils.error_capture
+        def _get_mac_list():
+            sysinfo_executor = shell.call("%s getsysinfo" % racadmcmd_prefix)
+            nic_mac_list = []
+            if sysinfo_executor.return_code:
+                raise Exception(sysinfo_executor.stderr)
+            for i in str(sysinfo_executor.stdout).split("Embedded NIC MAC Addresses:")[1].split("\n"):
+                if len(i.strip()) > 0:
+                    nic_mac_list.append(i.strip().split("=")[1].strip())
+            return {"nic_mac_list":nic_mac_list}
+
+        mac_result = _get_mac_list()
+        if mac_result.get("error"):
+            rsp.success = "Failed"
+            rsp.error = mac_result.get("error")
+        else:
+            rsp.success = "Success"
+            rsp.data = mac_result.get("nic_mac_list")
         return jsonobject.dumps(rsp)
 
 

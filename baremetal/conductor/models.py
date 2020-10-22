@@ -78,3 +78,8 @@ class ConvertCustomImage(AgentResponse):
     def __init__(self):
         super(ConvertCustomImage, self).__init__()
         self.custom_image_name = None
+
+class GetHostRealNicMacListResponse(AgentResponse):
+    def __init__(self):
+        super(GetHostRealNicMacListResponse, self).__init__()
+        self.data = None

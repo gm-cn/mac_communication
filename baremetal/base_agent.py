@@ -205,6 +205,9 @@ class RestService(object):
         self.rest.register_async_uri(constants.V2_DOWNLOAD_FILE_PATH,
                                      self.bios_v2.download_file)
 
+        self.rest.register_sync_uri(constants.V2_GET_HOST_MAC_PATH,
+                                    self.baremetal.get_host_mac_list)
+
     def __init__(self, config):
         opts.register_all_options()
         opts.prepare()
