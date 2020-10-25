@@ -365,13 +365,16 @@ class BaremetalPlugin(object):
                                                                                                     body.rootPassword)
         @utils.error_capture
         def _get_mac_list():
-            sysinfo_executor = shell.call("%s getsysinfo" % racadmcmd_prefix)
+            sysinfo_executor = shell.call("%s nicstatistics" % racadmcmd_prefix)
             nic_mac_list = []
             if sysinfo_executor.return_code:
                 raise Exception(sysinfo_executor.stderr)
-            for i in str(sysinfo_executor.stdout).split("Embedded NIC MAC Addresses:")[1].split("\n"):
-                if len(i.strip()) > 0:
-                    nic_mac_list.append(i.strip().split("=")[1].strip())
+            for i in str(sysinfo_executor.stdout).split("\n"):
+                if "NIC" in i:
+                    # print (i.strip().split("-"))
+                    # print (i.strip().split(" - "))
+                    nic_mac_list.append(i.strip().split(" - ")[-1].strip())
+
             return {"nic_mac_list":nic_mac_list}
 
         mac_result = _get_mac_list()
