@@ -370,7 +370,7 @@ class BaremetalPlugin(object):
             if sysinfo_executor.return_code:
                 raise Exception(sysinfo_executor.stderr)
             for i in str(sysinfo_executor.stdout).split("\n"):
-                if "NIC" in i:
+                if "NIC" in i and len(i.strip().split(" - ")) > 1:
                     nic_mac_list.append(i.strip().split(" - ")[-1].strip())
             return {"nic_mac_list":nic_mac_list}
 
