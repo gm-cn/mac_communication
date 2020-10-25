@@ -372,7 +372,6 @@ class BaremetalPlugin(object):
             for i in str(sysinfo_executor.stdout).split("\n"):
                 if "NIC" in i:
                     nic_mac_list.append(i.strip().split(" - ")[-1].strip())
-
             return {"nic_mac_list":nic_mac_list}
 
         mac_result = _get_mac_list()
