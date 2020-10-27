@@ -13,6 +13,7 @@ from baremetal.common import locking as sw_lock, utils, jsonobject, http
 import netmiko
 import paramiko
 from baremetal.common import exceptions
+from baremetal.common.exceptions import BmsCodeMsg
 import tenacity
 from oslo_config import cfg
 
@@ -20,6 +21,7 @@ from oslo_config import cfg
 from tooz import coordination
 
 from baremetal.v2 import models
+from baremetal.constants import V2_REQUEST_ID
 from baremetal.conductor.switch import cisco_ssh
 
 logger = logging.getLogger(__name__)
@@ -363,6 +365,18 @@ class CiscoSwitch_v2(cisco_ssh.CiscoSwitch):
 
         return relations
 
+    def get_port_config(self, ports):
+        commands = ""
+        for port in ports:
+            commands = "show run interface %s | include vlan" % port
+        datas = self.my_send_command(commands)
+        return datas
+
+    def get_switch_sn(self):
+        command = "show version | include Nexus9000"
+        datas = self.my_send_command(command)
+        return datas
+
 
 
 class SwitchPlugin(object):
@@ -624,6 +638,76 @@ class SwitchPlugin(object):
             else:
                 logger.error("switch %s save config config result: %s." %
                              (body.host, result))
+        return jsonobject.dumps(rsp)
+
+    @utils.replyerror_v2
+    def alter_vlan(self, req):
+        body = jsonobject.loads(req[http.REQUEST_BODY])
+        header = req[http.REQUEST_HEADER]
+
+        rsp = models.AgentResponse()
+        rsp.requestId = header[V2_REQUEST_ID]
+
+        device_cfg = {
+            "device_type": "cisco_nxos",
+            "ip": body.host,
+            "username": body.username,
+            "password": body.password
+        }
+
+        with CiscoSwitch_v2(device_cfg) as client:
+            try:
+                result = client.set_vlan(body.port)
+            except Exception as ex:
+                raise exceptions.SwitchTaskV2Error(BmsCodeMsg.SWITCH_ERROR, error=str(ex))
+
+        return jsonobject.dumps(rsp)
+
+
+    @utils.replyerror_v2
+    def get_port_config(self, req):
+        body = jsonobject.loads(req[http.REQUEST_BODY])
+        header = req[http.REQUEST_HEADER]
+
+        rsp = models.GetSwitchRelationsResp()
+        rsp.requestId = header[V2_REQUEST_ID]
+
+        device_cfg = {
+            "device_type": "cisco_nxos",
+            "ip": body.host,
+            "username": body.username,
+            "password": body.password
+        }
+
+        with CiscoSwitch_v2(device_cfg) as client:
+            try:
+                result = client.get_port_config(body.ports)
+            except Exception as ex:
+                raise exceptions.SwitchTaskV2Error(BmsCodeMsg.SWITCH_ERROR, error=str(ex))
+        rsp.data = result
+        return jsonobject.dumps(rsp)
+
+    @utils.replyerror_v2
+    def get_switch_sn(self, req):
+        body = jsonobject.loads(req[http.REQUEST_BODY])
+        header = req[http.REQUEST_HEADER]
+
+        rsp = models.GetSwitchSn()
+        rsp.requestId = header[V2_REQUEST_ID]
+
+        device_cfg = {
+            "device_type": "cisco_nxos",
+            "ip": body.host,
+            "username": body.username,
+            "password": body.password
+        }
+
+        with CiscoSwitch_v2(device_cfg) as client:
+            try:
+                result = client.get_switch_sn()
+            except Exception as ex:
+                raise exceptions.SwitchTaskV2Error(BmsCodeMsg.SWITCH_ERROR, error=str(ex))
+        rsp.data = result
         return jsonobject.dumps(rsp)
 
 
