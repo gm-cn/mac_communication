@@ -207,6 +207,15 @@ class CiscoSwitch(object):
             logger.error(traceback.format_exc())
         raise
 
+    def save(self):
+        with sw_lock.PoolLock(self.locker, **self.lock_kwargs):
+            with self._get_connection() as net_connect:
+                try:
+                    output = self.save_configuration(net_connect)
+                except tenacity.RetryError as ex:
+                    logger.error("save configuration failed:%s" % ex)
+                return output
+
     def gen_vlan_string(self, vlans):
         vlan_string = ""
         for vlan in vlans:
@@ -678,6 +687,30 @@ class SwitchPlugin(object):
             except Exception as ex:
                 raise exceptions.SwitchTaskError(error=str(ex))
         rsp.relations = relations
+        return jsonobject.dumps(rsp)
+
+
+    @utils.replyerror
+    def save(self, req):
+        body = jsonobject.loads(req[http.REQUEST_BODY])
+        rsp = models.AgentResponse()
+
+        device_cfg = {
+            "device_type": "cisco_nxos",
+            "ip": body.host,
+            "username": body.username,
+            "password": body.password
+        }
+        with CiscoSwitch(device_cfg) as client:
+            try:
+                result = client.save()
+            except Exception as ex:
+                raise exceptions.SwitchTaskError(error=str(ex))
+            if "successfully" in result:
+                logger.debug("switch %s save config successfully." % body.host)
+            else:
+                logger.error("switch %s save config config result: %s." %
+                             (body.host, result))
         return jsonobject.dumps(rsp)
 
 
