@@ -184,6 +184,34 @@ class CiscoSwitch(models.ModelBase):
                 net_connect.close()
                 return result
 
+    def save(self):
+        logger.debug("command: save")
+        net_connect = None
+        try:
+            with sw_lock.PoolLock(self.locker, **self.lock_kwargs):
+                net_connect = self._get_connection()
+
+                net_connect.read_until("Username:")
+                net_connect.write((self.username + '\n').encode('utf-8'))
+                net_connect.read_until('Password:')
+                net_connect.write((self.password + '\n').encode('utf-8'))
+
+                result = self.save_configuration(net_connect)
+                count = 0
+                while count < 60:
+                    result += net_connect.read_very_eager()
+                    if 'Save the configuration successfully' in result:
+                        logger.debug("config switch end..")
+                        break
+                    else:
+                        count += 1
+                        time.sleep(1)
+        finally:
+            logger.debug("session close.")
+            net_connect.close()
+
+        return result
+
     def gen_vlan_string(self, vlans):
         vlan_string = ""
         for vlan in vlans:
@@ -595,4 +623,22 @@ class SwitchPlugin(object):
             except Exception as ex:
                 raise exceptions.SwitchTaskError(error=str(ex))
         rsp.relations = relations
+        return jsonobject.dumps(rsp)
+
+    @utils.replyerror
+    def save(self, req):
+        body = jsonobject.loads(req[http.REQUEST_BODY])
+        rsp = models.AgentResponse()
+
+        with CiscoSwitch(body.username, body.password, body.host) as client:
+            try:
+                time.sleep(random.randint(1, 3))
+                result = client.save()
+            except Exception as ex:
+                raise exceptions.SwitchTaskError(error=str(ex))
+            if "successfully" in result:
+                logger.debug("switch %s save config successfully." % body.host)
+            else:
+                logger.error("switch %s save config config result: %s." %
+                             (body.host, result))
         return jsonobject.dumps(rsp)

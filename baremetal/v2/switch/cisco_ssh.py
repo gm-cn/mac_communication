@@ -602,3 +602,28 @@ class SwitchPlugin(object):
         return jsonobject.dumps(rsp)
 
 
+
+    @utils.replyerror
+    def save(self, req):
+        body = jsonobject.loads(req[http.REQUEST_BODY])
+        rsp = models.AgentResponse()
+
+        device_cfg = {
+            "device_type": "cisco_nxos",
+            "ip": body.host,
+            "username": body.username,
+            "password": body.password
+        }
+        with CiscoSwitch_v2(device_cfg) as client:
+            try:
+                result = client.save()
+            except Exception as ex:
+                raise exceptions.SwitchTaskError(error=str(ex))
+            if "successfully" in result:
+                logger.debug("switch %s save config successfully." % body.host)
+            else:
+                logger.error("switch %s save config config result: %s." %
+                             (body.host, result))
+        return jsonobject.dumps(rsp)
+
+
