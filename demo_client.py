@@ -87,11 +87,16 @@ class Demo(object):
         file_count = math.ceil(interval_length / self.default_packet_length)
         offset = 0
         f = open(file_path, "rb")
-        f.seek(file_sequence * self.default_interval_length)
+        start_seek = file_sequence * self.default_interval_length
+        f.seek(start_seek)
+        print(start_seek)
         for i in range(file_count):
             var_packet["ver"], var_packet["ptype"], var_packet["seskey"], var_packet["sequence"], var_packet["count"], \
             var_packet["offset"], var_packet["data"] = 1, 1, seskey, file_sequence, 200, offset, f.read(self.default_packet_length)
             offset += 1
+            next_seek = start_seek + self.default_packet_length
+            print(next_seek)
+            f.seek(next_seek)
             aa = copy.deepcopy(var_packet)
             self.q.put(aa)
         f.close()
@@ -106,7 +111,7 @@ class Demo(object):
                 src_mac = self.src_mac
                 raw_socket = self.set_socket()
                 self.send_packet(raw_socket, self.card, dst_mac, src_mac, ack_packet)
-                print(ack_packet)
+                #print(ack_packet)
             else:
                 break
 
