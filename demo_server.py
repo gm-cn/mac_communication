@@ -75,7 +75,7 @@ class Demo(object):
                 self.p_list.append(rece_data)
                 if len(self.p_list) == 7:
                     self.p_list.sort(key=lambda x: (x["sequence"], x["count"]))
-                    cc = reduce(lambda x, y: x + y, [binascii.b2a_qp(i["data"]) for i in self.p_list])
+                    cc = reduce(lambda x, y: x + y, [i["data"] for i in self.p_list])
                     with open(self.file_path, "ab") as f:
                         f.write(cc)
                 # ack_packet = self.var_packet

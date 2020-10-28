@@ -46,9 +46,9 @@ class Demo(object):
         self.vlan = '1740'
         self.card = "net1"
         self.file_path = "/home/test.tar.gz"
-        self.default_interval_length = 300
-        self.default_packet_length = 150
-
+        self.default_interval_length = 900000
+        self.default_packet_length = 300
+        self.mutex = threading.Lock()
     def create_queue(self):
         q = Queue()
         return q
@@ -61,18 +61,19 @@ class Demo(object):
         self.recv_frame()
 
     def run_f(self):
-
         self.q = self.create_queue()
         file_length = self.get_size(self.file_path)
         file_sequence = math.ceil(file_length / self.default_interval_length)
         file_end = file_length % self.default_interval_length
         seskey = "No3-seskey"
 
+        #self.cut_file(0, self.file_path, seskey, self.default_interval_length)
         if file_end:
             for i in range(file_sequence-1):
                 t = threading.Thread(target=self.cut_file, args=(i,self.file_path,seskey,self.default_interval_length,))
                 t.start()
             self.cut_file(file_sequence-1, self.file_path, seskey, file_end)
+            self.cut_file(0,self.file_path,seskey,self.default_interval_length)
         else:
             for i in range(file_sequence):
                 t = threading.Thread(target=self.cut_file, args=(i,self.file_path,seskey,self.default_interval_length,))
@@ -80,40 +81,43 @@ class Demo(object):
         for i in range(file_sequence):
             t = threading.Thread(target=self.send_file)
             t.start()
-        self.recv_frame()
+        #self.recv_frame()
 
     def cut_file(self, file_sequence, file_path, seskey, interval_length):
-        var_packet = self.var_packet
-        file_count = math.ceil(interval_length / self.default_packet_length)
-        offset = 0
-        f = open(file_path, "rb")
-        start_seek = file_sequence * self.default_interval_length
-        f.seek(start_seek)
-        print(start_seek)
-        for i in range(file_count):
-            var_packet["ver"], var_packet["ptype"], var_packet["seskey"], var_packet["sequence"], var_packet["count"], \
-            var_packet["offset"], var_packet["data"] = 1, 1, seskey, file_sequence, 200, offset, f.read(self.default_packet_length)
-            offset += 1
-            next_seek = start_seek + self.default_packet_length
-            print(next_seek)
-            f.seek(next_seek)
-            aa = copy.deepcopy(var_packet)
-            self.q.put(aa)
-        f.close()
+        with self.mutex:
+            var_packet = self.var_packet
+            file_count = math.ceil(interval_length / self.default_packet_length)
+            offset = 0
+            f = open(file_path, "rb")
+            start_seek = file_sequence * self.default_interval_length
+            f.seek(start_seek)
+            #print(start_seek)
+            for i in range(file_count):
+                var_packet["ver"], var_packet["ptype"], var_packet["seskey"], var_packet["sequence"], var_packet["count"], \
+                var_packet["offset"], var_packet["data"] = 1, 1, seskey, file_sequence, 200, offset, f.read(self.default_packet_length)
+                offset += 1
+                next_seek = start_seek + self.default_packet_length
+                #print(next_seek)
+                #f.seek(next_seek)
+                aa = copy.deepcopy(var_packet)
+                #print(aa)
+                self.q.put(aa)
+            f.close()
 
     def send_file(self):
         while True:
-            print("------------------------------------------------------")
-            if not self.q.empty():
-                ack_packet = self.q.get()
-                ack_packet = str(ack_packet)
-                dst_mac = self.dst_mac
-                src_mac = self.src_mac
-                raw_socket = self.set_socket()
-                self.send_packet(raw_socket, self.card, dst_mac, src_mac, ack_packet)
-                #print(ack_packet)
-            else:
-                break
+            with self.mutex:
+                print("------------------------------------------------------")
+                if not self.q.empty():
+                    ack_packet = self.q.get()
+                    ack_packet = str(ack_packet)
+                    dst_mac = self.dst_mac
+                    src_mac = self.src_mac
+                    raw_socket = self.set_socket()
+                    self.send_packet(raw_socket, self.card, dst_mac, src_mac, ack_packet)
+                    print(ack_packet)
+                else:
+                    break
 
     def recv_frame(self):
         raw_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
@@ -222,7 +226,6 @@ class Demo(object):
                 if self.format_mac(local_mac) == mac:
                     net_list.append(i)
         return net_list
-
 
 if __name__ == '__main__':
     # 修改网卡名， mac， vlan
