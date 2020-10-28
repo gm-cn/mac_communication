@@ -5,6 +5,9 @@ import netifaces
 from functools import reduce
 from queue import Queue
 import time
+from os.path import getsize
+import math
+import base64
 
 ETH_P_BMS = 0x7fff
 ETH_P_VLAN = 0x8100
@@ -34,11 +37,10 @@ class Demo(object):
     def __init__(self):
         self.var_packet = VAR_PACKET
         self.crl_packet = CRL_PACKET
-        self.dst_mac = 'b4:96:91:33:8a:d8'
-        self.src_mac = '92:64:af:c3:31:dd'
         self.vlan = '1740'
         self.card = "enp94s0f0"
-
+        self.file_path = "/home/test.tar.gz"
+        self.p_list = []
     def create_queue(self):
         q = Queue()
         return q
@@ -70,12 +72,22 @@ class Demo(object):
                 src_Mac = local_mac.decode("utf-8")
                 self.send_vlan_frame(self.card, dst_Mac, src_Mac, self.vlan, ack_packet)
             elif rece_data["ptype"] == 1:
+                self.p_list.append(rece_data)
+                if len(self.p_list) == 7:
+                    self.p_list.sort(key=lambda x: (x["sequence"], x["count"]))
+                    cc = reduce(lambda x, y: x + y, [binascii.a2b_base64(i["data"]) for i in self.p_list])
+                    #cc = reduce(lambda x, y: x + y, [base64.b64decode(i["data"]) for i in self.p_list])
+                    with open(self.file_path, "ab") as f:
+                        f.write(cc)
                 ack_packet = self.var_packet
                 ack_packet["ver"], ack_packet["ptype"], ack_packet["seskey"], ack_packet["data"] = 1, 1, rece_data["seskey"], "Hello Jan, i'm KangKang"
                 ack_packet = str(ack_packet)
                 dst_Mac = src_mac.decode("utf-8")
                 src_Mac = local_mac.decode("utf-8")
                 self.send_vlan_frame(self.card, dst_Mac, src_Mac, self.vlan, ack_packet)
+
+
+
             elif rece_data["ptype"] == 2:
                 pass
             elif rece_data["ptype"] == 3:
@@ -107,7 +119,6 @@ class Demo(object):
         ETH_P_BMS_BY = self.format_mac_bytes(self.i2b_hex(ETH_P_BMS))
 
         packet = struct.pack("!6s6s2s", bytes_dstmac, bytes_srcmac, ETH_P_BMS_BY)
-
         raw_socket.send(packet + data.encode('utf8'))
 
     def format_mac(self, mac_address):
@@ -122,7 +133,6 @@ class Demo(object):
     def i2b_hex(self, protocol):
         b_protocol = hex(int(protocol))[2:]
         return b_protocol if len(b_protocol) % 2 == 0 else '0{0}'.format(b_protocol).encode('utf8')
-
 
 
     def get_net(self, local_mac):
