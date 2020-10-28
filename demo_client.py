@@ -4,6 +4,7 @@ import binascii
 import netifaces
 from functools import reduce
 from queue import Queue
+import threading
 import time
 from os.path import getsize
 import math
@@ -45,6 +46,8 @@ class Demo(object):
         self.vlan = '1740'
         self.card = "net1"
         self.file_path = "/home/test.tar.gz"
+        self.default_interval_length = 300
+        self.default_packet_length = 150
 
     def create_queue(self):
         q = Queue()
@@ -58,109 +61,58 @@ class Demo(object):
         self.recv_frame()
 
     def run_f(self):
-        self.send_file(self.file_path, "No2-seskey")
-        self.recv_frame()
-        # self.q = self.create_queue()
-        # ack_packet = self.var_packet
-        # file_length = self.get_size(self.file_path)
-        # file_count = math.ceil(file_length / 100)
-        #
-        # f = open(self.file_path, "rb")
-        #
-        # a = 0
-        # b = ""
-        # for i in f.readlines():
-        #     n_p = binascii.b2a_base64(i)
-        #     n_size = len(n_p)
-        #     if 800 < n_size + a < 1000:
-        #         ack_packet["ver"], ack_packet["ptype"], ack_packet["data"] = 1, 1, n_p
-        #         aa = copy.deepcopy(ack_packet)
-        #         self.q.put(aa)
-        #     elif n_size > 1000:
-        #         pass
-        # f.close()
 
-    def send_file(self, file_path, seskey):
-        #ack_packet = copy.deepcopy(self.var_packet)
+        self.q = self.create_queue()
+        file_length = self.get_size(self.file_path)
+        file_sequence = math.ceil(file_length / self.default_interval_length)
+        file_end = file_length % self.default_interval_length
+        seskey = "No3-seskey"
+
+        if file_end:
+            for i in range(file_sequence-1):
+                t = threading.Thread(target=self.cut_file, args=(i,self.file_path,seskey,self.default_interval_length,))
+                t.start()
+            self.cut_file(file_sequence-1, self.file_path, seskey, file_end)
+        else:
+            for i in range(file_sequence):
+                t = threading.Thread(target=self.cut_file, args=(i,self.file_path,seskey,self.default_interval_length,))
+                t.start()
+        for i in range(file_sequence):
+            t = threading.Thread(target=self.send_file)
+            t.start()
+        self.recv_frame()
+
+    def cut_file(self, file_sequence, file_path, seskey, interval_length):
+        var_packet = self.var_packet
+        file_count = math.ceil(interval_length / self.default_packet_length)
+        offset = 0
         f = open(file_path, "rb")
-        offset = 1
-        b = ''
-        for i in f.readlines():
-            line_info = binascii.b2a_base64(i)
-            line_len = len(line_info)
-            if not b:
-                if 900 <= line_len <= 1300:
-                    self.var_packet["ver"], self.var_packet["ptype"], self.var_packet["seskey"], self.var_packet["sequence"], \
-                    self.var_packet["count"], self.var_packet["offset"], self.var_packet["data"] = 1, 1, seskey, 1, 200, offset, line_info
-                    aa = copy.deepcopy(self.var_packet)
-                    self.q.put(aa)
-                    offset += 1
-                elif line_len < 900:
-                    b = line_info
-                elif line_len > 1300:
-                    line_info_sent = copy.deepcopy(line_info[:1300])
-                    line_info_sent_will = copy.deepcopy(line_info[1300:])
-                    self.var_packet["ver"], self.var_packet["ptype"], self.var_packet["seskey"], self.var_packet["sequence"], \
-                    self.var_packet["count"], self.var_packet["offset"], self.var_packet["data"] = 1, 1, seskey, 1, 200, offset, line_info_sent
-                    aa = copy.deepcopy(self.var_packet)
-                    self.q.put(aa)
-                    b = line_info_sent_will
-                    offset += 1
-            else:
-                if 900 < (len(b) + len(line_info)) < 1300:
-                    line_info = b + line_info
-                    self.var_packet["ver"], self.var_packet["ptype"], self.var_packet["seskey"], self.var_packet["sequence"], \
-                    self.var_packet["count"], self.var_packet["offset"], self.var_packet["data"] = 1, 1, seskey, 1, 200, offset, line_info
-                    aa = copy.deepcopy(self.var_packet)
-                    self.q.put(aa)
-                    b = ''
-                    offset += 1
-                elif (len(b) + len(line_info)) < 900:
-                    b = b + line_info
-                elif (len(b) + len(line_info)) > 1300:
-                    line_info = b + line_info
-                    line_info_sent = copy.deepcopy(line_info[:1300])
-                    line_info_sent_will = copy.deepcopy(line_info[1300:])
-                    self.var_packet["ver"], self.var_packet["ptype"], self.var_packet["seskey"], self.var_packet["sequence"], \
-                    self.var_packet["count"], self.var_packet["offset"], self.var_packet["data"] = 1, 1, seskey, 1, 200, offset, line_info_sent
-                    aa = copy.deepcopy(self.var_packet)
-                    self.q.put(aa)
-                    b = line_info_sent_will
-                    offset += 1
+        f.seek(file_sequence * self.default_interval_length)
+        for i in range(file_count):
+            var_packet["ver"], var_packet["ptype"], var_packet["seskey"], var_packet["sequence"], var_packet["count"], \
+            var_packet["offset"], var_packet["data"] = 1, 1, seskey, file_sequence, 200, offset, f.read(self.default_packet_length)
+            offset += 1
+            aa = copy.deepcopy(var_packet)
+            self.q.put(aa)
         f.close()
 
-        if len(b) > 0:
-            tmp_count = math.ceil(len(b) / 1300)
-            for i in range(tmp_count):
-                self.var_packet["ver"], self.var_packet["ptype"], self.var_packet["seskey"], self.var_packet["sequence"], \
-                self.var_packet["count"], self.var_packet["offset"], self.var_packet["data"] = 1, 1, seskey, 1, 200, offset, b[:1300]
-                aa = copy.deepcopy(self.var_packet)
-                self.q.put(aa)
-                b = b[1300:]
-                offset += 1
-
-
-
-        # f = open(self.file_path, "rb")
-        # ff = f.read()
-        # ff = binascii.b2a_base64(ff)
-        # file_count = math.ceil(len(ff)/1000)
-        # for i in range(file_count):
-        #     ack_packet["ver"], ack_packet["ptype"], ack_packet["data"] = 1, 1, ff[(i*999):(i+1)*999]
-        # # for i in range(file_count):
-        # #     #ack_packet["ver"], ack_packet["ptype"], ack_packet["data"] = 1, 1, f.read(100)
-        # #     ff = struct.pack("!1000s", f.read(1000))
-        # #     #ff = base64.b64encode(f.read(100))
-        # #     ack_packet["ver"], ack_packet["ptype"], ack_packet["data"] = 1, 1, ff
-        #     aa = copy.deepcopy(ack_packet)
-        #     self.q.put(aa)
-        # f.close()
-        self.recv_frame()
+    def send_file(self):
+        while True:
+            print("------------------------------------------------------")
+            if not self.q.empty():
+                ack_packet = self.q.get()
+                ack_packet = str(ack_packet)
+                dst_mac = self.dst_mac
+                src_mac = self.src_mac
+                raw_socket = self.set_socket()
+                self.send_packet(raw_socket, self.card, dst_mac, src_mac, ack_packet)
+                print(ack_packet)
+            else:
+                break
 
     def recv_frame(self):
         raw_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
         while True:
-            print("------------------------------------------------------")
             if not self.q.empty():
                 ack_packet = self.q.get()
                 ack_packet = str(ack_packet)
@@ -210,6 +162,24 @@ class Demo(object):
         packet = struct.pack("!6s6s4s2s", bytes_dstmac, bytes_srcmac, vlan_tag, ETH_P_BMS_BY)
 
         raw_socket.send(packet + data.encode('utf8'))
+
+
+    def set_socket(self):
+        raw_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
+        return raw_socket
+
+
+    def send_packet(self, raw_socket, net_card, dst_mac, src_mac, data='hello'):
+        raw_socket.bind((net_card, socket.htons(ETH_P_BMS)))
+
+        bytes_srcmac = self.format_mac_bytes(self.format_mac(src_mac))
+        bytes_dstmac = self.format_mac_bytes(self.format_mac(dst_mac))
+        ETH_P_BMS_BY = self.format_mac_bytes(self.i2b_hex(ETH_P_BMS))
+
+        packet = struct.pack("!6s6s2s", bytes_dstmac, bytes_srcmac, ETH_P_BMS_BY)
+
+        raw_socket.send(packet + data.encode('utf8'))
+
 
     def send_frame(self, net_card, dst_mac, src_mac, data='hello'):
         raw_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
