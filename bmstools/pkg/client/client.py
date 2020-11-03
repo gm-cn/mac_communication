@@ -66,3 +66,9 @@ class Client(threading.Thread):
         关闭session
         """
         self.sessions.pop(session.client_key)
+
+
+if __name__ == "__main__":
+    client = get_client()
+    with client.new_session("") as session:
+        resp = session.exec_cmd("ls /root")

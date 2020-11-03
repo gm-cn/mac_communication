@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 _bms_tools_server = None
 
 
-def get_client():
+def get_server():
     """
     全局唯一server实例
     """
@@ -37,14 +37,12 @@ class Server(object):
                 packet = self.mac_socket.receive_data()
                 if packet.is_new_session():
                     self.new_session(packet.client_key, packet.dest_mac, packet.src_mac)
-                if packet.client_key:
-                    if packet.client_key in self.sessions:
-                        client_session = self.sessions.get(packet.client_key)
-                        client_session.handle_data(packet)
+                else:
+                    if packet.server_key in self.sessions:
+                        server_session = self.sessions.get(packet.server_key)
+                        server_session.handle_data(packet)
                     else:
                         logger.error("server not found session %s" % packet.client_key)
-                else:
-                    logger.error("receive data not found server key")
             except Exception as exc:
                 logger.error("receive data error: %s" % exc, exc_info=True)
                 sleep(3)
@@ -70,3 +68,8 @@ class Server(object):
         关闭session
         """
         self.sessions.pop(session.client_key)
+
+
+if __name__ == '__main__':
+    server = get_server()
+    server.run()
