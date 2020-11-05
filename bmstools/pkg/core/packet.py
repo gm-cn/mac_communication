@@ -10,7 +10,7 @@ class Frame(object):
     """
 
     def __init__(self, src_mac=None, dest_mac=None, client_key=None, server_key=None, ptype=None, sequence=None,
-                 count=None, offset=None, data=None):
+                 count=None, offset=None, data=None, session=None):
         self.src_mac = src_mac
         self.dest_mac = dest_mac
         self.client_key = client_key
@@ -28,7 +28,7 @@ class Packet(object):
     """
 
     def __init__(self, src_mac=None, dest_mac=None, client_key=None, server_key=None, ptype=None, sequence=None,
-                 data=None):
+                 data=None, session=None):
         self.src_mac = src_mac
         self.dest_mac = dest_mac
         self.client_key = client_key
@@ -36,6 +36,7 @@ class Packet(object):
         self.ptype = ptype
         self.sequence = sequence
         self.data = data
+        self.session = session
 
     def is_new_session(self):
         if self.ptype == 1:

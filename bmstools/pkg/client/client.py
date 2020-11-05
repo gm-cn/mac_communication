@@ -59,16 +59,21 @@ class Client(threading.Thread):
         客户端创建一个新的session
         """
         client_key = self.get_new_client_key()
-        return ClientSession(self, client_key=client_key, mac_socket=self.mac_socket, dest_mac=dest_mac)
+        cs = ClientSession(self, client_key=client_key, mac_socket=self.mac_socket, dest_mac=dest_mac)
+        self.sessions[client_key] = cs
 
     def close_session(self, session):
         """
         关闭session
         """
+
         self.sessions.pop(session.client_key)
 
 
 if __name__ == "__main__":
     client = get_client()
-    with client.new_session("") as session:
+    with client.new_session(dest_mac="") as session:
+        session.init_conn()
+        session.send_file("/tmp/aaa")
+        session.close_conn()
         resp = session.exec_cmd("ls /root")
