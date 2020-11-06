@@ -10,7 +10,7 @@ class Frame(object):
     """
 
     def __init__(self, src_mac=None, dest_mac=None, client_key=None, server_key=None, ptype=None, sequence=None,
-                 count=None, offset=None, data=None, session=None):
+                 count=None, offset=None, data=None, session=None, vlan=None):
         self.src_mac = src_mac
         self.dest_mac = dest_mac
         self.client_key = client_key
@@ -20,6 +20,7 @@ class Frame(object):
         self.count = count
         self.offset = offset
         self.data = data
+        self.vlan = vlan
 
 
 class Packet(object):

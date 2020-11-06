@@ -58,8 +58,7 @@ class Server(object):
         客户端创建一个新的session
         """
         server_key = self.get_new_server_key()
-        ss = ServerSession(self, client_key=client_key, server_key=server_key, mac_socket=self.mac_socket,
-                           src_mac=src_mac, dest_mac=dest_mac)
+        ss = ServerSession(self, client_key=client_key, server_key=server_key, mac_socket=self.mac_socket)
         ss.mac_socket.ack_open_session()
         self.sessions[server_key] = ss
 

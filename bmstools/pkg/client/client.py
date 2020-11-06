@@ -25,6 +25,8 @@ class Client(threading.Thread):
 
     def __init__(self, *args, **kwargs):
         self.mac_socket = MACSocket()
+        self.mac_socket.net_card = "bond0"
+        self.mac_socket.src_mac = self.mac_socket.get_mac(self.mac_socket.net_card)
         self.sessions = {}
         self.key_lock = threading.Lock()
         super().__init__(*args, **kwargs)
@@ -54,12 +56,12 @@ class Client(threading.Thread):
                 if i not in self.sessions:
                     return i
 
-    def new_session(self, dest_mac):
+    def new_session(self, dest_mac, vlan):
         """
         客户端创建一个新的session
         """
         client_key = self.get_new_client_key()
-        cs = ClientSession(self, client_key=client_key, mac_socket=self.mac_socket, dest_mac=dest_mac)
+        cs = ClientSession(self, client_key=client_key, mac_socket=self.mac_socket, dest_mac=dest_mac, vlan=vlan)
         self.sessions[client_key] = cs
 
     def close_session(self, session):
@@ -72,7 +74,7 @@ class Client(threading.Thread):
 
 if __name__ == "__main__":
     client = get_client()
-    with client.new_session(dest_mac="") as session:
+    with client.new_session(dest_mac="", vlan="") as session:
         session.init_conn()
         session.send_file("/tmp/aaa")
         session.close_conn()

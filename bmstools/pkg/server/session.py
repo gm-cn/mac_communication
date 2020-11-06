@@ -17,12 +17,13 @@ logger = logging.getLogger(__name__)
 
 class ServerSession(object):
 
-    def __init__(self, server, client_key=None, server_key=None, mac_socket=None, src_mac=None):
+    def __init__(self, server, client_key=None, server_key=None, mac_socket=None):
         self.server = server
         self.mac_socket = mac_socket
-        self.src_mac = src_mac
+        self.mac_socket.net_card = None
+        self.src_mac = None
         self.dest_mac = None
-
+        self.vlan = None
         self.client_key = None
         self.server_key = server_key
 
@@ -59,14 +60,18 @@ class ServerSession(object):
                 """
                 创建seskey返回
                 """
-                self.dst_Mac = data[1].decode("utf-8")
+                self.dest_mac = data[1].decode("utf-8")
+                self.src_mac = data[0].decode("utf-8")
+                self.vlan = data[2].vlan
+                self.mac_socket.net_card = self.mac_socket.get_net(self.src_mac)[0]
+                self.mac_socket.src_mac = self.src_mac
                 self.server_key = ""
                 self.client_key = self.receive_data.client_key
-                self.mac_socket.send_func_packet(self.dest_mac, ptype=2, server_key=self.server_key, client_key=self.client_key)
+                self.mac_socket.send_func_packet(self.dest_mac, ptype=2, server_key=self.server_key, client_key=self.client_key, vlan=self.vlan)
             elif self.receive_data.ptype == 255:
                 data = None
                 self.mac_socket.send_func_packet(self.dest_mac, ptype=255, server_key=self.server_key,
-                                                 client_key=self.client_key, data=data)
+                                                 client_key=self.client_key, data=data, vlan=self.vlan)
                 self.close_conn()
             self.receive_condition.notify()
 
@@ -102,7 +107,7 @@ class ServerSession(object):
         f = open(file_path, "rb")
         for i in range(file_sequence):
             self.mac_socket.send_data(dst_mac=self.dest_mac, sequence=i, server_key=self.server_key,
-                                      data=f.read(self.default_packet_length), )
+                                      data=f.read(self.default_packet_length), vlan=self.vlan)
         f.close()
 
     def authentication(self, data):
@@ -115,14 +120,14 @@ class ServerSession(object):
         pass
 
     def init_conn(self):
-        self.mac_socket.send_func_packet(dst_mac=self.dest_mac, ptype=0, session=self.client_key)
+        self.mac_socket.send_func_packet(dst_mac=self.dest_mac, ptype=0, session=self.client_key, vlan=self.vlan)
         """
         握手结束，开始认证
         """
         self.authentication(data="")
 
     def close_conn(self):
-        self.mac_socket.send_func_packet(dst_mac=self.dest_mac, ptype=255, session=self.client_key)
+        self.mac_socket.send_func_packet(dst_mac=self.dest_mac, ptype=255, session=self.client_key, vlan=self.vlan)
 
     def save_file(self, data):
         with open(self.file_path, "ab") as f:

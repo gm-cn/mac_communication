@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class ClientSession(object):
 
     def __init__(self, client, client_key=None, server_key=None, mac_socket=None, src_mac=None, dest_mac=None,
-                 session=None):
+                 session=None, vlan=None):
         self.client = client
         self.client_key = client_key
         self.server_key = server_key
@@ -21,6 +21,7 @@ class ClientSession(object):
         self.default_interval_length = 900000
         self.default_packet_length = 300
         self.file_path = None
+        self.vlan = vlan
 
     def __enter__(self):
         """
@@ -84,7 +85,7 @@ class ClientSession(object):
         file_sequence = math.ceil(file_length / self.default_interval_length)
         f = open(file_path, "rb")
         for i in range(file_sequence):
-            self.mac_socket.send_data(dst_mac=self.dest_mac, sequence=i, server_key=self.server_key,
+            self.mac_socket.send_data(dst_mac=self.dest_mac, sequence=i, server_key=self.server_key, vlan=self.vlan,
                                       data=f.read(self.default_packet_length), client_key=self.client_key)
         f.close()
         return "ok"
@@ -92,16 +93,19 @@ class ClientSession(object):
     def authentication(self, data):
 
         self.server_key = self.receive_data.server_key
-        self.mac_socket.send_func_packet(self.dest_mac, ptype=3, server_key=self.server_key, data="", client_key=self.client_key)
+        self.mac_socket.send_func_packet(self.dest_mac, ptype=3, server_key=self.server_key, data="",
+                                         client_key=self.client_key, vlan=self.vlan)
 
         if data.data is None:
             return "ok"
 
     def init_conn(self):
-        self.mac_socket.send_func_packet(dst_mac=self.dest_mac, ptype=0, session=self.client_key)
+        send_socket = self.mac_socket.set_send_socket()
+        self.mac_socket.send_socket = send_socket
+        self.mac_socket.send_func_packet(dst_mac=self.dest_mac, ptype=0, session=self.client_key, vlan=self.vlan)
         """
         握手结束，开始认证
         """
 
     def close_conn(self):
-        self.mac_socket.send_func_packet(dst_mac=self.dest_mac, ptype=255, session=self.client_key)
+        self.mac_socket.send_func_packet(dst_mac=self.dest_mac, ptype=255, session=self.client_key, vlan=self.vlan)
