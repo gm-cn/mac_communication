@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class MACSocket(object):
 
     def __init__(self):
-        net_card = "net1"
+        net_card = "bond0"
         self.receive_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
         self.send_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
         self.send_socket.bind((net_card, socket.htons(ETH_P_BMS)))
