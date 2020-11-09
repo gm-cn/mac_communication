@@ -3,17 +3,10 @@ import socket
 import struct
 import binascii
 from functools import reduce
-from queue import Queue
-import threading
-import time
-from os.path import getsize
 import math
-import base64
-import copy
 from time import sleep
 
 from .packet import Frame
-from .packet import ControlPacket
 
 import logging
 
