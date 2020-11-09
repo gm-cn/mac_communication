@@ -20,10 +20,9 @@ LOG_SETTINGS = {
 
     },
     'loggers': {
-        '': {
+        'bmstools': {
             'level': 'DEBUG',
-            'handlers': ['console'],
-            'propagate': False
+            'handlers': ['console']
         },
     }
 }
@@ -31,3 +30,5 @@ LOG_SETTINGS = {
 
 def setup():
     logging.config.dictConfig(LOG_SETTINGS)
+    logger = logging.getLogger('bmstools')
+    return logger
