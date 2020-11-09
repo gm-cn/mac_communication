@@ -1,7 +1,6 @@
 import socket
 import struct
 import binascii
-import netifaces
 from functools import reduce
 from queue import Queue
 import threading

@@ -1,16 +1,9 @@
+# coding=utf-8
 import logging
 import threading
 
-from functools import reduce
-from queue import Queue
-import time
 from os.path import getsize
 import math
-import base64
-import copy
-
-from ..core.packet import Frame
-from ..core.packet import ControlPacket
 
 logger = logging.getLogger(__name__)
 

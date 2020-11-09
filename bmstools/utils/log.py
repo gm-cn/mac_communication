@@ -1,4 +1,4 @@
-import os
+# coding=utf-8
 import logging
 import logging.config
 
@@ -17,15 +17,6 @@ LOG_SETTINGS = {
             'formatter': 'detailed',
             'stream': 'ext://sys.stdout',
         },
-        'file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'level': 'DEBUG',
-            'formatter': 'detailed',
-            'filename': '/var/log/cdsstack/baremetal-api.log',
-            'mode': 'a',
-            'maxBytes': 10485760,
-            'backupCount': 5,
-        },
 
     },
     'loggers': {
@@ -38,7 +29,5 @@ LOG_SETTINGS = {
 }
 
 
-def setup(path='/var/log/bmstools'):
-    if not os.path.exists(path):
-        os.makedirs(path)
+def setup():
     logging.config.dictConfig(LOG_SETTINGS)

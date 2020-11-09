@@ -1,3 +1,4 @@
+# coding=utf-8
 import logging
 import threading
 from os.path import getsize
