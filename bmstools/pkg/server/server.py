@@ -38,6 +38,8 @@ class Server(object):
                 local_mac, src_mac, data = packet[0], packet[1], packet[2]
                 if data["client_key"] not in self.sessions:
                     self.new_session(data["client_key"])
+                    server_session = self.sessions.get(data["client_key"])
+                    server_session.handle_data(packet)
                 else:
                     if data["client_key"] in self.sessions:
                         server_session = self.sessions.get(data["client_key"])

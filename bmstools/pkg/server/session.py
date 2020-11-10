@@ -48,6 +48,7 @@ class ServerSession(object):
             self.receive_data = data[2]
             if self.receive_data["ptype"] == 1:
                 self.save_file(self.receive_data["data"])
+                print(self.dest_mac, self.server_key, self.client_key, data, self.vlan)
             elif self.receive_data["ptype"] == 2 and self.receive_data["sequence"]:
                 pass
             elif self.receive_data["ptype"] == 2 and self.receive_data["sequence"] is None:
@@ -63,7 +64,7 @@ class ServerSession(object):
                 """
                 self.dest_mac = data[1].decode("utf-8")
                 self.src_mac = data[0].decode("utf-8")
-                self.vlan = data[2].vlan
+                self.vlan = self.receive_data["vlan"]
                 self.mac_socket.net_card = self.mac_socket.get_net(self.src_mac)[0]
                 self.mac_socket.src_mac = self.src_mac
                 self.server_key = ""
@@ -71,11 +72,13 @@ class ServerSession(object):
                 self.send_socket = self.mac_socket.set_send_socket()
                 self.mac_socket.send_func_packet(self.dest_mac, ptype=2, server_key=self.server_key,
                                                  client_key=self.client_key, vlan=self.vlan, raw_socket=self.send_socket)
+                print(self.dest_mac, self.server_key, self.client_key, data, self.vlan)
             elif self.receive_data["ptype"] == 255:
-                data = None
+                print(self.dest_mac, self.server_key, self.client_key, data, self.vlan)
                 self.mac_socket.send_func_packet(self.dest_mac, ptype=255, server_key=self.server_key, client_key=self.client_key,
                                                  data=data, vlan=self.vlan, raw_socket=self.send_socket)
                 self.close_conn()
+                data = None
             self.receive_condition.notify()
 
     def handle_data(self, packet):
