@@ -74,7 +74,7 @@ class ClientSession(object):
         """
         self.set_receive_data(packet)
 
-    def receive_data(self):
+    def receive_response(self):
         """
         从macsocket获取接收数据或返回数据
         """
@@ -90,7 +90,7 @@ class ClientSession(object):
         """
         self.mac_socket.send_data(packet)
         self.sequence += 1
-        resp_packet = self.receive_data()
+        resp_packet = self.receive_response()
         return resp_packet
 
     def exec_cmd(self, cmd):

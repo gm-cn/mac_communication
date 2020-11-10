@@ -44,6 +44,7 @@ class ServerSession(object):
         服务端对客户端响应
         """
         self.mac_socket.send_data(packet)
+        self.sequence += 1
 
     def ack_open_session(self):
         packet = Packet(src_mac=self.src_mac,

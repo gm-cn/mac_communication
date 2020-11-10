@@ -47,7 +47,7 @@ class MACSocket(object):
         eth_header = packet[0:14]
         src_mac, dst_mac, eth_type = struct.unpack("!6s6s2s", eth_header)
         if eth_type != '\x7f\xff':
-            logger.error("receive eth type %s is not bms type" % (eth_type, ))
+            logger.error("receive eth type %s is not bms type" % (eth_type,))
             return
         ver, ptype, client_session_key = struct.unpack('!BBH', packet[14: 18])
         frame = Frame(src_mac=src_mac,
@@ -65,16 +65,16 @@ class MACSocket(object):
             frame.data = packet[30: 30 + frame.length]
 
         logger.info("receive frame, client_key: %s, server_key: %s, ptype: %s, src_mac: %s, dest_mac: %s, sequence: %s \
-                    count: %s, offset:%s, length: %s, data: %s" % (frame.client_key,
-                                                                   frame.server_key,
-                                                                   frame.ptype,
-                                                                   frame.src_mac,
-                                                                   frame.dest_mac,
-                                                                   frame.sequence,
-                                                                   frame.count,
-                                                                   frame.offset,
-                                                                   frame.length,
-                                                                   frame.data))
+        count: %s, offset:%s, length: %s, data: %s" % (frame.client_key,
+                                                       frame.server_key,
+                                                       frame.ptype,
+                                                       frame.src_mac,
+                                                       frame.dest_mac,
+                                                       frame.sequence,
+                                                       frame.count,
+                                                       frame.offset,
+                                                       frame.length,
+                                                       frame.data))
 
         # 返回Ack确认包
         ack_frame = Frame(src_mac=frame.dest_mac,
@@ -159,16 +159,16 @@ class MACSocket(object):
         else:
             send_frame += struct.pack("!H", 0)
         logger.info("send frame, client_key: %s, server_key: %s, ptype: %s, src_mac: %s, dest_mac: %s, sequence: %s \
-                    count: %s, offset:%s, length: %s, data: %s" % (frame.client_key,
-                                                                   frame.server_key,
-                                                                   frame.ptype,
-                                                                   frame.src_mac,
-                                                                   frame.dest_mac,
-                                                                   frame.sequence,
-                                                                   frame.count,
-                                                                   frame.offset,
-                                                                   frame.length,
-                                                                   frame.data))
+        count: %s, offset:%s, length: %s, data: %s" % (frame.client_key,
+                                                       frame.server_key,
+                                                       frame.ptype,
+                                                       frame.src_mac,
+                                                       frame.dest_mac,
+                                                       frame.sequence,
+                                                       frame.count,
+                                                       frame.offset,
+                                                       frame.length,
+                                                       frame.data))
         self.send_socket.send(send_frame)
         if frame.ptype != PacketType.Ack:
             if frame.client_key not in self.send_frame_caches:
@@ -234,5 +234,3 @@ class MACSocket(object):
     def i2b_hex(cls, protocol):
         b_protocol = hex(int(protocol))[2:]
         return b_protocol if len(b_protocol) % 2 == 0 else '0{0}'.format(b_protocol).encode('utf8')
-
-
