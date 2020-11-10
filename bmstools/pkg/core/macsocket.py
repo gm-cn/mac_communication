@@ -75,17 +75,17 @@ class MACSocket(object):
                                                        frame.offset,
                                                        frame.length,
                                                        frame.data))
-
-        # 返回Ack确认包
-        ack_frame = Frame(src_mac=frame.dest_mac,
-                          dest_mac=frame.src_mac,
-                          client_key=frame.client_key,
-                          server_key=frame.server_key,
-                          ptype=PacketType.Ack,
-                          sequence=frame.sequence,
-                          count=frame.count,
-                          offset=frame.offset)
-        self.send_frame(ack_frame)
+        if frame.ptype != PacketType.Ack:
+            # 返回Ack确认包
+            ack_frame = Frame(src_mac=frame.dest_mac,
+                              dest_mac=frame.src_mac,
+                              client_key=frame.client_key,
+                              server_key=frame.server_key,
+                              ptype=PacketType.Ack,
+                              sequence=frame.sequence,
+                              count=frame.count,
+                              offset=frame.offset)
+            self.send_frame(ack_frame)
         return frame
 
     def receive_data(self):
