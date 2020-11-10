@@ -3,7 +3,7 @@ import logging
 import threading
 from time import sleep
 
-from .session import ServerSession, SessionState
+from .session import ServerSession
 from ..core.macsocket import MACSocket
 
 logger = logging.getLogger(__name__)
