@@ -66,6 +66,7 @@ class ServerSession(object):
                 self.src_mac = data[0].decode("utf-8")
                 self.vlan = self.receive_data["vlan"]
                 self.mac_socket.net_card = self.mac_socket.get_net(self.src_mac)[0]
+                print("card" + self.mac_socket.net_card)
                 self.mac_socket.src_mac = self.src_mac
                 self.server_key = ""
                 self.client_key = self.receive_data["client_key"]

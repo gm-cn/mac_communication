@@ -102,7 +102,7 @@ class MACSocket(object):
         local_mac, src_mac, eth_type = binascii.hexlify(eth_hdr[0]), binascii.hexlify(eth_hdr[1]), binascii.hexlify(
             eth_hdr[2])
         data = eval(packet[14:])
-        logger.debug(data)
+        logger.debug("receive : " + str(data))
         return local_mac, src_mac, data
 
     def send_frame(self, dst_mac, src_mac, data, raw_socket):
@@ -115,7 +115,7 @@ class MACSocket(object):
     def send_vlan_frame(self, b_vlan, dst_mac, src_mac, data, raw_socket):
         vlan_tag = struct.pack("!2s2s", self.ETH_P_VLAN_BY, b_vlan)
         packet = struct.pack("!6s6s4s2s", dst_mac, src_mac, vlan_tag, self.ETH_P_BMS_BY)
-        print(packet)
+        logger.debug("send : " + str(data))
         raw_socket.send(packet + data.encode('utf8'))
 
     def receive_data(self):
@@ -185,7 +185,7 @@ class MACSocket(object):
         bytes_srcmac = self.format_mac_bytes(self.format_mac(self.src_mac))
         bytes_dstmac = self.format_mac_bytes(self.format_mac(dst_mac))
         bytes_vlan = self.format_mac_bytes(self.i2b_hex(vlan))
-
+        print("++++++0", dst_mac, ptype, vlan)
         if ptype == 0:
             var_packet.ptype, var_packet.client_key, var_packet.server_key, var_packet.vlan = 0, client_key, \
                                                                                               server_key, vlan

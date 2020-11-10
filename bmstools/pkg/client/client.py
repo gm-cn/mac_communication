@@ -87,14 +87,17 @@ class Client(threading.Thread):
         从二层网卡接收数据，转发数据到对应已创建的session
         """
         while True:
+            print("------------")
             try:
+                print("***************")
                 packet = self.mac_socket.receive_data()
-                if packet.client_key:
-                    if packet.client_key in self.sessions:
-                        client_session = self.sessions.get(packet.client_key)
+                local_mac, src_mac, data = packet[0], packet[1], packet[2]
+                if data["client_key"]:
+                    if data["client_key"] in self.sessions:
+                        client_session = self.sessions.get(data["client_key"])
                         client_session.handle_data(packet)
                     else:
-                        logger.error("client not found session %s" % packet.client_key)
+                        logger.error("client not found session %s" % data["client_key"])
                 else:
                     logger.error("receive data not found client key")
             except Exception as exc:
