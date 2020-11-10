@@ -15,14 +15,63 @@ from time import sleep
 from .packet import Frame
 from .packet import ControlPacket
 
+import os
 import logging
+import logging.config
+
+LOG_SETTINGS = {
+    'version': 1,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'INFO',
+            'formatter': 'detailed',
+            'stream': 'ext://sys.stdout',
+        },
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'level': 'DEBUG',
+            'formatter': 'detailed',
+            'filename': '/var/log/cdsstack/baremetal-api.log',
+            'mode': 'a',
+            'maxBytes': 10485760,
+            'backupCount': 5,
+        },
+
+    },
+    'formatters': {
+        'detailed': {
+            'format': '%(asctime)s %(levelname)s %(process)d \
+%(name)s.%(lineno)d %(message)s',
+        },
+        'email': {
+            'format': 'Timestamp: %(asctime)s\nModule: %(module)s\n'
+                      'Line: %(lineno)d\nMessage: %(message)s',
+        },
+    },
+    'loggers': {
+        'baremetal': {
+            'level': 'DEBUG',
+            'handlers': ['file', 'console']
+        },
+    }
+}
+
+
+def setup(path='/var/log/cdsstack'):
+    if not os.path.exists(path):
+        os.makedirs(path)
+    logging.config.dictConfig(LOG_SETTINGS)
+    logger = logging.getLogger('baremetal')
+    return logger
+
+
+logger = setup()
 
 ETH_P_BMS = 0x7fff
 ETH_P_VLAN = 0x8100
 BuffSize = 65536
 TCP_PROTOCOL = 17
-
-logger = logging.getLogger(__name__)
 
 
 class MACSocket(object):
@@ -53,7 +102,7 @@ class MACSocket(object):
         local_mac, src_mac, eth_type = binascii.hexlify(eth_hdr[0]), binascii.hexlify(eth_hdr[1]), binascii.hexlify(
             eth_hdr[2])
         data = eval(packet[14:])
-        print(data)
+        logger.debug(data)
         return local_mac, src_mac, data
 
     def send_frame(self, dst_mac, src_mac, data, raw_socket):
@@ -66,6 +115,7 @@ class MACSocket(object):
     def send_vlan_frame(self, b_vlan, dst_mac, src_mac, data, raw_socket):
         vlan_tag = struct.pack("!2s2s", self.ETH_P_VLAN_BY, b_vlan)
         packet = struct.pack("!6s6s4s2s", dst_mac, src_mac, vlan_tag, self.ETH_P_BMS_BY)
+        print(packet)
         raw_socket.send(packet + data.encode('utf8'))
 
     def receive_data(self):
