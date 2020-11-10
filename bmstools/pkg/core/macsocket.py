@@ -45,7 +45,7 @@ class MACSocket(object):
         packet, packet_info = self.receive_socket.recvfrom(BuffSize)
         logger.info("receive packet: %s", packet)
         eth_header = packet[0:14]
-        src_mac, dst_mac, eth_type = struct.unpack("!6s6s2s", eth_header)
+        dst_mac, src_mac, eth_type = struct.unpack("!6s6s2s", eth_header)
         if eth_type != '\x7f\xff':
             logger.error("receive eth type %s is not bms type" % (eth_type,))
             return
