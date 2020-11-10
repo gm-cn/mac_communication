@@ -59,9 +59,10 @@ class Server(object):
         客户端创建一个新的session
         """
         server_key = self.get_new_server_key()
-        session_state = SessionState(client_key=client_key, server_key=server_key, src_mac=src_mac, dest_mac=dest_mac)
-        ss = ServerSession(self, mac_socket=self.mac_socket, session_state=session_state)
-        ss.mac_socket.ack_open_session()
+        # session_state = SessionState(client_key=client_key, server_key=server_key, src_mac=src_mac, dest_mac=dest_mac)
+        ss = ServerSession(self, mac_socket=self.mac_socket, client_key=client_key, server_key=server_key,
+                           src_mac=src_mac, dest_mac=dest_mac)
+        ss.ack_open_session()
         self.sessions[server_key] = ss
 
     def close_session(self, session):

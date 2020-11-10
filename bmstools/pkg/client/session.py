@@ -4,13 +4,14 @@ import threading
 from os.path import getsize
 import math
 
+from bmstools.pkg.core.packet import Packet, PacketType
+
 logger = logging.getLogger(__name__)
 
 
 class ClientSession(object):
 
-    def __init__(self, client, client_key=None, server_key=None, mac_socket=None, src_mac=None, dest_mac=None,
-                 session=None):
+    def __init__(self, client, client_key=None, server_key=None, mac_socket=None, src_mac=None, dest_mac=None):
         self.client = client
         self.client_key = client_key
         self.server_key = server_key
@@ -22,12 +23,13 @@ class ClientSession(object):
         self.default_interval_length = 900000
         self.default_packet_length = 300
         self.file_path = None
+        self.sequence = 0
 
     def __enter__(self):
         """
         打开session，认证过程
         """
-        pass
+        self.open_session()
 
     def __exit__(self):
         """
@@ -35,6 +37,15 @@ class ClientSession(object):
         """
         self.mac_socket.close_session()
         self.client.close_session(self)
+
+    def open_session(self):
+        packet = Packet(src_mac=self.src_mac,
+                        dest_mac=self.dest_mac,
+                        client_key=self.client_key,
+                        ptype=PacketType.OpenSession,
+                        sequence=self.sequence)
+        resp_packet = self.request(packet)
+        self.server_key = resp_packet.server_key
 
     def set_receive_data(self, data):
         """
@@ -70,15 +81,26 @@ class ClientSession(object):
                 self.receive_condition.wait()
         return self.receive_data
 
-    def request(self):
+    def request(self, packet):
         """
         对服务端发送请求
         """
-        pass
+        self.mac_socket.send_data(packet)
+        self.sequence += 1
+        resp_packet = self.receive_data()
+        return resp_packet
 
     def exec_cmd(self, cmd):
-        resp = self.request()
-        logger.info(resp)
+        packet = Packet(src_mac=self.src_mac,
+                        dest_mac=self.dest_mac,
+                        client_key=self.client_key,
+                        server_key=self.server_key,
+                        ptype=PacketType.Data,
+                        sequence=self.sequence,
+                        data=cmd)
+        resp = self.request(packet)
+        logger.info(resp.data)
+        return resp.data
 
     def send_file(self, file_path):
         file_length = getsize(file_path)

@@ -5,6 +5,8 @@ import threading
 from os.path import getsize
 import math
 
+from bmstools.pkg.core.packet import Packet, PacketType
+
 logger = logging.getLogger(__name__)
 
 
@@ -22,10 +24,14 @@ class SessionState(object):
 
 class ServerSession(object):
 
-    def __init__(self, server, mac_socket=None, session_state=None):
+    def __init__(self, server, mac_socket=None, client_key=None, server_key=None, src_mac=None, dest_mac=None):
         self.server = server
         self.mac_socket = mac_socket
-        self.session_state = session_state
+        self.client_key = client_key
+        self.server_key = server_key
+        self.src_mac = src_mac
+        self.dest_mac = dest_mac
+        self.sequence = 0
 
         self.receive_condition = threading.Condition()
         self.receive_data = None
@@ -33,11 +39,20 @@ class ServerSession(object):
         self.default_packet_length = 300
         self.file_path = "/home/ddd"
 
-    def response(self, data):
+    def response(self, packet):
         """
         服务端对客户端响应
         """
-        self.mac_socket.send_data(data)
+        self.mac_socket.send_data(packet)
+
+    def ack_open_session(self):
+        packet = Packet(src_mac=self.src_mac,
+                        dest_mac=self.dest_mac,
+                        client_key=self.client_key,
+                        server_key=self.server_key,
+                        ptype=PacketType.OpenSession,
+                        sequence=self.sequence)
+        self.response(packet)
 
     def set_receive_data(self, data):
         """
@@ -75,7 +90,16 @@ class ServerSession(object):
         """
         接收到数据处理
         """
-        self.set_receive_data(packet)
+        # self.set_receive_data(packet)
+        logger.info(packet.data)
+        packet = Packet(src_mac=self.src_mac,
+                        dest_mac=self.dest_mac,
+                        client_key=self.client_key,
+                        server_key=self.server_key,
+                        ptype=PacketType.Data,
+                        sequence=self.sequence,
+                        data="hello")
+        self.response(packet)
 
     def receive_data(self):
         """

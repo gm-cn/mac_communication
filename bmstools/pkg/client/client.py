@@ -25,10 +25,15 @@ def get_client():
 class Client(threading.Thread):
 
     def __init__(self, *args, **kwargs):
+        self.src_mac = self.get_src_mac()
         self.mac_socket = MACSocket()
         self.sessions = {}
         self.key_lock = threading.Lock()
         super().__init__(*args, **kwargs)
+
+    @classmethod
+    def get_src_mac(cls):
+        return ""
 
     def run(self):
         """
@@ -55,12 +60,14 @@ class Client(threading.Thread):
                 if i not in self.sessions:
                     return i
 
-    def new_session(self, dest_mac):
+    def new_session(self, dest_mac, src_mac=None):
         """
         客户端创建一个新的session
         """
         client_key = self.get_new_client_key()
-        cs = ClientSession(self, client_key=client_key, mac_socket=self.mac_socket, dest_mac=dest_mac)
+        if not src_mac:
+            src_mac = self.src_mac
+        cs = ClientSession(self, client_key=client_key, mac_socket=self.mac_socket, src_mac=src_mac, dest_mac=dest_mac)
         self.sessions[client_key] = cs
 
     def close_session(self, session):
