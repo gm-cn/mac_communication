@@ -53,6 +53,7 @@ class MACSocket(object):
         local_mac, src_mac, eth_type = binascii.hexlify(eth_hdr[0]), binascii.hexlify(eth_hdr[1]), binascii.hexlify(
             eth_hdr[2])
         data = eval(packet[14:])
+        print(data)
         return local_mac, src_mac, data
 
     def send_frame(self, dst_mac, src_mac, data, raw_socket):
@@ -74,7 +75,8 @@ class MACSocket(object):
         packet = self.receive_frame()
         local_mac, src_mac, data = packet[0], packet[1], packet[2]
         if data["ptype"] == 1:
-            self.server_packet_list.append(data)
+            if data not in self.server_packet_list:
+                self.server_packet_list.append(data)
             if len(self.server_packet_list) == data["count"]:
                 self.server_packet_list.sort(key=lambda x: (x["sequence"], x["offset"]))
                 data["data"] = reduce(lambda x, y: x + y, [i["data"] for i in self.server_packet_list])
@@ -111,8 +113,8 @@ class MACSocket(object):
 
         count = math.ceil(len(data) / self.default_packet_length)
 
-        var_packet.ptype, var_packet.client_key, var_packet.server_key, var_packet.sequence, var_packet.count = 1, \
-                                                                                client_key, server_key, sequence, count
+        var_packet.ptype, var_packet.client_key, var_packet.server_key, var_packet.sequence, var_packet.count, \
+        var_packet.vlan = 1, client_key, server_key, sequence, count, vlan
         for i in range(count):
             var_packet.offset, var_packet.data = i, data[
                                                     i * self.default_packet_length:(i + 1) * self.default_packet_length]

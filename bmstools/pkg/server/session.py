@@ -47,12 +47,12 @@ class ServerSession(object):
         with self.receive_condition:
             self.receive_data = data[2]
             if self.receive_data["ptype"] == 1:
-                self.save_file(self.receive_data)
+                self.save_file(self.receive_data["data"])
             elif self.receive_data["ptype"] == 2 and self.receive_data["sequence"]:
                 pass
             elif self.receive_data["ptype"] == 2 and self.receive_data["sequence"] is None:
                 self.init_conn()
-            elif data["ptype"] == 3:
+            elif self.receive_data["ptype"] == 3:
                 """
                 认证过程
                 """

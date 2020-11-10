@@ -2,7 +2,7 @@ import threading
 import logging
 from time import sleep
 
-from .pkg.client import client
+from pkg.client import client
 
 logger = logging.getLogger(__name__)
 
