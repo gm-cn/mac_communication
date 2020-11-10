@@ -32,13 +32,23 @@ class ClientSession(object):
         self.open_session()
         return self
 
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_val, exc_tb):
         """
-        退出session
+
+        :param exc_type:
+        :param exc_val:
+        :param exc_tb:
+        :return:
         """
-        # self.mac_socket.close_session()
-        # self.client.close_session(self)
-        pass
+        logger.info("exit session")
+
+    # def __exit__(self):
+    #     """
+    #     退出session
+    #     """
+    #     # self.mac_socket.close_session()
+    #     # self.client.close_session(self)
+    #     pass
 
     def open_session(self):
         packet = Packet(src_mac=self.src_mac,
