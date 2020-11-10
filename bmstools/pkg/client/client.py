@@ -56,7 +56,7 @@ class Client(threading.Thread):
 
     def get_new_client_key(self):
         with self.key_lock:
-            for i in range(65536):
+            for i in range(1, 65536):
                 if i not in self.sessions:
                     return i
 
