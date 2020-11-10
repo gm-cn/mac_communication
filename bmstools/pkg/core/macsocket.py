@@ -42,13 +42,13 @@ class MACSocket(object):
         if eth_type != '\x7f\xff':
             logger.error("receive eth type %s is not bms type" % (eth_type, ))
             return
-        ver, ptype, client_session_key = struct.unpack('!BBHH', packet[14: 20])
+        ver, ptype, client_session_key = struct.unpack('!BBH', packet[14: 20])
         frame = Frame(src_mac=src_mac,
                       dest_mac=dst_mac,
                       client_key=client_session_key,
                       ptype=ptype)
         if ptype in (PacketType.Ack, PacketType.Data, PacketType.Control):
-            server_session_key, sequence, count, offset, length = struct.unpack('!IHHH', packet[20: 30])
+            server_session_key, sequence, count, offset, length = struct.unpack('!HIHHH', packet[20: 30])
             frame.server_key = server_session_key
             frame.sequence = sequence
             frame.count = count
