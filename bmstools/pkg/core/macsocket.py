@@ -197,19 +197,23 @@ class MACSocket(object):
             logger.info("send packet data: %s" % (packet.data,))
             if packet.data:
                 count = int(len(packet.data) / self.default_packet_length)
-                for i in range(count):
-                    frame_data = packet.data[i * self.default_packet_length: (i + 1) * self.default_packet_length]
-                    frame = Frame(src_mac=packet.src_mac,
-                                  dest_mac=packet.dest_mac,
-                                  client_key=packet.client_key,
-                                  server_key=packet.server_key,
-                                  ptype=packet.ptype,
-                                  sequence=packet.sequence,
-                                  count=count,
-                                  offset=i,
-                                  length=len(frame_data),
-                                  data=frame_data)
-                    self.send_frame(frame)
+                for i in range(count + 1):
+                    if (i + 1) * self.default_packet_length > len(packet.data):
+                        frame_data = packet.data[i * self.default_packet_length:]
+                    else:
+                        frame_data = packet.data[i * self.default_packet_length: (i + 1) * self.default_packet_length]
+                    if frame_data:
+                        frame = Frame(src_mac=packet.src_mac,
+                                      dest_mac=packet.dest_mac,
+                                      client_key=packet.client_key,
+                                      server_key=packet.server_key,
+                                      ptype=packet.ptype,
+                                      sequence=packet.sequence,
+                                      count=count,
+                                      offset=i,
+                                      length=len(frame_data),
+                                      data=frame_data)
+                        self.send_frame(frame)
             else:
                 frame = Frame(src_mac=packet.src_mac,
                               dest_mac=packet.dest_mac,
