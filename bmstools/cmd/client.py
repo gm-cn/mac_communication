@@ -17,7 +17,8 @@ def main():
     log.setup()
 
     c = client.get_client()
-    with c.new_session(dest_mac="", src_mac="") as session:
+    c.start()
+    with c.new_session(dest_mac="\xb4\x96\x91\x2f\xcb\x40", src_mac="\xb4\x96\x91\x32\x31\xd8") as session:
         resp = session.exec_cmd("ls /root")
 
 

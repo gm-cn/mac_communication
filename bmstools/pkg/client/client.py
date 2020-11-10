@@ -29,7 +29,7 @@ class Client(threading.Thread):
         self.mac_socket = MACSocket()
         self.sessions = {}
         self.key_lock = threading.Lock()
-        super().__init__(*args, **kwargs)
+        super(Client, self).__init__(*args, **kwargs)
 
     @classmethod
     def get_src_mac(cls):
@@ -69,6 +69,7 @@ class Client(threading.Thread):
             src_mac = self.src_mac
         cs = ClientSession(self, client_key=client_key, mac_socket=self.mac_socket, src_mac=src_mac, dest_mac=dest_mac)
         self.sessions[client_key] = cs
+        return cs
 
     def close_session(self, session):
         """
