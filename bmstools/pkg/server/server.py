@@ -59,6 +59,10 @@ class Server(object):
         客户端创建一个新的session
         """
         server_key = self.get_new_server_key()
+        logger.info("start new session, client_key: %s, server_key: %s, src_mac: %s, dest_mac: %s" % (client_key,
+                                                                                                      server_key,
+                                                                                                      src_mac,
+                                                                                                      dest_mac))
         # session_state = SessionState(client_key=client_key, server_key=server_key, src_mac=src_mac, dest_mac=dest_mac)
         ss = ServerSession(self, mac_socket=self.mac_socket, client_key=client_key, server_key=server_key,
                            src_mac=src_mac, dest_mac=dest_mac)

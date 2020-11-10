@@ -52,6 +52,7 @@ class ServerSession(object):
                         server_key=self.server_key,
                         ptype=PacketType.OpenSession,
                         sequence=self.sequence)
+        logger.info("send ack open session")
         self.response(packet)
 
     def set_receive_data(self, data):

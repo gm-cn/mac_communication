@@ -64,6 +64,18 @@ class MACSocket(object):
         if ptype == PacketType.Data:
             frame.data = packet[30: 30 + frame.length]
 
+        logger.info("receive frame, client_key: %s, server_key: %s, ptype: %s, src_mac: %s, dest_mac: %s, sequence: %s \
+                    count: %s, offset:%s, length: %s, data: %s" % (frame.client_key,
+                                                                   frame.server_key,
+                                                                   frame.ptype,
+                                                                   frame.src_mac,
+                                                                   frame.dest_mac,
+                                                                   frame.sequence,
+                                                                   frame.count,
+                                                                   frame.offset,
+                                                                   frame.length,
+                                                                   frame.data))
+
         # 返回Ack确认包
         ack_frame = Frame(src_mac=frame.dest_mac,
                           dest_mac=frame.src_mac,
@@ -146,6 +158,17 @@ class MACSocket(object):
             send_frame += frame.data
         else:
             send_frame += struct.pack("!H", 0)
+        logger.info("send frame, client_key: %s, server_key: %s, ptype: %s, src_mac: %s, dest_mac: %s, sequence: %s \
+                    count: %s, offset:%s, length: %s, data: %s" % (frame.client_key,
+                                                                   frame.server_key,
+                                                                   frame.ptype,
+                                                                   frame.src_mac,
+                                                                   frame.dest_mac,
+                                                                   frame.sequence,
+                                                                   frame.count,
+                                                                   frame.offset,
+                                                                   frame.length,
+                                                                   frame.data))
         self.send_socket.send(send_frame)
         if frame.ptype != PacketType.Ack:
             if frame.client_key not in self.send_frame_caches:

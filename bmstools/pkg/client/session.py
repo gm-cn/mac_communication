@@ -42,9 +42,12 @@ class ClientSession(object):
         packet = Packet(src_mac=self.src_mac,
                         dest_mac=self.dest_mac,
                         client_key=self.client_key,
+                        server_key=0,
                         ptype=PacketType.OpenSession,
                         sequence=self.sequence)
+        logger.info("send open session packet")
         resp_packet = self.request(packet)
+        logger.info("receive server open session, server key: %s", resp_packet.server_key)
         self.server_key = resp_packet.server_key
 
     def set_receive_data(self, data):
@@ -52,17 +55,17 @@ class ClientSession(object):
         设置接收数据变量
         """
         with self.receive_condition:
-            self.receive_data = data[2]
-            if self.receive_data.ptype == 1:
-                pass
-            elif self.receive_data.ptype == 2 and self.receive_data.sequence:
-                pass
-            elif self.receive_data.ptype == 2 and self.receive_data.sequence is None:
-                self.authentication(self.receive_data)
-            elif self.receive_data.ptype == 3:
-                self.authentication(self.receive_data)
-            elif self.receive_data.ptype == 255:
-                self.close_conn()
+            self.receive_data = data
+            # if self.receive_data.ptype == 1:
+            #     pass
+            # elif self.receive_data.ptype == 2 and self.receive_data.sequence:
+            #     pass
+            # elif self.receive_data.ptype == 2 and self.receive_data.sequence is None:
+            #     self.authentication(self.receive_data)
+            # elif self.receive_data.ptype == 3:
+            #     self.authentication(self.receive_data)
+            # elif self.receive_data.ptype == 255:
+            #     self.close_conn()
             self.receive_condition.notify()
 
     def handle_data(self, packet):
