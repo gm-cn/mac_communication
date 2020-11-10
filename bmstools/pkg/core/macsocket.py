@@ -194,9 +194,9 @@ class MACSocket(object):
             self.send_frame(frame)
         elif packet.ptype in (PacketType.Data, PacketType.Control):
             count, offset = 0, 0
+            logger.info("send packet data: %s" % (packet.data,))
             if packet.data:
-                count = math.ceil(len(packet.data) / self.default_packet_length)
-            if count > 0:
+                count = int(len(packet.data) / self.default_packet_length)
                 for i in range(count):
                     frame_data = packet.data[i * self.default_packet_length: (i + 1) * self.default_packet_length]
                     frame = Frame(src_mac=packet.src_mac,
