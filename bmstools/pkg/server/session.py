@@ -8,16 +8,24 @@ import math
 logger = logging.getLogger(__name__)
 
 
+class SessionState(object):
+
+    def __init__(self, client_key=None, server_key=None, src_mac=None, dest_mac=None, server_sequence=0,
+                 client_sequence=0):
+        self.src_mac = src_mac
+        self.dest_mac = dest_mac
+        self.client_key = client_key
+        self.server_key = server_key
+        self.server_sequence = server_sequence
+        self.client_sequence = client_sequence
+
+
 class ServerSession(object):
 
-    def __init__(self, server, client_key=None, server_key=None, mac_socket=None, src_mac=None):
+    def __init__(self, server, mac_socket=None, session_state=None):
         self.server = server
         self.mac_socket = mac_socket
-        self.src_mac = src_mac
-        self.dest_mac = None
-
-        self.client_key = None
-        self.server_key = server_key
+        self.session_state = session_state
 
         self.receive_condition = threading.Condition()
         self.receive_data = None

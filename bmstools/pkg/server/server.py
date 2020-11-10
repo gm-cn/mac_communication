@@ -3,7 +3,7 @@ import logging
 import threading
 from time import sleep
 
-from .session import ServerSession
+from .session import ServerSession, SessionState
 from ..core.macsocket import MACSocket
 
 logger = logging.getLogger(__name__)
@@ -59,8 +59,8 @@ class Server(object):
         客户端创建一个新的session
         """
         server_key = self.get_new_server_key()
-        ss = ServerSession(self, client_key=client_key, server_key=server_key, mac_socket=self.mac_socket,
-                           src_mac=src_mac, dest_mac=dest_mac)
+        session_state = SessionState(client_key=client_key, server_key=server_key, src_mac=src_mac, dest_mac=dest_mac)
+        ss = ServerSession(self, mac_socket=self.mac_socket, session_state=session_state)
         ss.mac_socket.ack_open_session()
         self.sessions[server_key] = ss
 

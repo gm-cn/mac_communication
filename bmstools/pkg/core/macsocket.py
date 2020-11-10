@@ -6,7 +6,7 @@ from functools import reduce
 import math
 from time import sleep
 
-from .packet import Frame
+from .packet import Frame, PacketType, Packet, PacketFrames
 
 import logging
 
@@ -29,19 +29,101 @@ class MACSocket(object):
         self.default_packet_length = 300
         self.src_mac = None
         self.packet_list = {"client_key": {"num": None}}
-        self.server_packet_list = []
+        self.server_packet_frames = {}
 
     def receive_frame(self):
         """
         二层接收帧数据包Frame，接收之后返回ACK
         """
         packet, packet_info = self.receive_socket.recvfrom(BuffSize)
+        logger.info("receive packet: %s", packet)
         eth_header = packet[0:14]
-        eth_hdr = struct.unpack("!6s6s2s", eth_header)
-        local_mac, src_mac, eth_type = binascii.hexlify(eth_hdr[0]), binascii.hexlify(eth_hdr[1]), binascii.hexlify(
-            eth_hdr[2])
-        data = eval(packet[14:])
-        return local_mac, src_mac, data
+        src_mac, dst_mac, eth_type = struct.unpack("!6s6s2s", eth_header)
+        if eth_type != '\x7f\xff':
+            logger.error("receive eth type %s is not bms type" % (eth_type, ))
+            return
+        ver, ptype, client_session_key = struct.unpack('!BBHH', packet[14: 20])
+        frame = Frame(src_mac=src_mac,
+                      dest_mac=dst_mac,
+                      client_key=client_session_key,
+                      ptype=ptype)
+        if ptype in (PacketType.Ack, PacketType.Data, PacketType.Control):
+            server_session_key, sequence, count, offset, length = struct.unpack('!IHHH', packet[20: 30])
+            frame.server_key = server_session_key
+            frame.sequence = sequence
+            frame.count = count
+            frame.offset = offset
+            frame.length = length
+            if ptype == PacketType.Data:
+                frame.data = packet[30: 30 + frame.length]
+        return frame
+
+    def receive_data(self):
+        """
+        一个sequence中接收的数据，并排序重组，返回Packet
+        """
+        while True:
+            frame = self.receive_frame()
+            if frame.ptype == PacketType.OpenSession:
+                packet = Packet(src_mac=frame.src_mac,
+                                dest_mac=frame.dest_mac,
+                                client_key=frame.client_key,
+                                ptype=frame.ptype)
+                return packet
+            if frame.ptype == PacketType.Ack:
+                # 处理Ack，删除cache中的frame
+                pass
+            elif frame.ptype in (PacketType.Data, PacketType.Control):
+                if frame.server_key not in self.server_packet_frames:
+                    packet_frames = PacketFrames(src_mac=frame.src_mac,
+                                                 dest_mac=frame.dest_mac,
+                                                 client_key=frame.client_key,
+                                                 server_key=frame.server_key,
+                                                 ptype=frame.ptype,
+                                                 sequence=frame.sequence,
+                                                 count=frame.count)
+                else:
+                    packet_frames = self.server_packet_frames.get(frame.server_key)
+                packet_frames.add_frame(frame)
+                if packet_frames.has_receive_all():
+                    data = packet_frames.packet_data()
+                    packet = Packet(src_mac=frame.src_mac,
+                                    dest_mac=frame.dest_mac,
+                                    client_key=frame.client_key,
+                                    server_key=frame.server_key,
+                                    ptype=frame.ptype,
+                                    sequence=frame.sequence,
+                                    data=data)
+                    return packet
+
+        # packet = self.receive_frame()
+        # data = packet[2]
+        # if data.ptype == 1:
+        #     self.server_packet_list.append(data)
+        #     if len(self.server_packet_list) == data.count:
+        #         self.server_packet_list.sort(key=lambda x: (x["sequence"], x["offset"]))
+        #         data.data = reduce(lambda x, y: x + y, [i["data"] for i in self.server_packet_list])
+        #         return packet[0], packet[1], data
+        # elif data.ptype == 2 and data.sequence:
+        #     """
+        #     resend packet
+        #     """
+        #     client_key, sequence, count, offset = data.client_key, data.sequence, data.count, data.offset
+        #     try:
+        #         self.packet_list[client_key].pop(sequence * count + offset)
+        #     except Exception as exc:
+        #         logger.error("receive data error: %s" % exc, exc_info=True)
+        # elif data.ptype == 2 and data.sequence is None:
+        #     """
+        #     握手包
+        #     """
+        #     return packet
+        # elif data.ptype == 3:
+        #     return packet
+        # elif data.ptype == 0:
+        #     return packet
+        # elif data.ptype == 255:
+        #     return packet
 
     def send_frame(self, dst_mac, src_mac, data):
         """
@@ -54,40 +136,6 @@ class MACSocket(object):
         vlan_tag = struct.pack("!2s2s", b_vlan, vlan)
         packet = struct.pack("!6s6s4s2s", dst_mac, src_mac, vlan_tag, self.ETH_P_BMS_BY)
         self.send_socket.send(packet + data.encode('utf8'))
-
-    def receive_data(self):
-        """
-        一个sequence中接收的数据，并排序重组，返回Packet
-        """
-        packet = self.receive_frame()
-        data = packet[2]
-        if data.ptype == 1:
-            self.server_packet_list.append(data)
-            if len(self.server_packet_list) == data.count:
-                self.server_packet_list.sort(key=lambda x: (x["sequence"], x["offset"]))
-                data.data = reduce(lambda x, y: x + y, [i["data"] for i in self.server_packet_list])
-                return packet[0], packet[1], data
-        elif data.ptype == 2 and data.sequence:
-            """
-            resend packet
-            """
-            client_key, sequence, count, offset = data.client_key, data.sequence, data.count, data.offset
-            try:
-                self.packet_list[client_key].pop(sequence * count + offset)
-            except Exception as exc:
-                logger.error("receive data error: %s" % exc, exc_info=True)
-        elif data.ptype == 2 and data.sequence is None:
-            """
-            握手包
-            """
-            return packet
-        elif data.ptype == 3:
-            return packet
-        elif data.ptype == 0:
-            return packet
-        elif data.ptype == 255:
-            return packet
-
 
 
     def send_data(self, dst_mac, sequence, server_key, data, client_key):
