@@ -100,6 +100,7 @@ class MACSocket(object):
                 packet = Packet(src_mac=frame.src_mac,
                                 dest_mac=frame.dest_mac,
                                 client_key=frame.client_key,
+                                server_key=frame.server_key,
                                 ptype=frame.ptype)
                 return packet
             if frame.ptype == PacketType.Ack:

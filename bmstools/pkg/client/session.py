@@ -30,13 +30,15 @@ class ClientSession(object):
         打开session，认证过程
         """
         self.open_session()
+        return self
 
     def __exit__(self):
         """
         退出session
         """
-        self.mac_socket.close_session()
-        self.client.close_session(self)
+        # self.mac_socket.close_session()
+        # self.client.close_session(self)
+        pass
 
     def open_session(self):
         packet = Packet(src_mac=self.src_mac,
