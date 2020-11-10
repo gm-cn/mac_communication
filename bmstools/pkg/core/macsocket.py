@@ -1,13 +1,12 @@
 # coding=utf-8
+import logging
 import socket
 import struct
 import binascii
 from functools import reduce
-import math
 
 from .packet import Frame, PacketType, Packet, PacketFrames
 
-import logging
 
 ETH_P_BMS = 0x7fff
 ETH_P_VLAN = 0x8100
