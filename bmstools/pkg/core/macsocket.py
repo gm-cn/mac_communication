@@ -30,8 +30,6 @@ class MACSocket(object):
     def __init__(self):
         self.net_card = None
         self.receive_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
-        self.send_socket = None
-        self.send_socket.bind((self.net_card, socket.htons(ETH_P_BMS)))
         self.ETH_P_BMS_BY = None
         self.ETH_P_VLAN_BY = None
         self.default_interval_length = 900000
@@ -41,7 +39,9 @@ class MACSocket(object):
         self.server_packet_list = []
 
     def set_send_socket(self):
-        return socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
+        raw_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
+        raw_socket.bind((self.net_card, socket.htons(ETH_P_BMS)))
+        return raw_socket
 
     def receive_frame(self):
         """
@@ -55,52 +55,52 @@ class MACSocket(object):
         data = eval(packet[14:])
         return local_mac, src_mac, data
 
-    def send_frame(self, dst_mac, src_mac, data):
+    def send_frame(self, dst_mac, src_mac, data, raw_socket):
         """
         二层发送帧数据包Frame，记录发送的数据，并超时重试
         """
         packet = struct.pack("!6s6s2s", dst_mac, src_mac, self.ETH_P_BMS_BY)
-        self.send_socket.send(packet + data.encode('utf8'))
+        raw_socket.send(packet + data.encode('utf8'))
 
-    def send_vlan_frame(self, b_vlan, dst_mac, src_mac, data):
+    def send_vlan_frame(self, b_vlan, dst_mac, src_mac, data, raw_socket):
         vlan_tag = struct.pack("!2s2s", self.ETH_P_VLAN_BY, b_vlan)
         packet = struct.pack("!6s6s4s2s", dst_mac, src_mac, vlan_tag, self.ETH_P_BMS_BY)
-        self.send_socket.send(packet + data.encode('utf8'))
+        raw_socket.send(packet + data.encode('utf8'))
 
     def receive_data(self):
         """
         一个sequence中接收的数据，并排序重组，返回Packet
         """
         packet = self.receive_frame()
-        data = packet[2]
-        if data.ptype == 1:
+        local_mac, src_mac, data = packet[0], packet[1], packet[2]
+        if data["ptype"] == 1:
             self.server_packet_list.append(data)
-            if len(self.server_packet_list) == data.count:
+            if len(self.server_packet_list) == data["count"]:
                 self.server_packet_list.sort(key=lambda x: (x["sequence"], x["offset"]))
-                data.data = reduce(lambda x, y: x + y, [i["data"] for i in self.server_packet_list])
-                return packet[0], packet[1], data
-        elif data.ptype == 2 and data.sequence:
+                data["data"] = reduce(lambda x, y: x + y, [i["data"] for i in self.server_packet_list])
+                return local_mac, src_mac, data
+        elif data["ptype"] == 2 and data["sequence"]:
             """
             resend packet
             """
-            client_key, sequence, count, offset = data.client_key, data.sequence, data.count, data.offset
+            client_key, sequence, count, offset = data["client_key"], data["sequence"], data["count"], data["offset"]
             try:
                 self.packet_list[client_key].pop(sequence * count + offset)
             except Exception as exc:
                 logger.error("receive data error: %s" % exc, exc_info=True)
-        elif data.ptype == 2 and data.sequence is None:
+        elif data["ptype"] == 2 and data["sequence"] is None:
             """
             握手包
             """
-            return packet
-        elif data.ptype == 3:
-            return packet
-        elif data.ptype == 0:
-            return packet
-        elif data.ptype == 255:
-            return packet
+            return local_mac, src_mac, data
+        elif data["ptype"] == 3:
+            return local_mac, src_mac, data
+        elif data["ptype"] == 0:
+            return local_mac, src_mac, data
+        elif data["ptype"] == 255:
+            return local_mac, src_mac, data
 
-    def send_data(self, dst_mac, sequence, server_key, data, client_key, vlan):
+    def send_data(self, dst_mac, sequence, server_key, data, client_key, vlan, raw_socket):
         """
         发送sequence数据Packet，并拆分为帧包，所有数据都收到ACK，才算发送完成
         """
@@ -111,17 +111,22 @@ class MACSocket(object):
 
         count = math.ceil(len(data) / self.default_packet_length)
 
-        var_packet.ptype, var_packet.server_key, var_packet.sequence, var_packet.count = 1, server_key, sequence, count
+        var_packet.ptype, var_packet.client_key, var_packet.server_key, var_packet.sequence, var_packet.count = 1, \
+                                                                                client_key, server_key, sequence, count
         for i in range(count):
-            var_packet.offset, var_packet.data = i, data[i * self.default_packet_length:(i + 1) * self.default_packet_length]
-            self.send_vlan_frame(b_vlan=bytes_vlan, dst_mac=bytes_dstmac, src_mac=bytes_srcmac, data=str(var_packet))
-            self.packet_list[client_key][sequence * count + i] = var_packet
+            var_packet.offset, var_packet.data = i, data[
+                                                    i * self.default_packet_length:(i + 1) * self.default_packet_length]
+            self.send_vlan_frame(b_vlan=bytes_vlan, dst_mac=bytes_dstmac, src_mac=bytes_srcmac,
+                                 data=str(var_packet.__dict__),
+                                 raw_socket=raw_socket)
+            self.packet_list[client_key][sequence * count + i] = var_packet.__dict__
         sleep(1)
         if len(self.packet_list[client_key]) != 0:
             for i in self.packet_list[client_key]:
-                self.send_vlan_frame(b_vlan=bytes_vlan, dst_mac=bytes_dstmac, src_mac=bytes_srcmac, data=str(self.packet_list[client_key][i]))
+                self.send_vlan_frame(b_vlan=bytes_vlan, dst_mac=bytes_dstmac, src_mac=bytes_srcmac,
+                                     data=str(self.packet_list[client_key][i]), raw_socket=raw_socket)
 
-    def send_func_packet(self, dst_mac, ptype, server_key=None, client_key=None, data=None, vlan=None):
+    def send_func_packet(self, dst_mac, ptype, server_key=None, client_key=None, data=None, vlan=None, raw_socket=None):
         var_packet = Frame()
         self.ETH_P_BMS_BY = self.format_mac_bytes(self.i2b_hex(ETH_P_BMS))
         self.ETH_P_VLAN_BY = self.format_mac_bytes(self.i2b_hex(ETH_P_VLAN))
@@ -137,12 +142,14 @@ class MACSocket(object):
                                                                                               server_key, vlan
         elif ptype == 3:
             var_packet.ptype, var_packet.client_key, var_packet.server_key, var_packet.data, var_packet.vlan = 3, \
-                                                                                     client_key, server_key, data, vlan
+                                                                                                               client_key, server_key, data, vlan
         elif ptype == 255:
             var_packet.ptype, var_packet.client_key, var_packet.server_key, var_packet.data, var_packet.vlan = 255, \
-                                                                                    client_key, server_key, data, vlan
+                                                                                                               client_key, server_key, data, vlan
 
-        self.send_vlan_frame(b_vlan=bytes_vlan, dst_mac=bytes_dstmac, src_mac=bytes_srcmac, data=str(var_packet))
+        self.send_vlan_frame(b_vlan=bytes_vlan, dst_mac=bytes_dstmac, src_mac=bytes_srcmac,
+                             data=str(var_packet.__dict__),
+                             raw_socket=raw_socket)
 
     def open_session(self):
         """
@@ -188,4 +195,3 @@ class MACSocket(object):
     def get_mac(self, card):
         mac = netifaces.ifaddresses(card)[TCP_PROTOCOL][0]["addr"]
         return mac
-

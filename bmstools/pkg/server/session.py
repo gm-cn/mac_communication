@@ -26,6 +26,7 @@ class ServerSession(object):
         self.vlan = None
         self.client_key = None
         self.server_key = server_key
+        self.send_socket = None
 
         self.receive_condition = threading.Condition()
         self.receive_data = None
@@ -45,18 +46,18 @@ class ServerSession(object):
         """
         with self.receive_condition:
             self.receive_data = data[2]
-            if self.receive_data.ptype == 1:
+            if self.receive_data["ptype"] == 1:
                 self.save_file(self.receive_data)
-            elif self.receive_data.ptype == 2 and self.receive_data.sequence:
+            elif self.receive_data["ptype"] == 2 and self.receive_data["sequence"]:
                 pass
-            elif self.receive_data.ptype == 2 and self.receive_data.sequence is None:
+            elif self.receive_data["ptype"] == 2 and self.receive_data["sequence"] is None:
                 self.init_conn()
-            elif data.ptype == 3:
+            elif data["ptype"] == 3:
                 """
                 认证过程
                 """
                 self.authentication(data)
-            elif self.receive_data.ptype == 0:
+            elif self.receive_data["ptype"] == 0:
                 """
                 创建seskey返回
                 """
@@ -66,12 +67,14 @@ class ServerSession(object):
                 self.mac_socket.net_card = self.mac_socket.get_net(self.src_mac)[0]
                 self.mac_socket.src_mac = self.src_mac
                 self.server_key = ""
-                self.client_key = self.receive_data.client_key
-                self.mac_socket.send_func_packet(self.dest_mac, ptype=2, server_key=self.server_key, client_key=self.client_key, vlan=self.vlan)
-            elif self.receive_data.ptype == 255:
+                self.client_key = self.receive_data["client_key"]
+                self.send_socket = self.mac_socket.set_send_socket()
+                self.mac_socket.send_func_packet(self.dest_mac, ptype=2, server_key=self.server_key,
+                                                 client_key=self.client_key, vlan=self.vlan, raw_socket=self.send_socket)
+            elif self.receive_data["ptype"] == 255:
                 data = None
-                self.mac_socket.send_func_packet(self.dest_mac, ptype=255, server_key=self.server_key,
-                                                 client_key=self.client_key, data=data, vlan=self.vlan)
+                self.mac_socket.send_func_packet(self.dest_mac, ptype=255, server_key=self.server_key, client_key=self.client_key,
+                                                 data=data, vlan=self.vlan, raw_socket=self.send_socket)
                 self.close_conn()
             self.receive_condition.notify()
 
@@ -107,7 +110,7 @@ class ServerSession(object):
         f = open(file_path, "rb")
         for i in range(file_sequence):
             self.mac_socket.send_data(dst_mac=self.dest_mac, sequence=i, server_key=self.server_key,
-                                      data=f.read(self.default_packet_length), vlan=self.vlan)
+                                      data=f.read(self.default_packet_length), vlan=self.vlan, raw_socket=self.send_socket)
         f.close()
 
     def authentication(self, data):
@@ -120,14 +123,16 @@ class ServerSession(object):
         pass
 
     def init_conn(self):
-        self.mac_socket.send_func_packet(dst_mac=self.dest_mac, ptype=0, session=self.client_key, vlan=self.vlan)
+        self.mac_socket.send_func_packet(dst_mac=self.dest_mac, ptype=0, session=self.client_key, vlan=self.vlan,
+                                         raw_socket=self.send_socket)
         """
         握手结束，开始认证
         """
         self.authentication(data="")
 
     def close_conn(self):
-        self.mac_socket.send_func_packet(dst_mac=self.dest_mac, ptype=255, session=self.client_key, vlan=self.vlan)
+        self.mac_socket.send_func_packet(dst_mac=self.dest_mac, ptype=255, client_key=self.client_key, vlan=self.vlan,
+                                         raw_socket=self.send_socket)
 
     def save_file(self, data):
         with open(self.file_path, "ab") as f:

@@ -35,14 +35,15 @@ class Server(object):
         while True:
             try:
                 packet = self.mac_socket.receive_data()
-                if packet.is_new_session():
-                    self.new_session(packet.client_key, packet.dest_mac, packet.src_mac)
+                local_mac, src_mac, data = packet[0], packet[1], packet[2]
+                if data["client_key"] not in self.sessions:
+                    self.new_session(data["client_key"])
                 else:
-                    if packet.server_key in self.sessions:
-                        server_session = self.sessions.get(packet.server_key)
+                    if data["client_key"] in self.sessions:
+                        server_session = self.sessions.get(data["client_key"])
                         server_session.handle_data(packet)
                     else:
-                        logger.error("server not found session %s" % packet.client_key)
+                        logger.error("server not found session %s" % data["client_key"])
             except Exception as exc:
                 logger.error("receive data error: %s" % exc, exc_info=True)
                 sleep(3)
@@ -53,7 +54,7 @@ class Server(object):
                 if i not in self.sessions:
                     return i
 
-    def new_session(self, client_key, src_mac, dest_mac):
+    def new_session(self, client_key):
         """
         客户端创建一个新的session
         """

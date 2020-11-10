@@ -63,6 +63,7 @@ class Client(threading.Thread):
         client_key = self.get_new_client_key()
         cs = ClientSession(self, client_key=client_key, mac_socket=self.mac_socket, dest_mac=dest_mac, vlan=vlan)
         self.sessions[client_key] = cs
+        return cs
 
     def close_session(self, session):
         """
