@@ -29,12 +29,24 @@ class MACSocket(object):
         self.receive_frame_caches = {}
         self.send_frame_caches = {}
 
+    def clean_session(self, session_key):
+        """
+        清除session缓存
+        """
+        if session_key in self.receive_frame_caches:
+            self.receive_frame_caches.pop(session_key)
+        if session_key in self.send_frame_caches:
+            self.send_frame_caches.pop(session_key)
+
     @classmethod
     def get_send_net_card(cls):
         return "bond0"
 
     @classmethod
     def frame_cache_key(cls, frame):
+        """
+        每个session缓存的key
+        """
         return '%s:%s:%s' % (frame.sequence, frame.count, frame.offset)
 
     def receive_frame(self):

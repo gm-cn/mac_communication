@@ -36,13 +36,21 @@ class ClientSession(object):
         """
         退出session
         """
-        logger.info("exit session")
+        logger.info("start end session")
+        self.end_session()
+        self.client.close_session(self)
+        logger.info("end session success")
 
     def open_session(self):
         logger.info("send open session packet")
         resp_packet = self.request(PacketType.OpenSession)
         logger.info("receive server open session, server key: %s", resp_packet.src_key)
         self.dest_key = resp_packet.src_key
+
+    def end_session(self):
+        logger.info("send end session packet")
+        self.request(PacketType.EndSession)
+        logger.info("receive server end session")
 
     def handle_data(self, packet):
         """

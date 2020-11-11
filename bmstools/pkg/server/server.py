@@ -79,4 +79,5 @@ class Server(object):
         """
         关闭session
         """
+        self.mac_socket.clean_session(session.src_key)
         self.sessions.pop(session.src_key)

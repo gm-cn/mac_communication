@@ -48,6 +48,10 @@ class ServerSession(object):
         logger.info("send ack open session")
         self.response(PacketType.OpenSession)
 
+    def ack_end_session(self):
+        logger.info("send ack end session")
+        self.response(PacketType.EndSession)
+
     def _handle_data(self, packet):
         if packet.ptype == PacketType.Control:
             control = ControlPacket.unpack(packet.data)
@@ -73,6 +77,9 @@ class ServerSession(object):
                     return Response(Code.LogicError, "Session save file path is empty")
             else:
                 Response(Code.LogicError, "Session receive data but is not file")
+        elif packet.ptype == PacketType.EndSession:
+            self.ack_end_session()
+            self.server.close_session(self)
         else:
             Response(Code.LogicError, "Session can not process packet type %s" % (packet.ptype,))
 
