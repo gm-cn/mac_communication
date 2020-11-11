@@ -37,13 +37,13 @@ class Server(object):
             try:
                 packet = self.mac_socket.receive_data()
                 if packet.is_new_session():
-                    self.new_session(packet.client_key, packet.dest_mac, packet.src_mac, packet.vlan)
+                    self.new_session(packet.src_key, packet.dest_mac, packet.src_mac, packet.vlan)
                 else:
-                    if packet.server_key in self.sessions:
-                        server_session = self.sessions.get(packet.server_key)
+                    if packet.dest_key in self.sessions:
+                        server_session = self.sessions.get(packet.dest_key)
                         server_session.handle_data(packet)
                     else:
-                        logger.error("server not found session %s" % packet.client_key)
+                        logger.error("server not found session %s" % packet.src_key)
             except Exception as exc:
                 logger.error("receive data error: %s" % exc, exc_info=True)
                 sleep(3)
@@ -54,25 +54,29 @@ class Server(object):
                 if i not in self.sessions:
                     return i
 
-    def new_session(self, client_key, src_mac, dest_mac, vlan):
+    def new_session(self, dest_key, src_mac, dest_mac, vlan):
         """
-        客户端创建一个新的session
+        服务端创建一个新的session
         """
-        server_key = self.get_new_server_key()
-        logger.info("start new session, client_key: %s, server_key: %s, src_mac: %s, dest_mac: %s, vlan: %s" % (
-            client_key,
-            server_key,
+        src_key = self.get_new_server_key()
+        logger.info("start new session, src_key: %s, dest_key: %s, src_mac: %s, dest_mac: %s, vlan: %s" % (
+            src_key,
+            dest_key,
             src_mac,
             dest_mac,
             vlan))
-        # session_state = SessionState(client_key=client_key, server_key=server_key, src_mac=src_mac, dest_mac=dest_mac)
-        ss = ServerSession(self, mac_socket=self.mac_socket, client_key=client_key, server_key=server_key,
-                           src_mac=src_mac, dest_mac=dest_mac, vlan=vlan)
+        ss = ServerSession(self,
+                           mac_socket=self.mac_socket,
+                           src_key=src_key,
+                           dest_key=dest_key,
+                           src_mac=src_mac,
+                           dest_mac=dest_mac,
+                           vlan=vlan)
         ss.ack_open_session()
-        self.sessions[server_key] = ss
+        self.sessions[dest_key] = ss
 
     def close_session(self, session):
         """
         关闭session
         """
-        self.sessions.pop(session.client_key)
+        self.sessions.pop(session.src_key)

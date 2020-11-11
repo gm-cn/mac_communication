@@ -43,9 +43,9 @@ class Client(threading.Thread):
         while True:
             try:
                 packet = self.mac_socket.receive_data()
-                if packet.client_key:
-                    if packet.client_key in self.sessions:
-                        client_session = self.sessions.get(packet.client_key)
+                if packet.dest_key:
+                    if packet.dest_key in self.sessions:
+                        client_session = self.sessions.get(packet.dest_key)
                         client_session.handle_data(packet)
                     else:
                         logger.error("client not found session %s" % packet.client_key)
@@ -65,16 +65,16 @@ class Client(threading.Thread):
         """
         客户端创建一个新的session
         """
-        client_key = self.get_new_client_key()
+        src_key = self.get_new_client_key()
         if not src_mac:
             src_mac = self.src_mac
         cs = ClientSession(self,
-                           client_key=client_key,
+                           src_key=src_key,
                            mac_socket=self.mac_socket,
                            src_mac=src_mac,
                            dest_mac=dest_mac,
                            vlan=vlan)
-        self.sessions[client_key] = cs
+        self.sessions[src_key] = cs
         return cs
 
     def close_session(self, session):

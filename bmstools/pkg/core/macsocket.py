@@ -25,7 +25,7 @@ class MACSocket(object):
         self.ETH_P_VLAN_BY = self.format_mac_bytes(self.i2b_hex(ETH_P_VLAN))
         # self.default_interval_length = 900000
         self.max_frame_length = 300
-        # self.packet_list = {"client_key": {"num": None}}
+        # self.packet_list = {"src_key": {"num": None}}
         self.receive_frame_caches = {}
         self.send_frame_caches = {}
 
@@ -48,13 +48,13 @@ class MACSocket(object):
         if eth_type != '\x7f\xff':
             logger.error("receive eth type %s is not bms type" % (eth_type,))
             return
-        ver, ptype, client_session_key = struct.unpack('!BBH', packet[14: 18])
-        server_session_key, sequence, count, offset, vlan, length = struct.unpack('!HIHHIH', packet[18: 34])
+        ver, ptype, src_key = struct.unpack('!BBH', packet[14: 18])
+        dest_key, sequence, count, offset, vlan, length = struct.unpack('!HIHHIH', packet[18: 34])
         frame = Frame(src_mac=src_mac,
                       dest_mac=dst_mac,
-                      client_key=client_session_key,
+                      src_key=src_key,
                       ptype=ptype,
-                      server_key=server_session_key,
+                      dest_key=dest_key,
                       sequence=sequence,
                       count=count,
                       offset=offset,
@@ -63,9 +63,9 @@ class MACSocket(object):
         if ptype in (PacketType.Data, PacketType.Control):
             frame.data = packet[34: 34 + frame.length]
 
-        logger.info("receive frame, client_key: %s, server_key: %s, ptype: %s, src_mac: %s, dest_mac: %s, sequence: %s \
-count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.client_key,
-                                                          frame.server_key,
+        logger.info("receive frame, src_key: %s, dest_key: %s, ptype: %s, src_mac: %s, dest_mac: %s, sequence: %s \
+count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
+                                                          frame.dest_key,
                                                           frame.ptype,
                                                           frame.src_mac,
                                                           frame.dest_mac,
@@ -79,8 +79,8 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.client_key,
             # 返回Ack确认包
             ack_frame = Frame(src_mac=frame.dest_mac,
                               dest_mac=frame.src_mac,
-                              client_key=frame.client_key,
-                              server_key=frame.server_key,
+                              src_key=frame.dest_key,
+                              dest_key=frame.src_key,
                               ptype=PacketType.Ack,
                               sequence=frame.sequence,
                               count=frame.count,
@@ -100,45 +100,45 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.client_key,
                 # 开启一个新的session，直接返回packet包
                 packet = Packet(src_mac=frame.src_mac,
                                 dest_mac=frame.dest_mac,
-                                client_key=frame.client_key,
-                                server_key=frame.server_key,
+                                src_key=frame.src_key,
+                                dest_key=frame.dest_key,
                                 ptype=frame.ptype,
                                 vlan=frame.vlan)
                 return packet
             if frame.ptype == PacketType.Ack:
                 # 处理Ack，删除cache中的frame
-                if frame.client_key in self.send_frame_caches:
+                if frame.dest_key in self.send_frame_caches:
                     cache_key = self.frame_cache_key(frame)
-                    if cache_key in self.send_frame_caches.get(frame.client_key):
-                        self.send_frame_caches[frame.client_key].pop(cache_key)
+                    if cache_key in self.send_frame_caches.get(frame.dest_key):
+                        self.send_frame_caches[frame.dest_key].pop(cache_key)
             elif frame.ptype in (PacketType.Data, PacketType.Control):
                 # 数据包或控制包，组合count所有的offset之后返回packet包
-                if frame.server_key not in self.receive_frame_caches:
+                if frame.dest_key not in self.receive_frame_caches:
                     packet_frames = PacketFrames(src_mac=frame.src_mac,
                                                  dest_mac=frame.dest_mac,
-                                                 client_key=frame.client_key,
-                                                 server_key=frame.server_key,
+                                                 src_key=frame.src_key,
+                                                 dest_key=frame.dest_key,
                                                  ptype=frame.ptype,
                                                  sequence=frame.sequence,
                                                  count=frame.count,
                                                  vlan=frame.vlan)
-                    # 根据server_key添加缓存组合offset
-                    self.receive_frame_caches[frame.server_key] = packet_frames
-                packet_frames = self.receive_frame_caches.get(frame.server_key)
+                    # 根据dest_key添加缓存组合offset
+                    self.receive_frame_caches[frame.dest_key] = packet_frames
+                packet_frames = self.receive_frame_caches.get(frame.dest_key)
                 packet_frames.add_frame(frame)
                 if packet_frames.has_receive_all():
                     # sequence已经接收到所有count
                     data = packet_frames.packet_data()
                     packet = Packet(src_mac=frame.src_mac,
                                     dest_mac=frame.dest_mac,
-                                    client_key=frame.client_key,
-                                    server_key=frame.server_key,
+                                    src_key=frame.src_key,
+                                    dest_key=frame.dest_key,
                                     ptype=frame.ptype,
                                     sequence=frame.sequence,
                                     vlan=frame.vlan,
                                     data=data)
                     # 删除offset缓存
-                    self.receive_frame_caches.pop(frame.server_key)
+                    self.receive_frame_caches.pop(frame.dest_key)
                     return packet
 
     def send_frame(self, frame):
@@ -156,8 +156,8 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.client_key,
         send_frame += struct.pack("!BBHH",
                                   version,
                                   int(frame.ptype),
-                                  int(frame.client_key),
-                                  int(frame.server_key))
+                                  int(frame.src_key),
+                                  int(frame.dest_key))
         send_frame += struct.pack("!IHH",
                                   frame.sequence,
                                   frame.count,
@@ -170,9 +170,9 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.client_key,
             send_frame += frame.data
         else:
             send_frame += struct.pack("!H", 0)
-        logger.info("send frame, client_key: %s, server_key: %s, ptype: %s, src_mac: %s, dest_mac: %s, sequence: %s \
-count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.client_key,
-                                                          frame.server_key,
+        logger.info("send frame, src_key: %s, dest_key: %s, ptype: %s, src_mac: %s, dest_mac: %s, sequence: %s \
+count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
+                                                          frame.dest_key,
                                                           frame.ptype,
                                                           frame.src_mac,
                                                           frame.dest_mac,
@@ -184,10 +184,11 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.client_key,
                                                           frame.data))
         self.send_socket.send(send_frame)
         if frame.ptype != PacketType.Ack:
-            if frame.client_key not in self.send_frame_caches:
-                self.send_frame_caches[frame.client_key] = {}
-            send_frame_caches = self.send_frame_caches.get(frame.client_key)
-            send_frame_caches['%s:%s:%s' % (frame.sequence, frame.count, frame.offset)] = frame
+            if frame.src_key not in self.send_frame_caches:
+                self.send_frame_caches[frame.src_key] = {}
+            send_frame_caches = self.send_frame_caches.get(frame.src_key)
+            cache_key = self.frame_cache_key(frame)
+            send_frame_caches[cache_key] = frame
 
     def send_data(self, packet):
         """
@@ -196,8 +197,8 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.client_key,
         if packet.ptype == PacketType.OpenSession:
             frame = Frame(src_mac=packet.src_mac,
                           dest_mac=packet.dest_mac,
-                          client_key=packet.client_key,
-                          server_key=packet.server_key,
+                          src_key=packet.src_key,
+                          dest_key=packet.dest_key,
                           ptype=packet.ptype,
                           sequence=0,
                           vlan=packet.vlan,
@@ -220,8 +221,8 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.client_key,
                     # if frame_data:
                     frame = Frame(src_mac=packet.src_mac,
                                   dest_mac=packet.dest_mac,
-                                  client_key=packet.client_key,
-                                  server_key=packet.server_key,
+                                  src_key=packet.src_key,
+                                  dest_key=packet.dest_key,
                                   ptype=packet.ptype,
                                   sequence=packet.sequence,
                                   vlan=packet.vlan,
@@ -233,8 +234,8 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.client_key,
             else:
                 frame = Frame(src_mac=packet.src_mac,
                               dest_mac=packet.dest_mac,
-                              client_key=packet.client_key,
-                              server_key=packet.server_key,
+                              src_key=packet.src_key,
+                              dest_key=packet.dest_key,
                               ptype=packet.ptype,
                               sequence=packet.sequence,
                               vlan=packet.vlan,

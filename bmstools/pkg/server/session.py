@@ -9,12 +9,11 @@ logger = logging.getLogger(__name__)
 
 class ServerSession(object):
 
-    def __init__(self, server, mac_socket=None, client_key=None, server_key=None, src_mac=None, dest_mac=None,
-                 vlan=None):
+    def __init__(self, server, mac_socket=None, src_key=None, dest_key=None, src_mac=None, dest_mac=None, vlan=None):
         self.server = server
         self.mac_socket = mac_socket
-        self.client_key = client_key
-        self.server_key = server_key
+        self.src_key = src_key
+        self.dest_key = dest_key
         self.src_mac = src_mac
         self.dest_mac = dest_mac
         self.sequence = 0
@@ -35,8 +34,8 @@ class ServerSession(object):
         """
         packet = Packet(src_mac=self.src_mac,
                         dest_mac=self.dest_mac,
-                        client_key=self.client_key,
-                        server_key=self.server_key,
+                        src_key=self.src_key,
+                        dest_key=self.dest_key,
                         ptype=ptype,
                         sequence=self.sequence,
                         vlan=self.vlan,
@@ -113,14 +112,14 @@ class ServerSession(object):
     #             创建seskey返回
     #             """
     #             self.dst_Mac = data[1].decode("utf-8")
-    #             self.server_key = ""
-    #             self.client_key = self.receive_data.client_key
-    #             self.mac_socket.send_func_packet(self.dest_mac, ptype=2, server_key=self.server_key,
-    #                                              client_key=self.client_key)
+    #             self.dest_key = ""
+    #             self.src_key = self.receive_data.src_key
+    #             self.mac_socket.send_func_packet(self.dest_mac, ptype=2, dest_key=self.dest_key,
+    #                                              src_key=self.src_key)
     #         elif self.receive_data.ptype == 255:
     #             data = None
-    #             self.mac_socket.send_func_packet(self.dest_mac, ptype=255, server_key=self.server_key,
-    #                                              client_key=self.client_key, data=data)
+    #             self.mac_socket.send_func_packet(self.dest_mac, ptype=255, dest_key=self.dest_key,
+    #                                              src_key=self.src_key, data=data)
     #             self.close_conn()
     #         self.receive_condition.notify()
     #
@@ -139,7 +138,7 @@ class ServerSession(object):
     #     file_sequence = math.ceil(file_length / self.default_interval_length)
     #     f = open(file_path, "rb")
     #     for i in range(file_sequence):
-    #         self.mac_socket.send_data(dst_mac=self.dest_mac, sequence=i, server_key=self.server_key,
+    #         self.mac_socket.send_data(dst_mac=self.dest_mac, sequence=i, dest_key=self.dest_key,
     #                                   data=f.read(self.default_packet_length), )
     #     f.close()
     #
@@ -147,21 +146,21 @@ class ServerSession(object):
     #     """
     #     认证过程
     #     self.dst_Mac = data[1].decode("utf-8")
-    #     self.server_key = self.receive_data.server_key
-    #     self.mac_socket.send_func_packet(self.dest_mac, ptype=3, server_key=self.server_key, data="",
-    #     client_key=self.client_key)
+    #     self.dest_key = self.receive_data.dest_key
+    #     self.mac_socket.send_func_packet(self.dest_mac, ptype=3, dest_key=self.dest_key, data="",
+    #     src_key=self.src_key)
     #     """
     #     pass
     #
     # def init_conn(self):
-    #     self.mac_socket.send_func_packet(dst_mac=self.dest_mac, ptype=0, session=self.client_key)
+    #     self.mac_socket.send_func_packet(dst_mac=self.dest_mac, ptype=0, session=self.src_key)
     #     """
     #     握手结束，开始认证
     #     """
     #     self.authentication(data="")
     #
     # def close_conn(self):
-    #     self.mac_socket.send_func_packet(dst_mac=self.dest_mac, ptype=255, session=self.client_key)
+    #     self.mac_socket.send_func_packet(dst_mac=self.dest_mac, ptype=255, session=self.src_key)
     #
     # def save_file(self, data):
     #     with open(self.file_path, "ab") as f:

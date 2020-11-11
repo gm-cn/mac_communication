@@ -20,12 +20,12 @@ class Frame(object):
     二层收发帧数据
     """
 
-    def __init__(self, src_mac=None, dest_mac=None, client_key=None, server_key=None, ptype=None, sequence=None,
+    def __init__(self, src_mac=None, dest_mac=None, src_key=None, dest_key=None, ptype=None, sequence=None,
                  count=None, offset=None, vlan=None, length=None, data=None):
         self.src_mac = src_mac
         self.dest_mac = dest_mac
-        self.client_key = client_key
-        self.server_key = server_key
+        self.src_key = src_key
+        self.dest_key = dest_key
         self.ptype = ptype
         self.sequence = sequence
         self.count = count
@@ -39,12 +39,12 @@ class PacketFrames(object):
     """
 
     """
-    def __init__(self, src_mac=None, dest_mac=None, client_key=None, server_key=None, ptype=None, sequence=None,
+    def __init__(self, src_mac=None, dest_mac=None, src_key=None, dest_key=None, ptype=None, sequence=None,
                  vlan=None, count=None):
         self.src_mac = src_mac
         self.dest_mac = dest_mac
-        self.client_key = client_key
-        self.server_key = server_key
+        self.src_key = src_key
+        self.dest_key = dest_key
         self.ptype = ptype
         self.sequence = sequence
         self.count = count
@@ -74,12 +74,12 @@ class Packet(object):
     sequence收发数据包结构
     """
 
-    def __init__(self, src_mac=None, dest_mac=None, client_key=None, server_key=None, ptype=None, sequence=None,
+    def __init__(self, src_mac=None, dest_mac=None, src_key=None, dest_key=None, ptype=None, sequence=None,
                  vlan=None, data=None):
         self.src_mac = src_mac
         self.dest_mac = dest_mac
-        self.client_key = client_key
-        self.server_key = server_key
+        self.src_key = src_key
+        self.dest_key = dest_key
         self.ptype = ptype
         self.sequence = sequence
         self.vlan = vlan
