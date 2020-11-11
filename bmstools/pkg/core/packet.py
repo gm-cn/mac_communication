@@ -19,7 +19,7 @@ class Frame(object):
     """
 
     def __init__(self, src_mac=None, dest_mac=None, client_key=None, server_key=None, ptype=None, sequence=None,
-                 count=None, offset=None, length=None, data=None):
+                 count=None, offset=None, vlan=None, length=None, data=None):
         self.src_mac = src_mac
         self.dest_mac = dest_mac
         self.client_key = client_key
@@ -28,6 +28,7 @@ class Frame(object):
         self.sequence = sequence
         self.count = count
         self.offset = offset
+        self.vlan = vlan
         self.length = length
         self.data = data
 
@@ -37,7 +38,7 @@ class PacketFrames(object):
 
     """
     def __init__(self, src_mac=None, dest_mac=None, client_key=None, server_key=None, ptype=None, sequence=None,
-                 count=None):
+                 vlan=None, count=None):
         self.src_mac = src_mac
         self.dest_mac = dest_mac
         self.client_key = client_key
@@ -45,6 +46,7 @@ class PacketFrames(object):
         self.ptype = ptype
         self.sequence = sequence
         self.count = count
+        self.vlan = vlan
         self.frames = {}
         self.receive_count = 0
 
@@ -71,13 +73,14 @@ class Packet(object):
     """
 
     def __init__(self, src_mac=None, dest_mac=None, client_key=None, server_key=None, ptype=None, sequence=None,
-                 data=None):
+                 vlan=None, data=None):
         self.src_mac = src_mac
         self.dest_mac = dest_mac
         self.client_key = client_key
         self.server_key = server_key
         self.ptype = ptype
         self.sequence = sequence
+        self.vlan = vlan
         self.data = data
 
     def is_new_session(self):

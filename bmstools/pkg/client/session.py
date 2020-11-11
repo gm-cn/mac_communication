@@ -11,19 +11,21 @@ logger = logging.getLogger(__name__)
 
 class ClientSession(object):
 
-    def __init__(self, client, client_key=None, server_key=0, mac_socket=None, src_mac=None, dest_mac=None):
+    def __init__(self, client, client_key=None, server_key=0, mac_socket=None, src_mac=None, dest_mac=None, vlan=0):
         self.client = client
         self.client_key = client_key
         self.server_key = server_key
         self.mac_socket = mac_socket
         self.src_mac = src_mac
         self.dest_mac = dest_mac
+        self.vlan = vlan
+        self.sequence = 0
+
         self.receive_condition = threading.Condition()
         self.receive_data = None
-        self.default_interval_length = 900000
-        self.default_packet_length = 300
-        self.file_path = None
-        self.sequence = 0
+        # self.default_interval_length = 900000
+        # self.default_packet_length = 300
+        # self.file_path = None
 
     def __enter__(self):
         """
@@ -72,6 +74,7 @@ class ClientSession(object):
                         server_key=self.server_key,
                         ptype=ptype,
                         sequence=self.sequence,
+                        vlan=self.vlan,
                         data=data)
         self.mac_socket.send_data(packet)
         self.sequence += 1

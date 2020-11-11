@@ -7,7 +7,6 @@ from functools import reduce
 
 from .packet import Frame, PacketType, Packet, PacketFrames
 
-
 ETH_P_BMS = 0x7fff
 ETH_P_VLAN = 0x8100
 BuffSize = 65536
@@ -23,9 +22,9 @@ class MACSocket(object):
         self.send_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
         self.send_socket.bind((self.net_card, socket.htons(ETH_P_BMS)))
         self.ETH_P_BMS_BY = self.format_mac_bytes(self.i2b_hex(ETH_P_BMS))
-        self.default_interval_length = 900000
-        self.default_packet_length = 300
-        self.packet_list = {"client_key": {"num": None}}
+        # self.default_interval_length = 900000
+        self.max_frame_length = 300
+        # self.packet_list = {"client_key": {"num": None}}
         self.receive_frame_caches = {}
         self.send_frame_caches = {}
 
@@ -49,31 +48,33 @@ class MACSocket(object):
             logger.error("receive eth type %s is not bms type" % (eth_type,))
             return
         ver, ptype, client_session_key = struct.unpack('!BBH', packet[14: 18])
+        server_session_key, sequence, count, offset, length = struct.unpack('!HIHHH', packet[18: 30])
+        vlan = 0
         frame = Frame(src_mac=src_mac,
                       dest_mac=dst_mac,
                       client_key=client_session_key,
-                      ptype=ptype)
-        # if ptype in (PacketType.Ack, PacketType.Data, PacketType.Control):
-        server_session_key, sequence, count, offset, length = struct.unpack('!HIHHH', packet[18: 30])
-        frame.server_key = server_session_key
-        frame.sequence = sequence
-        frame.count = count
-        frame.offset = offset
-        frame.length = length
+                      ptype=ptype,
+                      server_key=server_session_key,
+                      sequence=sequence,
+                      count=count,
+                      offset=offset,
+                      vlan=vlan,
+                      length=length)
         if ptype == PacketType.Data:
             frame.data = packet[30: 30 + frame.length]
 
         logger.info("receive frame, client_key: %s, server_key: %s, ptype: %s, src_mac: %s, dest_mac: %s, sequence: %s \
-        count: %s, offset:%s, length: %s, data: %s" % (frame.client_key,
-                                                       frame.server_key,
-                                                       frame.ptype,
-                                                       frame.src_mac,
-                                                       frame.dest_mac,
-                                                       frame.sequence,
-                                                       frame.count,
-                                                       frame.offset,
-                                                       frame.length,
-                                                       frame.data))
+count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.client_key,
+                                                          frame.server_key,
+                                                          frame.ptype,
+                                                          frame.src_mac,
+                                                          frame.dest_mac,
+                                                          frame.sequence,
+                                                          frame.count,
+                                                          frame.offset,
+                                                          frame.vlan,
+                                                          frame.length,
+                                                          frame.data))
         if frame.ptype != PacketType.Ack:
             # 返回Ack确认包
             ack_frame = Frame(src_mac=frame.dest_mac,
@@ -83,7 +84,8 @@ class MACSocket(object):
                               ptype=PacketType.Ack,
                               sequence=frame.sequence,
                               count=frame.count,
-                              offset=frame.offset)
+                              offset=frame.offset,
+                              vlan=vlan)
             self.send_frame(ack_frame)
         return frame
 
@@ -100,7 +102,8 @@ class MACSocket(object):
                                 dest_mac=frame.dest_mac,
                                 client_key=frame.client_key,
                                 server_key=frame.server_key,
-                                ptype=frame.ptype)
+                                ptype=frame.ptype,
+                                vlan=frame.vlan)
                 return packet
             if frame.ptype == PacketType.Ack:
                 # 处理Ack，删除cache中的frame
@@ -117,7 +120,8 @@ class MACSocket(object):
                                                  server_key=frame.server_key,
                                                  ptype=frame.ptype,
                                                  sequence=frame.sequence,
-                                                 count=frame.count)
+                                                 count=frame.count,
+                                                 vlan=frame.vlan)
                     # 根据server_key添加缓存组合offset
                     self.receive_frame_caches[frame.server_key] = packet_frames
                 packet_frames = self.receive_frame_caches.get(frame.server_key)
@@ -130,6 +134,7 @@ class MACSocket(object):
                                     server_key=frame.server_key,
                                     ptype=frame.ptype,
                                     sequence=frame.sequence,
+                                    vlan=frame.vlan,
                                     data=data)
                     # 删除offset缓存
                     self.receive_frame_caches.pop(frame.server_key)
@@ -159,16 +164,17 @@ class MACSocket(object):
         else:
             send_frame += struct.pack("!H", 0)
         logger.info("send frame, client_key: %s, server_key: %s, ptype: %s, src_mac: %s, dest_mac: %s, sequence: %s \
-        count: %s, offset:%s, length: %s, data: %s" % (frame.client_key,
-                                                       frame.server_key,
-                                                       frame.ptype,
-                                                       frame.src_mac,
-                                                       frame.dest_mac,
-                                                       frame.sequence,
-                                                       frame.count,
-                                                       frame.offset,
-                                                       frame.length,
-                                                       frame.data))
+count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.client_key,
+                                                          frame.server_key,
+                                                          frame.ptype,
+                                                          frame.src_mac,
+                                                          frame.dest_mac,
+                                                          frame.sequence,
+                                                          frame.count,
+                                                          frame.offset,
+                                                          frame.vlan,
+                                                          frame.length,
+                                                          frame.data))
         self.send_socket.send(send_frame)
         if frame.ptype != PacketType.Ack:
             if frame.client_key not in self.send_frame_caches:
@@ -187,6 +193,7 @@ class MACSocket(object):
                           server_key=packet.server_key,
                           ptype=packet.ptype,
                           sequence=0,
+                          vlan=packet.vlan,
                           count=1,
                           offset=0,
                           length=0)
@@ -195,26 +202,27 @@ class MACSocket(object):
             count, offset = 1, 0
             logger.info("send packet data: %s" % (packet.data,))
             if packet.data:
-                count = int(len(packet.data) / self.default_packet_length)
-                if len(packet.data) % self.default_packet_length:
+                count = int(len(packet.data) / self.max_frame_length)
+                if len(packet.data) % self.max_frame_length:
                     count += 1
                 for i in range(count):
-                    if (i + 1) * self.default_packet_length > len(packet.data):
-                        frame_data = packet.data[i * self.default_packet_length:]
+                    if (i + 1) * self.max_frame_length > len(packet.data):
+                        frame_data = packet.data[i * self.max_frame_length:]
                     else:
-                        frame_data = packet.data[i * self.default_packet_length: (i + 1) * self.default_packet_length]
-                    if frame_data:
-                        frame = Frame(src_mac=packet.src_mac,
-                                      dest_mac=packet.dest_mac,
-                                      client_key=packet.client_key,
-                                      server_key=packet.server_key,
-                                      ptype=packet.ptype,
-                                      sequence=packet.sequence,
-                                      count=count,
-                                      offset=i,
-                                      length=len(frame_data),
-                                      data=frame_data)
-                        self.send_frame(frame)
+                        frame_data = packet.data[i * self.max_frame_length: (i + 1) * self.max_frame_length]
+                    # if frame_data:
+                    frame = Frame(src_mac=packet.src_mac,
+                                  dest_mac=packet.dest_mac,
+                                  client_key=packet.client_key,
+                                  server_key=packet.server_key,
+                                  ptype=packet.ptype,
+                                  sequence=packet.sequence,
+                                  vlan=packet.vlan,
+                                  count=count,
+                                  offset=i,
+                                  length=len(frame_data),
+                                  data=frame_data)
+                    self.send_frame(frame)
             else:
                 frame = Frame(src_mac=packet.src_mac,
                               dest_mac=packet.dest_mac,
@@ -222,6 +230,7 @@ class MACSocket(object):
                               server_key=packet.server_key,
                               ptype=packet.ptype,
                               sequence=packet.sequence,
+                              vlan=packet.vlan,
                               count=count,
                               offset=offset,
                               length=0,

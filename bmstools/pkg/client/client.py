@@ -39,6 +39,7 @@ class Client(threading.Thread):
         """
         从二层网卡接收数据，转发数据到对应已创建的session
         """
+        logger.info("client start receive data")
         while True:
             try:
                 packet = self.mac_socket.receive_data()
@@ -60,14 +61,19 @@ class Client(threading.Thread):
                 if i not in self.sessions:
                     return i
 
-    def new_session(self, dest_mac, src_mac=None):
+    def new_session(self, dest_mac, vlan, src_mac=None):
         """
         客户端创建一个新的session
         """
         client_key = self.get_new_client_key()
         if not src_mac:
             src_mac = self.src_mac
-        cs = ClientSession(self, client_key=client_key, mac_socket=self.mac_socket, src_mac=src_mac, dest_mac=dest_mac)
+        cs = ClientSession(self,
+                           client_key=client_key,
+                           mac_socket=self.mac_socket,
+                           src_mac=src_mac,
+                           dest_mac=dest_mac,
+                           vlan=vlan)
         self.sessions[client_key] = cs
         return cs
 
@@ -75,14 +81,4 @@ class Client(threading.Thread):
         """
         关闭session
         """
-
         self.sessions.pop(session.client_key)
-
-
-if __name__ == "__main__":
-    client = get_client()
-    with client.new_session(dest_mac="") as session:
-        session.init_conn()
-        session.send_file("/tmp/aaa")
-        session.close_conn()
-        resp = session.exec_cmd("ls /root")

@@ -8,7 +8,6 @@ from ..core.macsocket import MACSocket
 
 logger = logging.getLogger(__name__)
 
-
 _bms_tools_server = None
 
 
@@ -33,11 +32,12 @@ class Server(object):
         """
         从二层网卡接收数据，转发数据到对应已创建的session
         """
+        logger.info("server start receive data")
         while True:
             try:
                 packet = self.mac_socket.receive_data()
                 if packet.is_new_session():
-                    self.new_session(packet.client_key, packet.dest_mac, packet.src_mac)
+                    self.new_session(packet.client_key, packet.dest_mac, packet.src_mac, packet.vlan)
                 else:
                     if packet.server_key in self.sessions:
                         server_session = self.sessions.get(packet.server_key)
@@ -54,18 +54,20 @@ class Server(object):
                 if i not in self.sessions:
                     return i
 
-    def new_session(self, client_key, src_mac, dest_mac):
+    def new_session(self, client_key, src_mac, dest_mac, vlan):
         """
         客户端创建一个新的session
         """
         server_key = self.get_new_server_key()
-        logger.info("start new session, client_key: %s, server_key: %s, src_mac: %s, dest_mac: %s" % (client_key,
-                                                                                                      server_key,
-                                                                                                      src_mac,
-                                                                                                      dest_mac))
+        logger.info("start new session, client_key: %s, server_key: %s, src_mac: %s, dest_mac: %s, vlan: %s" % (
+            client_key,
+            server_key,
+            src_mac,
+            dest_mac,
+            vlan))
         # session_state = SessionState(client_key=client_key, server_key=server_key, src_mac=src_mac, dest_mac=dest_mac)
         ss = ServerSession(self, mac_socket=self.mac_socket, client_key=client_key, server_key=server_key,
-                           src_mac=src_mac, dest_mac=dest_mac)
+                           src_mac=src_mac, dest_mac=dest_mac, vlan=vlan)
         ss.ack_open_session()
         self.sessions[server_key] = ss
 
@@ -74,8 +76,3 @@ class Server(object):
         关闭session
         """
         self.sessions.pop(session.client_key)
-
-
-if __name__ == '__main__':
-    server = get_server()
-    server.run()

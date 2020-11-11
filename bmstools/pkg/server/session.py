@@ -8,7 +8,8 @@ logger = logging.getLogger(__name__)
 
 class ServerSession(object):
 
-    def __init__(self, server, mac_socket=None, client_key=None, server_key=None, src_mac=None, dest_mac=None):
+    def __init__(self, server, mac_socket=None, client_key=None, server_key=None, src_mac=None, dest_mac=None,
+                 vlan=None):
         self.server = server
         self.mac_socket = mac_socket
         self.client_key = client_key
@@ -16,6 +17,7 @@ class ServerSession(object):
         self.src_mac = src_mac
         self.dest_mac = dest_mac
         self.sequence = 0
+        self.vlan = vlan
 
         # self.receive_condition = threading.Condition()
         # self.receive_data = None
@@ -36,6 +38,7 @@ class ServerSession(object):
                         server_key=self.server_key,
                         ptype=ptype,
                         sequence=self.sequence,
+                        vlan=self.vlan,
                         data=data)
         self.mac_socket.send_data(packet)
         self.sequence += 1
