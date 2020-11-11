@@ -79,7 +79,7 @@ class ServerSession(object):
         """
         接收到数据处理
         """
-        logger.info(packet.data)
+        logger.info("receive packet data: %s" % (packet.data,))
         resp = self._handle_data(packet)
         self.response(PacketType.Data, resp.pack())
 
