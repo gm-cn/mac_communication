@@ -36,10 +36,10 @@ class ClientSession(object):
         """
         退出session
         """
-        logger.info("start end session")
+        logger.info("start end session %s" % self.src_key)
         self.end_session()
         self.client.close_session(self)
-        logger.info("end session success")
+        logger.info("end session %s success" % self.src_key)
 
     def open_session(self):
         logger.info("send open session packet")

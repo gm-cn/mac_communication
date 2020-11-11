@@ -87,9 +87,15 @@ class ServerSession(object):
         """
         接收到数据处理
         """
-        logger.info("receive packet data: %s" % (packet.data,))
-        resp = self._handle_data(packet)
-        self.response(PacketType.Data, resp.pack())
+        if packet.ptype == PacketType.EndSession:
+            logger.info("start end session %s" % self.src_key)
+            self.ack_end_session()
+            self.server.close_session(self)
+            logger.info("end session %s success" % self.src_key)
+        else:
+            logger.info("receive packet data: %s" % (packet.data,))
+            resp = self._handle_data(packet)
+            self.response(PacketType.Data, resp.pack())
 
     def exec_cmd(self, cmd):
         s = shell.call(cmd)
