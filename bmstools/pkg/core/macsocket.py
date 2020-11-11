@@ -61,7 +61,7 @@ class MACSocket(object):
                       vlan=vlan,
                       length=length)
         if ptype in (PacketType.Data, PacketType.Control):
-            frame.data = packet[30: 30 + frame.length]
+            frame.data = packet[34: 34 + frame.length]
 
         logger.info("receive frame, client_key: %s, server_key: %s, ptype: %s, src_mac: %s, dest_mac: %s, sequence: %s \
 count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.client_key,
