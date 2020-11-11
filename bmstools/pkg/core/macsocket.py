@@ -108,13 +108,14 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
         while True:
             frame = self.receive_frame()
             # logger.info("receive frame ptype: %s" % (frame.ptype,))
-            if frame.ptype == PacketType.OpenSession:
+            if frame.ptype in (PacketType.OpenSession, PacketType.EndSession):
                 # 开启一个新的session，直接返回packet包
                 packet = Packet(src_mac=frame.src_mac,
                                 dest_mac=frame.dest_mac,
                                 src_key=frame.src_key,
                                 dest_key=frame.dest_key,
                                 ptype=frame.ptype,
+                                sequence=frame.sequence,
                                 vlan=frame.vlan)
                 return packet
             if frame.ptype == PacketType.Ack:
@@ -206,13 +207,13 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
         """
         发送sequence数据Packet，并拆分为帧包，所有数据都收到ACK，才算发送完成
         """
-        if packet.ptype == PacketType.OpenSession:
+        if packet.ptype in (PacketType.OpenSession, PacketType.EndSession):
             frame = Frame(src_mac=packet.src_mac,
                           dest_mac=packet.dest_mac,
                           src_key=packet.src_key,
                           dest_key=packet.dest_key,
                           ptype=packet.ptype,
-                          sequence=0,
+                          sequence=packet.sequence,
                           vlan=packet.vlan,
                           count=1,
                           offset=0,
