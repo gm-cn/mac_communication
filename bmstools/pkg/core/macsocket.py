@@ -22,6 +22,7 @@ class MACSocket(object):
         self.send_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
         self.send_socket.bind((self.net_card, socket.htons(ETH_P_BMS)))
         self.ETH_P_BMS_BY = self.format_mac_bytes(self.i2b_hex(ETH_P_BMS))
+        self.ETH_P_VLAN_BY = self.format_mac_bytes(self.i2b_hex(ETH_P_VLAN))
         # self.default_interval_length = 900000
         self.max_frame_length = 300
         # self.packet_list = {"client_key": {"num": None}}
@@ -48,8 +49,7 @@ class MACSocket(object):
             logger.error("receive eth type %s is not bms type" % (eth_type,))
             return
         ver, ptype, client_session_key = struct.unpack('!BBH', packet[14: 18])
-        server_session_key, sequence, count, offset, length = struct.unpack('!HIHHH', packet[18: 30])
-        vlan = 0
+        server_session_key, sequence, count, offset, vlan, length = struct.unpack('!HIHHIH', packet[18: 34])
         frame = Frame(src_mac=src_mac,
                       dest_mac=dst_mac,
                       client_key=client_session_key,
@@ -144,10 +144,13 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.client_key,
         """
         二层发送帧数据包Frame，记录发送的数据，并超时重试
         """
+        b_vlan = self.format_mac_bytes(self.i2b_hex(frame.vlan))
         version = 1
-        send_frame = struct.pack("!6s6s2s",
+        send_frame = struct.pack("!6s6s2s2s2s",
                                  frame.dest_mac,
                                  frame.src_mac,
+                                 self.ETH_P_VLAN_BY,
+                                 b_vlan,
                                  self.ETH_P_BMS_BY)
         send_frame += struct.pack("!BBHH",
                                   version,
@@ -158,6 +161,9 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.client_key,
                                   frame.sequence,
                                   frame.count,
                                   frame.offset)
+        send_frame += struct.pack("!I",
+                                  frame.vlan)
+
         if frame.data:
             send_frame += struct.pack("!H", frame.length)
             send_frame += frame.data
