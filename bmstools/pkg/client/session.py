@@ -83,7 +83,7 @@ class ClientSession(object):
         return resp_packet
 
     def exec_cmd(self, cmd):
-        cmd_packet = ControlPacket(ctype=ControlType.Exec, data="ls /root")
+        cmd_packet = ControlPacket(ctype=ControlType.Exec, data=cmd)
         resp = self.request(PacketType.Control, cmd_packet.pack())
         logger.info("exec cmd response: %s" % (resp.data,))
         return resp.data
