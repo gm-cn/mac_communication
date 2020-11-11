@@ -42,7 +42,7 @@ class MACSocket(object):
         二层接收帧数据包Frame，接收之后返回ACK
         """
         packet, packet_info = self.receive_socket.recvfrom(BuffSize)
-        logger.info("receive packet: %s", packet)
+        # logger.info("receive packet: %s", packet)
         eth_header = packet[0:14]
         dst_mac, src_mac, eth_type = struct.unpack("!6s6s2s", eth_header)
         if eth_type != '\x7f\xff':
@@ -95,7 +95,7 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.client_key,
         """
         while True:
             frame = self.receive_frame()
-            logger.info("receive frame ptype: %s" % (frame.ptype,))
+            # logger.info("receive frame ptype: %s" % (frame.ptype,))
             if frame.ptype == PacketType.OpenSession:
                 # 开启一个新的session，直接返回packet包
                 packet = Packet(src_mac=frame.src_mac,
@@ -127,6 +127,7 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.client_key,
                 packet_frames = self.receive_frame_caches.get(frame.server_key)
                 packet_frames.add_frame(frame)
                 if packet_frames.has_receive_all():
+                    # sequence已经接收到所有count
                     data = packet_frames.packet_data()
                     packet = Packet(src_mac=frame.src_mac,
                                     dest_mac=frame.dest_mac,

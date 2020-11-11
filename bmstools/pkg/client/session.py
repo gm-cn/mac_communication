@@ -4,7 +4,7 @@ import threading
 from os.path import getsize
 import math
 
-from bmstools.pkg.core.packet import Packet, PacketType
+from bmstools.pkg.core.packet import Packet, PacketType, ControlPacket, ControlType
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,8 @@ class ClientSession(object):
 
         self.receive_condition = threading.Condition()
         self.receive_data = None
-        # self.default_interval_length = 900000
+
+        self.max_slice_length = 900000
         # self.default_packet_length = 300
         # self.file_path = None
 
@@ -82,9 +83,27 @@ class ClientSession(object):
         return resp_packet
 
     def exec_cmd(self, cmd):
-        resp = self.request(PacketType.Data, cmd)
+        cmd_packet = ControlPacket(ctype=ControlType.Exec, data=cmd)
+        resp = self.request(PacketType.Control, cmd_packet.pack())
         logger.info("exec cmd response: %s" % (resp.data,))
         return resp.data
+
+    def send_file(self, file_path):
+        file_packet = ControlPacket(ctype=ControlType.File, data=file_path)
+        resp = self.request(PacketType.Control, file_packet.pack())
+        logger.info("send file path response: %s" % (resp.data,))
+        file_length = getsize(file_path)
+        file_sequence = int(file_length / self.max_slice_length)
+        if file_length % self.max_slice_length:
+            file_sequence += 1
+        f = open(file_path, "rb")
+        for i in range(file_sequence):
+            # self.mac_socket.send_data(dst_mac=self.dest_mac, sequence=i, server_key=self.server_key,
+            #                           data=f.read(self.max_slice_length), client_key=self.client_key)
+            resp = self.request(PacketType.Data, str(f.read(self.max_slice_length)))
+            logger.info("send file response: %s" % (resp.data,))
+        f.close()
+        return "ok"
 
     # def send_file(self, file_path):
     #     file_length = getsize(file_path)
