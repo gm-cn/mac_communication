@@ -1,6 +1,8 @@
 # coding=utf-8
 import logging
+import struct
 
+from bmstools.pkg.core.response import TException, Code
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +91,13 @@ class Packet(object):
         return False
 
 
+class ControlType(object):
+    Noop = -1       # 空类型
+    Auth = 0        # 认证控制
+    Exec = 1        # 执行命令
+    File = 2        # 传输文件
+
+
 class ControlPacket(object):
     """
     控制包结构
@@ -97,3 +106,23 @@ class ControlPacket(object):
     def __init__(self, ctype=None, data=None):
         self.ctype = ctype
         self.data = data
+
+    def pack(self):
+        p = struct.pack("!B", self.ctype)
+        if self.data:
+            p += struct.pack("!I", len(self.data))
+            p += self.data
+        else:
+            p += struct.pack("!I", 0)
+        return p
+
+    @classmethod
+    def unpack(cls, data):
+        ctype, length = struct.unpack("!BI", data[:5])
+        if ctype not in (ControlType.Auth, ControlType.Exec, ControlType.File):
+            raise TException(Code.AnalyzeError, "Control packet type %s is not correct" % (ctype,))
+        if length > 0:
+            var_data = data[5: 5 + length]
+        else:
+            var_data = ''
+        return cls(ctype=ctype, data=var_data)

@@ -1,7 +1,8 @@
 # coding=utf-8
 import logging
 
-from bmstools.pkg.core.packet import Packet, PacketType
+from bmstools.pkg.core.response import Response, Code
+from ..core.packet import Packet, PacketType, ControlType, ControlPacket
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +26,8 @@ class ServerSession(object):
         # self.default_packet_length = 300
         # self.file_path = "/home/ddd"
 
-        self.ctype = -1
-        self.save_file = ""
+        self.ctype = ControlType.Noop
+        self.save_file_path = ""
 
     def response(self, ptype, data=''):
         """
@@ -47,15 +48,48 @@ class ServerSession(object):
         logger.info("send ack open session")
         self.response(PacketType.OpenSession)
 
+    def _handle_data(self, packet):
+        if packet.ptype == PacketType.Control:
+            control = ControlPacket.unpack(packet.data)
+            self.ctype = control.ctype
+            if self.ctype == ControlType.File:
+                # 传输文件，data为文件路径名
+                self.save_file_path = control.data
+                if not self.save_file_path:
+                    return Response(Code.ParameterError, "Save file path is empty")
+                return Response(Code.Success)
+            elif self.ctype == ControlType.Exec:
+                # 执行命令
+                return self.exec_cmd(control.data)
+            elif self.ctype == ControlType.Auth:
+                # session认证
+                pass
+        elif packet.ptype == PacketType.Data:
+            # 数据包，当前只有传输文件时会使用
+            if self.ctype == ControlType.File:
+                if self.save_file_path:
+                    return self.save_file(packet.data)
+                else:
+                    return Response(Code.LogicError, "Session save file path is empty")
+            else:
+                Response(Code.LogicError, "Session receive data but is not file")
+        else:
+            Response(Code.LogicError, "Session can not process packet type %s" % (packet.ptype,))
+
     def handle_data(self, packet):
         """
         接收到数据处理
         """
-        # self.set_receive_data(packet)
-        # logger.info(packet.data)
-        if packet.ptype == PacketType.Control:
-            pass
-        self.response(PacketType.Data, "hello")
+        logger.info(packet.data)
+        resp = self._handle_data(packet)
+        self.response(PacketType.Data, resp.pack())
+
+    def exec_cmd(self, cmd):
+        return Response(Code.Success, data="exec %s: hello" % (cmd,))
+
+    def save_file(self, data):
+        logger.info("save data: %s" % data)
+        return Response(Code.Success, msg="save file %s success" % (self.save_file_path,))
 
     # def set_receive_data(self, data):
     #     """

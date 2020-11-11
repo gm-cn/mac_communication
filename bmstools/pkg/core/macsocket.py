@@ -127,6 +127,7 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.client_key,
                 packet_frames = self.receive_frame_caches.get(frame.server_key)
                 packet_frames.add_frame(frame)
                 if packet_frames.has_receive_all():
+                    # sequence已经接收到所有count
                     data = packet_frames.packet_data()
                     packet = Packet(src_mac=frame.src_mac,
                                     dest_mac=frame.dest_mac,
