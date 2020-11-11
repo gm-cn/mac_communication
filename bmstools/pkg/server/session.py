@@ -2,6 +2,7 @@
 import logging
 
 from bmstools.pkg.core.response import Response, Code
+from bmstools.utils import shell
 from ..core.packet import Packet, PacketType, ControlType, ControlPacket
 
 logger = logging.getLogger(__name__)
@@ -84,7 +85,13 @@ class ServerSession(object):
         self.response(PacketType.Data, resp.pack())
 
     def exec_cmd(self, cmd):
-        return Response(Code.Success, data="exec %s: hello" % (cmd,))
+        s = shell.call(cmd)
+        resp = {
+            "code": s.return_code,
+            "stdout": s.stdout,
+            "stderr": s.stderr
+        }
+        return Response(Code.Success, data=resp)
 
     def save_file(self, data):
         logger.info("save data: %s" % data)
