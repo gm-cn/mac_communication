@@ -19,8 +19,8 @@ class MACSocket(object):
     def __init__(self):
         self.net_card = self.get_send_net_card()
         self.receive_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
-        #self.send_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
-        #self.send_socket.bind((self.net_card, socket.htons(ETH_P_BMS)))
+        self.send_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
+        self.send_socket.bind((self.net_card, socket.htons(ETH_P_BMS)))
         self.ETH_P_BMS_BY = self.format_mac_bytes(self.i2b_hex(ETH_P_BMS))
         self.ETH_P_VLAN_BY = self.format_mac_bytes(self.i2b_hex(ETH_P_VLAN))
         # self.default_interval_length = 900000
@@ -91,7 +91,7 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
                               count=frame.count,
                               offset=frame.offset,
                               vlan=vlan)
-            self.send_frame(ack_frame)
+            self.send_frame(ack_frame, self.send_socket)
         return frame
 
     def receive_data(self):
