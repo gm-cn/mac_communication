@@ -29,10 +29,21 @@ class MACSocket(object):
         self.receive_frame_caches = {}
         self.send_frame_caches = {}
 
+<<<<<<< HEAD
     def set_send_socket(self):
         raw_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
         raw_socket.bind((self.net_card, socket.htons(ETH_P_BMS)))
         return raw_socket
+=======
+    def clean_session(self, session_key):
+        """
+        清除session缓存
+        """
+        if session_key in self.receive_frame_caches:
+            self.receive_frame_caches.pop(session_key)
+        if session_key in self.send_frame_caches:
+            self.send_frame_caches.pop(session_key)
+>>>>>>> a9cba6d84587b3c91a6269081b8605f56ed6bcf1
 
     @classmethod
     def get_send_net_card(cls):
@@ -40,6 +51,9 @@ class MACSocket(object):
 
     @classmethod
     def frame_cache_key(cls, frame):
+        """
+        每个session缓存的key
+        """
         return '%s:%s:%s' % (frame.sequence, frame.count, frame.offset)
 
     def receive_frame(self):
@@ -101,13 +115,14 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
         while True:
             frame = self.receive_frame()
             # logger.info("receive frame ptype: %s" % (frame.ptype,))
-            if frame.ptype == PacketType.OpenSession:
+            if frame.ptype in (PacketType.OpenSession, PacketType.EndSession):
                 # 开启一个新的session，直接返回packet包
                 packet = Packet(src_mac=frame.src_mac,
                                 dest_mac=frame.dest_mac,
                                 src_key=frame.src_key,
                                 dest_key=frame.dest_key,
                                 ptype=frame.ptype,
+                                sequence=frame.sequence,
                                 vlan=frame.vlan)
                 return packet
             if frame.ptype == PacketType.Ack:
@@ -201,13 +216,13 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
         """
         发送sequence数据Packet，并拆分为帧包，所有数据都收到ACK，才算发送完成
         """
-        if packet.ptype == PacketType.OpenSession:
+        if packet.ptype in (PacketType.OpenSession, PacketType.EndSession):
             frame = Frame(src_mac=packet.src_mac,
                           dest_mac=packet.dest_mac,
                           src_key=packet.src_key,
                           dest_key=packet.dest_key,
                           ptype=packet.ptype,
-                          sequence=0,
+                          sequence=packet.sequence,
                           vlan=packet.vlan,
                           count=1,
                           offset=0,

@@ -73,10 +73,11 @@ class Server(object):
                            dest_mac=dest_mac,
                            vlan=vlan)
         ss.ack_open_session()
-        self.sessions[dest_key] = ss
+        self.sessions[src_key] = ss
 
     def close_session(self, session):
         """
         关闭session
         """
+        self.mac_socket.clean_session(session.src_key)
         self.sessions.pop(session.src_key)

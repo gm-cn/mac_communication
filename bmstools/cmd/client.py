@@ -19,7 +19,12 @@ def main():
     c.start()
     with c.new_session(dest_mac="\xb4\x96\x91\x32\x23\xa8", src_mac="\xb4\x96\x91\x33\x68\xd0", vlan=1708) as session:
         resp = session.exec_cmd("ls /root")
+        logger.info("return: %s" % resp)
+    with c.new_session(dest_mac="\xb4\x96\x91\x2f\xcb\x40", src_mac="\xb4\x96\x91\x32\x31\xd8", vlan=1800) as session:
+        resp = session.exec_cmd("cat /root/get")
+        logger.info("return: %s" % resp)
 
 
 if __name__ == '__main__':
     main()
+    exit(0)

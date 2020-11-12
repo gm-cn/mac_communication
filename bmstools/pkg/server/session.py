@@ -2,6 +2,7 @@
 import logging
 
 from bmstools.pkg.core.response import Response, Code
+from bmstools.utils import shell
 from ..core.packet import Packet, PacketType, ControlType, ControlPacket
 
 logger = logging.getLogger(__name__)
@@ -49,6 +50,10 @@ class ServerSession(object):
         logger.info("send ack open session")
         self.response(PacketType.OpenSession)
 
+    def ack_end_session(self):
+        logger.info("send ack end session")
+        self.response(PacketType.EndSession)
+
     def _handle_data(self, packet):
         if packet.ptype == PacketType.Control:
             control = ControlPacket.unpack(packet.data)
@@ -74,6 +79,9 @@ class ServerSession(object):
                     return Response(Code.LogicError, "Session save file path is empty")
             else:
                 Response(Code.LogicError, "Session receive data but is not file")
+        elif packet.ptype == PacketType.EndSession:
+            self.ack_end_session()
+            self.server.close_session(self)
         else:
             Response(Code.LogicError, "Session can not process packet type %s" % (packet.ptype,))
 
@@ -81,12 +89,24 @@ class ServerSession(object):
         """
         接收到数据处理
         """
-        logger.info(packet.data)
-        resp = self._handle_data(packet)
-        self.response(PacketType.Data, resp.pack())
+        if packet.ptype == PacketType.EndSession:
+            logger.info("start end session %s" % self.src_key)
+            self.ack_end_session()
+            self.server.close_session(self)
+            logger.info("end session %s success" % self.src_key)
+        else:
+            logger.info("receive packet data: %s" % (packet.data,))
+            resp = self._handle_data(packet)
+            self.response(PacketType.Data, resp.pack())
 
     def exec_cmd(self, cmd):
-        return Response(Code.Success, data="exec %s: hello" % (cmd,))
+        s = shell.call(cmd)
+        resp = {
+            "code": s.return_code,
+            "stdout": s.stdout,
+            "stderr": s.stderr
+        }
+        return Response(Code.Success, data=resp)
 
     def save_file(self, data):
         logger.info("save data: %s" % data)

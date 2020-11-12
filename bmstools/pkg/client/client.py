@@ -81,4 +81,5 @@ class Client(threading.Thread):
         """
         关闭session
         """
-        self.sessions.pop(session.client_key)
+        self.mac_socket.clean_session(session.src_key)
+        self.sessions.pop(session.src_key)
