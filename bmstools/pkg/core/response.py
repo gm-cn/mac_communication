@@ -10,6 +10,7 @@ class Code(object):
     Success = "Success"
 
     AnalyzeError = "AnalyzeError"
+    AuthError = "AuthError"
     LogicError = "LogicError"
     ParameterError = "ParameterError"
     UnknownError = "UnknownError"

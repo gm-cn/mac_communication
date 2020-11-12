@@ -126,3 +126,11 @@ class ControlPacket(object):
         else:
             var_data = ''
         return cls(ctype=ctype, data=var_data)
+
+
+class SessionState(object):
+    NEW = "new"
+    CONNECT = "connect"
+    AUTH = "auth"
+    OK = "ok"
+    END = "end"

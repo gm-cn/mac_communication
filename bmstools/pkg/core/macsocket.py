@@ -171,8 +171,8 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
                                  self.ETH_P_VLAN_BY,
                                  b_vlan,
                                  self.ETH_P_BMS_BY)
-        #a = struct.unpack("!6s6s2s2s2s", send_frame)
-        #logger.info("send header : %s", send_frame)
+        # a = struct.unpack("!6s6s2s2s2s", send_frame)
+        # logger.info("send header : %s", send_frame)
         send_frame += struct.pack("!BBHH",
                                   version,
                                   int(frame.ptype),

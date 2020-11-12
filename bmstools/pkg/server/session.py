@@ -1,9 +1,13 @@
 # coding=utf-8
+import code
+import hashlib
 import logging
+import random
+import string
 
 from bmstools.pkg.core.response import Response, Code
 from bmstools.utils import shell
-from ..core.packet import Packet, PacketType, ControlType, ControlPacket
+from ..core.packet import Packet, PacketType, ControlType, ControlPacket, SessionState
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +24,8 @@ class ServerSession(object):
         self.sequence = 0
         self.vlan = vlan
         self.send_socket = self.mac_socket.set_send_socket()
-
+        self.state = SessionState.NEW
+        self.random_auth = ''
 
         # self.receive_condition = threading.Condition()
         # self.receive_data = None
@@ -58,6 +63,11 @@ class ServerSession(object):
         if packet.ptype == PacketType.Control:
             control = ControlPacket.unpack(packet.data)
             self.ctype = control.ctype
+            if self.ctype == ControlType.Auth:
+                # session认证
+                random_auth = ''.join(random.sample(string.ascii_letters + string.digits, 8))
+                random_control = ControlPacket(ControlType.Auth, random_auth)
+
             if self.ctype == ControlType.File:
                 # 传输文件，data为文件路径名
                 self.save_file_path = control.data
@@ -79,9 +89,6 @@ class ServerSession(object):
                     return Response(Code.LogicError, "Session save file path is empty")
             else:
                 Response(Code.LogicError, "Session receive data but is not file")
-        elif packet.ptype == PacketType.EndSession:
-            self.ack_end_session()
-            self.server.close_session(self)
         else:
             Response(Code.LogicError, "Session can not process packet type %s" % (packet.ptype,))
 
@@ -94,7 +101,32 @@ class ServerSession(object):
             self.ack_end_session()
             self.server.close_session(self)
             logger.info("end session %s success" % self.src_key)
+            return
         else:
+            if packet.ptype == PacketType.Control:
+                control = ControlPacket.unpack(packet.data)
+                if control.ctype == ControlType.Auth:
+                    # session认证
+                    if self.state == SessionState.NEW:
+                        logger.info("start auth session")
+                        random_auth = ''.join(random.sample(string.ascii_letters + string.digits, 8))
+                        logger.info("auth random: %s" % random_auth)
+                        random_control = ControlPacket(ControlType.Auth, random_auth)
+                        self.response(PacketType.Control, random_control.pack())
+                        self.state = SessionState.AUTH
+                        self.random_auth = random_auth
+                    else:
+                        logger.info("start auth md5 random")
+                        src_md5_random = control.data
+                        md5_random = hashlib.md5()
+                        md5_random.update(self.random_auth.encode('utf-8'))
+                        logger.info("src_md5_random: %s, md5_random: %s" % (src_md5_random, md5_random))
+                        self.response(PacketType.Data, Response(Code.Success).pack())
+                        self.state = SessionState.OK
+                    return
+            if self.state != SessionState.OK:
+                self.response(PacketType.Data, Response(Code.AuthError, "current session is not ok state").pack())
+                return
             logger.info("receive packet data: %s" % (packet.data,))
             resp = self._handle_data(packet)
             self.response(PacketType.Data, resp.pack())

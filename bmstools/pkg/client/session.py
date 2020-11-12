@@ -1,9 +1,10 @@
 # coding=utf-8
+import hashlib
 import logging
 import threading
 from os.path import getsize
 
-from bmstools.pkg.core.packet import Packet, PacketType, ControlPacket, ControlType
+from bmstools.pkg.core.packet import Packet, PacketType, ControlPacket, ControlType, SessionState
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ class ClientSession(object):
         self.vlan = vlan
         self.sequence = 0
         self.send_socket = self.mac_socket.set_send_socket()
-
+        self.state = SessionState.NEW
 
         self.receive_condition = threading.Condition()
         self.receive_data = None
@@ -32,6 +33,9 @@ class ClientSession(object):
         打开session，认证过程
         """
         self.open_session()
+        self.state = SessionState.CONNECT
+        self.auth()
+        self.state = SessionState.OK
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -41,6 +45,7 @@ class ClientSession(object):
         logger.info("start end session %s" % self.src_key)
         self.end_session()
         self.client.close_session(self)
+        self.state = SessionState.END
         logger.info("end session %s success" % self.src_key)
 
     def open_session(self):
@@ -48,6 +53,20 @@ class ClientSession(object):
         resp_packet = self.request(PacketType.OpenSession)
         logger.info("receive server open session, server key: %s", resp_packet.src_key)
         self.dest_key = resp_packet.src_key
+
+    def auth(self):
+        logger.info("start session auth")
+        auth_control = ControlPacket(ControlType.Auth)
+        resp_packet = self.request(PacketType.Control, auth_control.pack())
+        self.state = SessionState.AUTH
+        auth_random = ControlPacket(resp_packet.data)
+        logger.info("server random number: %s" % auth_random.data)
+        md5_random = hashlib.md5()
+        md5_random.update(auth_random.data.encode("utf-8"))
+        logger.info("md5 random: %s" % md5_random)
+        md5_packet = ControlPacket(ControlType.Auth, md5_random)
+        resp_packet = self.request(PacketType.Control, md5_packet.pack())
+        logger.info("md5 check res: %s" % resp_packet.data)
 
     def end_session(self):
         logger.info("send end session packet")

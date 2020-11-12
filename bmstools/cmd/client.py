@@ -1,5 +1,5 @@
 # coding=utf-8
-import logging
+# import logging
 import sys
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -9,11 +9,11 @@ from bmstools.utils import log
 from bmstools.pkg.client import client
 
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 
 def main():
-    log.setup()
+    logger = log.setup()
 
     c = client.get_client()
     c.start()
