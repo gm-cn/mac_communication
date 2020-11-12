@@ -73,7 +73,8 @@ class Client(threading.Thread):
                            mac_socket=self.mac_socket,
                            src_mac=src_mac,
                            dest_mac=dest_mac,
-                           vlan=vlan)
+                           vlan=vlan,
+                           private_key=private_key)
         self.sessions[src_key] = cs
         return cs
 

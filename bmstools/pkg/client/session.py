@@ -70,7 +70,7 @@ class ClientSession(object):
         self.state = SessionState.AUTH
         auth_random = ControlPacket.unpack(resp_packet.data)
         logger.info("server random number: %s" % auth_random.data)
-        de_auth_random = auth.decrypt(self.private_key, auth_random)
+        de_auth_random = auth.decrypt(self.private_key, auth_random.data)
         md5_random = hashlib.md5(de_auth_random.data.encode("utf-8")).hexdigest()
         logger.info("md5 random: %s" % md5_random)
         md5_packet = ControlPacket(ControlType.Auth, md5_random)
