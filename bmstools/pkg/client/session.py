@@ -59,7 +59,7 @@ class ClientSession(object):
         auth_control = ControlPacket(ControlType.Auth)
         resp_packet = self.request(PacketType.Control, auth_control.pack())
         self.state = SessionState.AUTH
-        auth_random = ControlPacket(resp_packet.data)
+        auth_random = ControlPacket.unpack(resp_packet.data)
         logger.info("server random number: %s" % auth_random.data)
         md5_random = hashlib.md5()
         md5_random.update(auth_random.data.encode("utf-8"))

@@ -128,6 +128,7 @@ class ControlPacket(object):
             var_data = data[5: 5 + length]
         else:
             var_data = ''
+        logger.info("")
         return cls(ctype=ctype, data=var_data)
 
 
