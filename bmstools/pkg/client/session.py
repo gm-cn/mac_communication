@@ -64,13 +64,16 @@ class ClientSession(object):
         """
         客户端认证
         """
+        # 开始请求认证
         logger.info("start session auth")
         auth_control = ControlPacket(ControlType.Auth)
         resp_packet = self.request(PacketType.Control, auth_control.pack())
         self.state = SessionState.AUTH
+        # 私钥解密服务端随机数
         auth_random = ControlPacket.unpack(resp_packet.data)
         logger.info("server random number: %s" % auth_random.data)
         de_auth_random = auth.decrypt(self.private_key, auth_random.data)
+        # md5加密随机数发送
         md5_random = hashlib.md5(de_auth_random.encode("utf-8")).hexdigest()
         logger.info("md5 random: %s" % md5_random)
         md5_packet = ControlPacket(ControlType.Auth, md5_random)
