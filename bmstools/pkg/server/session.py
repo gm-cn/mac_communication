@@ -20,6 +20,7 @@ class ServerSession(object):
         self.sequence = 0
         self.vlan = vlan
         self.send_socket = self.mac_socket.set_send_socket()
+        self.mac_socket.net_card = self.mac_socket.get_send_net_card(src_mac)
 
 
         # self.receive_condition = threading.Condition()

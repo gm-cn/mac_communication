@@ -20,11 +20,8 @@ class ClientSession(object):
         self.vlan = vlan
         self.sequence = 0
         self.send_socket = self.mac_socket.set_send_socket()
-
-
         self.receive_condition = threading.Condition()
         self.receive_data = None
-
         self.max_slice_length = 900000
 
     def __enter__(self):

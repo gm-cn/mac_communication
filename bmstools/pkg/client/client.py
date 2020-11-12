@@ -27,6 +27,7 @@ class Client(threading.Thread):
     def __init__(self, *args, **kwargs):
         self.src_mac = self.get_src_mac()
         self.mac_socket = MACSocket()
+        self.mac_socket.net_card = "bond0"
         self.sessions = {}
         self.key_lock = threading.Lock()
         super(Client, self).__init__(*args, **kwargs)
