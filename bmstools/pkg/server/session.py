@@ -88,6 +88,8 @@ class ServerSession(object):
 
     def save_file(self, data):
         logger.info("save data: %s" % data)
+        with open(self.save_file_path, "ab") as f:
+            f.write(data)
         return Response(Code.Success, msg="save file %s success" % (self.save_file_path,))
 
     # def set_receive_data(self, data):

@@ -19,8 +19,8 @@ class MACSocket(object):
     def __init__(self):
         self.net_card = self.get_send_net_card()
         self.receive_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
-        self.send_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
-        self.send_socket.bind((self.net_card, socket.htons(ETH_P_BMS)))
+        #self.send_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
+        #self.send_socket.bind((self.net_card, socket.htons(ETH_P_BMS)))
         self.ETH_P_BMS_BY = self.format_mac_bytes(self.i2b_hex(ETH_P_BMS))
         self.ETH_P_VLAN_BY = self.format_mac_bytes(self.i2b_hex(ETH_P_VLAN))
         # self.default_interval_length = 900000
@@ -28,6 +28,11 @@ class MACSocket(object):
         # self.packet_list = {"src_key": {"num": None}}
         self.receive_frame_caches = {}
         self.send_frame_caches = {}
+
+    def set_send_socket(self):
+        raw_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
+        raw_socket.bind((self.net_card, socket.htons(ETH_P_BMS)))
+        return raw_socket
 
     @classmethod
     def get_send_net_card(cls):
@@ -141,7 +146,7 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
                     self.receive_frame_caches.pop(frame.dest_key)
                     return packet
 
-    def send_frame(self, frame):
+    def send_frame(self, frame, raw_socket):
         """
         二层发送帧数据包Frame，记录发送的数据，并超时重试
         """
@@ -153,6 +158,8 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
                                  self.ETH_P_VLAN_BY,
                                  b_vlan,
                                  self.ETH_P_BMS_BY)
+        #a = struct.unpack("!6s6s2s2s2s", send_frame)
+        #logger.info("send header : %s", send_frame)
         send_frame += struct.pack("!BBHH",
                                   version,
                                   int(frame.ptype),
@@ -182,7 +189,7 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
                                                           frame.vlan,
                                                           frame.length,
                                                           frame.data))
-        self.send_socket.send(send_frame)
+        raw_socket.send(send_frame)
         if frame.ptype != PacketType.Ack:
             if frame.src_key not in self.send_frame_caches:
                 self.send_frame_caches[frame.src_key] = {}
@@ -190,7 +197,7 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
             cache_key = self.frame_cache_key(frame)
             send_frame_caches[cache_key] = frame
 
-    def send_data(self, packet):
+    def send_data(self, packet, raw_socket):
         """
         发送sequence数据Packet，并拆分为帧包，所有数据都收到ACK，才算发送完成
         """
@@ -243,7 +250,7 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
                               offset=offset,
                               length=0,
                               data='')
-                self.send_frame(frame)
+                self.send_frame(frame, raw_socket)
 
     @classmethod
     def format_mac(cls, mac_address):
