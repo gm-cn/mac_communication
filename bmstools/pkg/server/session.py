@@ -18,6 +18,8 @@ class ServerSession(object):
         self.dest_mac = dest_mac
         self.sequence = 0
         self.vlan = vlan
+        self.send_socket = self.mac_socket.set_send_socket()
+
 
         # self.receive_condition = threading.Condition()
         # self.receive_data = None
@@ -40,7 +42,7 @@ class ServerSession(object):
                         sequence=self.sequence,
                         vlan=self.vlan,
                         data=data)
-        self.mac_socket.send_data(packet)
+        self.mac_socket.send_data(packet, self.send_socket)
         self.sequence += 1
 
     def ack_open_session(self):
