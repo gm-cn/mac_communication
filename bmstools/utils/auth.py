@@ -25,6 +25,8 @@ def encrypt(public_key, data):
 
 
 def decrypt(private_key, data):
+    logger.info(private_key)
+    logger.info(data)
     random_generator = Random.new().read
     rsakey = RSA.importKey(private_key)
     cipher = PKCS1_v1_5.new(rsakey)
