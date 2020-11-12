@@ -68,7 +68,6 @@ class MACSocket(object):
         二层接收帧数据包Frame，接收之后返回ACK
         """
         packet, packet_info = self.receive_socket.recvfrom(BuffSize)
-        # logger.info("receive packet: %s", packet)
         eth_header = packet[0:14]
         dst_mac, src_mac, eth_type = struct.unpack("!6s6s2s", eth_header)
         if eth_type != '\x7f\xff':
@@ -104,8 +103,6 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
 
         if self.global_socket is None:
             self.net_card = self.get_send_net_card(binascii.hexlify(dst_mac))
-            logger.info("card : %s", self.net_card)
-            logger.info("local mac : %s", dst_mac)
             self.global_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
             self.global_socket.bind((self.net_card, socket.htons(ETH_P_BMS)))
 
