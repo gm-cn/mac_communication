@@ -46,7 +46,7 @@ class MACSocket(object):
     def get_send_net_card(cls, mac):
         for k, v in net_if_addrs().items():
             for item in v:
-                if item[1] == mac and "bond" not in k:
+                if item[1].replace(":", "") == mac and "bond" not in k:
                     return k
 
     @classmethod
@@ -103,7 +103,9 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
                                                           frame.data))
 
         if self.global_socket is None:
-            self.net_card = self.get_send_net_card(frame.dest_mac)
+            self.net_card = self.get_send_net_card(binascii.hexlify(dst_mac))
+            logger.info("card : %s", self.net_card)
+            logger.info("local mac : %s", dst_mac)
             self.global_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
             self.global_socket.bind((self.net_card, socket.htons(ETH_P_BMS)))
 
@@ -186,8 +188,6 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
                                  self.ETH_P_VLAN_BY,
                                  b_vlan,
                                  self.ETH_P_BMS_BY)
-        #a = struct.unpack("!6s6s2s2s2s", send_frame)
-        #logger.info("send header : %s", send_frame)
         send_frame += struct.pack("!BBHH",
                                   version,
                                   int(frame.ptype),
@@ -229,6 +229,8 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
         """
         发送sequence数据Packet，并拆分为帧包，所有数据都收到ACK，才算发送完成
         """
+        packet.src_mac = self.format_mac_bytes(self.format_mac(packet.src_mac))
+        packet.dest_mac = self.format_mac_bytes(self.format_mac(packet.dest_mac))
         if packet.ptype in (PacketType.OpenSession, PacketType.EndSession):
             frame = Frame(src_mac=packet.src_mac,
                           dest_mac=packet.dest_mac,
