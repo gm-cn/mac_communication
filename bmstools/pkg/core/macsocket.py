@@ -212,7 +212,7 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
                           count=1,
                           offset=0,
                           length=0)
-            self.send_frame(frame)
+            self.send_frame(frame, raw_socket)
         elif packet.ptype in (PacketType.Data, PacketType.Control):
             count, offset = 1, 0
             logger.info("send packet data: %s" % (packet.data,))
@@ -237,7 +237,7 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
                                   offset=i,
                                   length=len(frame_data),
                                   data=frame_data)
-                    self.send_frame(frame)
+                    self.send_frame(frame, raw_socket)
             else:
                 frame = Frame(src_mac=packet.src_mac,
                               dest_mac=packet.dest_mac,
