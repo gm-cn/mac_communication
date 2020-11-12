@@ -5,13 +5,15 @@ import threading
 from os.path import getsize
 
 from bmstools.pkg.core.packet import Packet, PacketType, ControlPacket, ControlType, SessionState
+from bmstools.utils import auth
 
 logger = logging.getLogger(__name__)
 
 
 class ClientSession(object):
 
-    def __init__(self, client, src_key=None, dest_key=0, mac_socket=None, src_mac=None, dest_mac=None, vlan=0):
+    def __init__(self, client, src_key=None, dest_key=0, mac_socket=None, src_mac=None, dest_mac=None, vlan=0,
+                 private_key=''):
         self.client = client
         self.src_key = src_key
         self.dest_key = dest_key
@@ -22,6 +24,7 @@ class ClientSession(object):
         self.sequence = 0
         self.send_socket = self.mac_socket.set_send_socket()
         self.state = SessionState.NEW
+        self.private_key = private_key
 
         self.receive_condition = threading.Condition()
         self.receive_data = None
@@ -49,19 +52,26 @@ class ClientSession(object):
         logger.info("end session %s success" % self.src_key)
 
     def open_session(self):
+        """
+        开启session，获取服务端session key
+        """
         logger.info("send open session packet")
         resp_packet = self.request(PacketType.OpenSession)
         logger.info("receive server open session, server key: %s", resp_packet.src_key)
         self.dest_key = resp_packet.src_key
 
     def auth(self):
+        """
+        客户端认证
+        """
         logger.info("start session auth")
         auth_control = ControlPacket(ControlType.Auth)
         resp_packet = self.request(PacketType.Control, auth_control.pack())
         self.state = SessionState.AUTH
         auth_random = ControlPacket.unpack(resp_packet.data)
         logger.info("server random number: %s" % auth_random.data)
-        md5_random = hashlib.md5(auth_random.data.encode("utf-8")).hexdigest()
+        de_auth_random = auth.decrypt(self.private_key, auth_random)
+        md5_random = hashlib.md5(de_auth_random.data.encode("utf-8")).hexdigest()
         logger.info("md5 random: %s" % md5_random)
         md5_packet = ControlPacket(ControlType.Auth, md5_random)
         resp_packet = self.request(PacketType.Control, md5_packet.pack())

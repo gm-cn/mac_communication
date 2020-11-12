@@ -1,19 +1,22 @@
 # coding=utf-8
-import logging
+# import logging
 import sys
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 sys.path.insert(0, BASE_DIR)
-from bmstools.utils import log
+from bmstools.utils import log, auth
 from bmstools.pkg.server import server
 
 
-logger = logging.getLogger(__name__)
-
-
 def main():
-    log.setup()
+    logger = log.setup()
+    logger.info("start server")
+    private_key, public_key = auth.gen_key()
+    with open("../pkg/server/private.pem", "w") as f:
+        f.write(private_key)
+    with open("../pkg/server/public.pem", "w") as f:
+        f.write(public_key)
 
     s = server.get_server()
     s.run()

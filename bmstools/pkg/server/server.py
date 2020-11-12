@@ -27,6 +27,8 @@ class Server(object):
         self.mac_socket = MACSocket()
         self.sessions = {}
         self.key_lock = threading.Lock()
+        with open("./public.pem") as f:
+            self.public_key = f.read()
 
     def run(self):
         """

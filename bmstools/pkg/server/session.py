@@ -6,7 +6,7 @@ import random
 import string
 
 from bmstools.pkg.core.response import Response, Code
-from bmstools.utils import shell
+from bmstools.utils import shell, auth
 from ..core.packet import Packet, PacketType, ControlType, ControlPacket, SessionState
 
 logger = logging.getLogger(__name__)
@@ -111,7 +111,9 @@ class ServerSession(object):
                         logger.info("start auth session")
                         random_auth = ''.join(random.sample(string.ascii_letters + string.digits, 8))
                         logger.info("auth random: %s" % random_auth)
-                        random_control = ControlPacket(ControlType.Auth, random_auth)
+                        en_random_auth = auth.encrypt(self.server.public_key, random_auth)
+                        logger.info("encrypt auth random: %s" % en_random_auth)
+                        random_control = ControlPacket(ControlType.Auth, en_random_auth)
                         self.response(PacketType.Control, random_control.pack())
                         self.state = SessionState.AUTH
                         self.random_auth = random_auth

@@ -61,7 +61,7 @@ class Client(threading.Thread):
                 if i not in self.sessions:
                     return i
 
-    def new_session(self, dest_mac, vlan, src_mac=None):
+    def new_session(self, dest_mac, vlan, private_key="", src_mac=None):
         """
         客户端创建一个新的session
         """
