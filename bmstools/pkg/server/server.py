@@ -1,4 +1,5 @@
 # coding=utf-8
+import os
 import logging
 import threading
 from time import sleep
@@ -9,6 +10,8 @@ from ..core.macsocket import MACSocket
 logger = logging.getLogger(__name__)
 
 _bms_tools_server = None
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def get_server():
@@ -27,7 +30,7 @@ class Server(object):
         self.mac_socket = MACSocket()
         self.sessions = {}
         self.key_lock = threading.Lock()
-        with open("./public.pem") as f:
+        with open(os.path.join(BASE_DIR, "public.pem")) as f:
             self.public_key = f.read()
 
     def run(self):
