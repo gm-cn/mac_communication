@@ -118,8 +118,7 @@ class ServerSession(object):
                     else:
                         logger.info("start auth md5 random")
                         src_md5_random = control.data
-                        md5_random = hashlib.md5()
-                        md5_random.update(self.random_auth.encode('utf-8'))
+                        md5_random = hashlib.md5(self.random_auth.encode('utf-8')).hexdigest()
                         logger.info("src_md5_random: %s, md5_random: %s" % (src_md5_random, md5_random))
                         self.response(PacketType.Data, Response(Code.Success).pack())
                         self.state = SessionState.OK
