@@ -29,12 +29,11 @@ class MACSocket(object):
         self.receive_frame_caches = {}
         self.send_frame_caches = {}
 
-<<<<<<< HEAD
     def set_send_socket(self):
         raw_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
         raw_socket.bind((self.net_card, socket.htons(ETH_P_BMS)))
         return raw_socket
-=======
+
     def clean_session(self, session_key):
         """
         清除session缓存
@@ -43,7 +42,6 @@ class MACSocket(object):
             self.receive_frame_caches.pop(session_key)
         if session_key in self.send_frame_caches:
             self.send_frame_caches.pop(session_key)
->>>>>>> a9cba6d84587b3c91a6269081b8605f56ed6bcf1
 
     @classmethod
     def get_send_net_card(cls):
