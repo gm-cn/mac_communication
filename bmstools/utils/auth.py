@@ -26,6 +26,7 @@ def encrypt(public_key, data):
 
 def decrypt(private_key, data):
     random_generator = Random.new().read
-    cipher = PKCS1_v1_5.new(private_key)
+    rsakey = RSA.importKey(private_key)
+    cipher = PKCS1_v1_5.new(rsakey)
     text = cipher.decrypt(base64.b64decode(data), random_generator)
     return text
