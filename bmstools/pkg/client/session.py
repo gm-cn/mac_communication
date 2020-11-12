@@ -24,7 +24,7 @@ class ClientSession(object):
         self.sequence = 0
         self.send_socket = self.mac_socket.set_send_socket()
         self.state = SessionState.NEW
-        self.private_key = private_key
+        self.private_key = private_key.strip()
 
         self.receive_condition = threading.Condition()
         self.receive_data = None
