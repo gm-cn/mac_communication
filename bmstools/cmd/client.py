@@ -11,6 +11,9 @@ from bmstools.pkg.client import client
 
 logger = logging.getLogger(__name__)
 
+private_key = """
+"""
+
 
 def main():
     logger = log.setup()
