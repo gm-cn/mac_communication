@@ -68,8 +68,10 @@ class MACSocket(object):
         二层接收帧数据包Frame，接收之后返回ACK
         """
         packet, packet_info = self.receive_socket.recvfrom(BuffSize)
-        eth_header = packet[0:14]
-        dst_mac, src_mac, eth_type = struct.unpack("!6s6s2s", eth_header)
+        eth_header = eth_hdr = struct.unpack("!6s6s2s", packet[0:14])
+        dst_mac, src_mac, eth_type = binascii.hexlify(eth_hdr[0]), \
+                                     binascii.hexlify(eth_hdr[1]), \
+                                     eth_hdr[2]
         if eth_type != '\x7f\xff':
             logger.error("receive eth type %s is not bms type" % (eth_type,))
             return
@@ -102,12 +104,13 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
                                                           frame.data))
 
         if self.global_socket is None:
-            self.net_card = self.get_send_net_card(binascii.hexlify(dst_mac))
+            self.net_card = self.get_send_net_card(dst_mac)
             self.global_socket = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_BMS))
             self.global_socket.bind((self.net_card, socket.htons(ETH_P_BMS)))
 
         if frame.ptype != PacketType.Ack:
-            # 返回Ack确认包
+            frame.dest_mac = self.format_mac_bytes(self.format_mac(dst_mac))
+            frame.src_mac = self.format_mac_bytes(self.format_mac(src_mac))
             ack_frame = Frame(src_mac=frame.dest_mac,
                               dest_mac=frame.src_mac,
                               src_key=frame.dest_key,
@@ -179,6 +182,7 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
         """
         b_vlan = self.format_mac_bytes(self.i2b_hex(frame.vlan))
         version = 1
+        logger.info("send info : %s",  self.ETH_P_BMS_BY)
         send_frame = struct.pack("!6s6s2s2s2s",
                                  frame.dest_mac,
                                  frame.src_mac,

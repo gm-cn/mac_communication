@@ -15,7 +15,7 @@ class ClientSession(object):
         self.src_key = src_key
         self.dest_key = dest_key
         self.mac_socket = mac_socket
-        self.src_mac = src_mac
+        self.src_mac = self.mac_socket.get_mac(self.mac_socket.net_card)
         self.dest_mac = dest_mac
         self.vlan = vlan
         self.sequence = 0
