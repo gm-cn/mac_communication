@@ -43,20 +43,6 @@ class MACSocket(object):
             self.send_frame_caches.pop(session_key)
 
     @classmethod
-    def get_send_net_card(cls, mac):
-        for k, v in net_if_addrs().items():
-            for item in v:
-                if item[1].replace(":", "") == mac and "bond" not in k:
-                    return k
-
-    @classmethod
-    def get_mac(cls, card):
-        msg = net_if_addrs()
-        return msg[card][1][1]
-
-
-
-    @classmethod
     def frame_cache_key(cls, frame):
         """
         每个session缓存的key
@@ -109,8 +95,8 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
             self.global_socket.bind((self.net_card, socket.htons(ETH_P_BMS)))
 
         if frame.ptype != PacketType.Ack:
-            frame.dest_mac = self.format_mac_bytes(self.format_mac(dst_mac))
-            frame.src_mac = self.format_mac_bytes(self.format_mac(src_mac))
+            #frame.dest_mac = self.format_mac_bytes(self.format_mac(dst_mac))
+            #frame.src_mac = self.format_mac_bytes(self.format_mac(src_mac))
             ack_frame = Frame(src_mac=frame.dest_mac,
                               dest_mac=frame.src_mac,
                               src_key=frame.dest_key,
@@ -295,4 +281,17 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
     def i2b_hex(cls, protocol):
         b_protocol = hex(int(protocol))[2:]
         return b_protocol if len(b_protocol) % 2 == 0 else '0{0}'.format(b_protocol).encode('utf8')
+
+    @classmethod
+    def get_send_net_card(cls, mac):
+        for k, v in net_if_addrs().items():
+            for item in v:
+                if item[1].replace(":", "") == mac and "bond" not in k:
+                    return k
+
+    @classmethod
+    def get_mac(cls, card):
+        msg = net_if_addrs()
+        return msg[card][1][1]
+
 

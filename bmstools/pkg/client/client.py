@@ -28,6 +28,7 @@ class Client(threading.Thread):
         self.src_mac = self.get_src_mac()
         self.mac_socket = MACSocket()
         self.mac_socket.net_card = "bond0"
+        self.src_mac = self.mac_socket.get_mac(self.mac_socket.net_card)
         self.sessions = {}
         self.key_lock = threading.Lock()
         super(Client, self).__init__(*args, **kwargs)
@@ -72,6 +73,7 @@ class Client(threading.Thread):
         cs = ClientSession(self,
                            src_key=src_key,
                            mac_socket=self.mac_socket,
+                           src_mac=self.src_mac,
                            dest_mac=dest_mac,
                            vlan=vlan)
         self.sessions[src_key] = cs
