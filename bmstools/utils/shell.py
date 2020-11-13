@@ -1,6 +1,7 @@
 import subprocess
 
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -66,3 +67,8 @@ def run(cmd, workdir=None):
     s = ShellCmd(cmd, workdir)
     s(False)
     return s.return_code
+
+def prepare_pid_dir(path):
+    pdir = os.path.dirname(path)
+    if not os.path.isdir(pdir):
+        os.makedirs(pdir)
