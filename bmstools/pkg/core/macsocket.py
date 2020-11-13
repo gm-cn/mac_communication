@@ -168,7 +168,6 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
         """
         b_vlan = self.format_mac_bytes(self.i2b_hex(frame.vlan))
         version = 1
-        logger.info("send info : %s",  self.ETH_P_BMS_BY)
         send_frame = struct.pack("!6s6s2s2s2s",
                                  frame.dest_mac,
                                  frame.src_mac,
