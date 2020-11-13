@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class ClientSession(object):
 
-    def __init__(self, client, src_key=None, dest_key=0, mac_socket=None, src_mac=None, dest_mac=None, vlan=0):
+    def __init__(self, client, src_key=None, dest_key=0, mac_socket=None, dest_mac=None, vlan=0):
         self.client = client
         self.src_key = src_key
         self.dest_key = dest_key

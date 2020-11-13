@@ -62,17 +62,16 @@ class Client(threading.Thread):
                 if i not in self.sessions:
                     return i
 
-    def new_session(self, dest_mac, vlan, src_mac=None):
+    def new_session(self, dest_mac, vlan):
         """
         客户端创建一个新的session
         """
         src_key = self.get_new_client_key()
-        if not src_mac:
-            src_mac = self.src_mac
+        #if not src_mac:
+        #    src_mac = self.src_mac
         cs = ClientSession(self,
                            src_key=src_key,
                            mac_socket=self.mac_socket,
-                           src_mac=src_mac,
                            dest_mac=dest_mac,
                            vlan=vlan)
         self.sessions[src_key] = cs

@@ -17,10 +17,10 @@ def main():
 
     c = client.get_client()
     c.start()
-    with c.new_session(dest_mac="\xb4\x96\x91\x32\x23\xa8", src_mac="\xb4\x96\x91\x33\x68\xd0", vlan=1708) as session:
+    with c.new_session(dest_mac="b4:96:91:32:23:a8", vlan=1708) as session:
         resp = session.send_file("/tmp/passwd.sh")
         logger.info("return: %s" % resp)
-    with c.new_session(dest_mac="\xb4\x96\x91\x32\x23\xa8", src_mac="\xb4\x96\x91\x33\x68\xd0", vlan=1708) as session:
+    with c.new_session(dest_mac="b4:96:91:32:23:a8", vlan=1708) as session:
         resp = session.exec_cmd("bash /tmp/passwd.sh")
         logger.info("return: %s" % resp)
 
