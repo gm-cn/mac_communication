@@ -56,6 +56,7 @@ class PacketFrames(object):
         if frame.offset not in self.frames:
             self.receive_count += 1
         self.frames[frame.offset] = frame.data
+        logger.info("offset: %s, data: %s" % (frame.offset, frame.data))
 
     def has_receive_all(self):
         if self.receive_count == self.count:
@@ -66,6 +67,8 @@ class PacketFrames(object):
         data = ''
         for i in range(self.count):
             data += self.frames[i]
+        logger.info("data: %s" % data)
+        logger.info("frames: %s" % self.frames)
         return data
 
 
@@ -125,4 +128,13 @@ class ControlPacket(object):
             var_data = data[5: 5 + length]
         else:
             var_data = ''
+        logger.debug("ctype: %s, length: %s, data: %s" % (ctype, length, var_data))
         return cls(ctype=ctype, data=var_data)
+
+
+class SessionState(object):
+    NEW = "new"
+    CONNECT = "connect"
+    AUTH = "auth"
+    OK = "ok"
+    END = "end"

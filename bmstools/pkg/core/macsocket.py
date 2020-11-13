@@ -95,8 +95,7 @@ count: %s, offset: %s, vlan: %s, length: %s, data: %s" % (frame.src_key,
             self.global_socket.bind((self.net_card, socket.htons(ETH_P_BMS)))
 
         if frame.ptype != PacketType.Ack:
-            #frame.dest_mac = self.format_mac_bytes(self.format_mac(dst_mac))
-            #frame.src_mac = self.format_mac_bytes(self.format_mac(src_mac))
+            # 返回Ack确认包
             ack_frame = Frame(src_mac=frame.dest_mac,
                               dest_mac=frame.src_mac,
                               src_key=frame.dest_key,
