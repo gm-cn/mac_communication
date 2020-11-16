@@ -4,7 +4,7 @@ Description=bmstools service
 [Service]
 Restart=always
 User=root
-ExecStart=/usr/bin/bmstools
+ExecStart=/usr/bin/bmstools-server
 
 [Install]
 WantedBy=multi-user.target
