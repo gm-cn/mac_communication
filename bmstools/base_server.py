@@ -11,7 +11,6 @@ from bmstools.utils import daemon
 
 _rest_service = None
 
-
 def new_rest_service():
     global _rest_service
     if not _rest_service:
